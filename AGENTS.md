@@ -25,7 +25,7 @@ IntelliJ registrations live in `src/main/resources/META-INF/plugin.xml`. Maven i
 
 ## Key Directories
 
-- `src/main/kotlin/kr/kyg/intellij/plugin/egovframe/`
+- `src/main/kotlin/kr/kyg/ijplugin/egovframe/`
   - `assets/`: catalogs, manifest parsing, checked cache/download storage.
   - `config/`: config form model, validation, rendering, and UI.
   - `crud/`: CRUD context preparation, template paths, preview, and generation UI.
@@ -93,11 +93,11 @@ The packaged plugin is written under `build/distributions/`. No dedicated lint o
 - `build.gradle.kts`: dependencies, IntelliJ target, verifier/signing/publishing, JDK toolchain.
 - `settings.gradle.kts`, `gradle.properties`: plugin/tool versions and repository configuration.
 - `src/main/resources/META-INF/plugin.xml`: extension points, dependencies, tool window, wizard, settings, actions.
-- `src/main/kotlin/kr/kyg/intellij/plugin/egovframe/project/EgovProjectWizard.kt`: project wizard entry point.
-- `src/main/kotlin/kr/kyg/intellij/plugin/egovframe/config/ConfigGenerator.kt`: config form, validation, render, and write contract.
-- `src/main/kotlin/kr/kyg/intellij/plugin/egovframe/crud/CrudGenerator.kt`: immutable CRUD context and 11-file rendering contract.
-- `src/main/kotlin/kr/kyg/intellij/plugin/egovframe/render/EgovHandlebars.kt`: JavaScript parity helpers and normalized-template lookup.
-- `src/main/kotlin/kr/kyg/intellij/plugin/egovframe/assets/TemplateStore.kt`: cache, download, hash, and atomic-write rules.
+- `src/main/kotlin/kr/kyg/ijplugin/egovframe/project/EgovProjectWizard.kt`: project wizard entry point.
+- `src/main/kotlin/kr/kyg/ijplugin/egovframe/config/ConfigGenerator.kt`: config form, validation, render, and write contract.
+- `src/main/kotlin/kr/kyg/ijplugin/egovframe/crud/CrudGenerator.kt`: immutable CRUD context and 11-file rendering contract.
+- `src/main/kotlin/kr/kyg/ijplugin/egovframe/render/EgovHandlebars.kt`: JavaScript parity helpers and normalized-template lookup.
+- `src/main/kotlin/kr/kyg/ijplugin/egovframe/assets/TemplateStore.kt`: cache, download, hash, and atomic-write rules.
 - `src/main/resources/egovframe/asset-manifest.json`: pinned asset inventory and ZIP metadata.
 - `src/test/resources/golden/index.json`: fixture inventory used by renderer and CRUD-context parity tests.
 - `NOTICE`: upstream provenance, licenses, pinned commit, and normalized-asset explanation.

@@ -52,7 +52,7 @@ dependencies {
 
 intellijPlatform {
   pluginConfiguration {
-    id = "kr.kyg.intellij.plugin.egovframe"
+    id = "kr.kyg.ijplugin.egovframe"
     name = providers.gradleProperty("pluginName").get()
     version = providers.gradleProperty("pluginVersion").get()
 

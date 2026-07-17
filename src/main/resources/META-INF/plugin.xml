@@ -1,5 +1,5 @@
 <idea-plugin>
-  <id>kr.kyg.intellij.plugin.egovframe</id>
+  <id>kr.kyg.ijplugin.egovframe</id>
   <name>eGovFrame Initializr</name>
   <vendor url="https://github.com/eGovFramework/egovframe-vscode-initializr">kyg</vendor>
 
@@ -24,16 +24,16 @@
   <extensions defaultExtensionNs="com.intellij">
     <notificationGroup id="eGovFrame" displayType="BALLOON" bundle="messages.EgovBundle" key="notification.group.name"/>
     <toolWindow id="eGovFrame" anchor="right"
-                factoryClass="kr.kyg.intellij.plugin.egovframe.ui.EgovToolWindowFactory"/>
-    <applicationConfigurable id="kr.kyg.intellij.plugin.egovframe.settings"
+                factoryClass="kr.kyg.ijplugin.egovframe.ui.EgovToolWindowFactory"/>
+    <applicationConfigurable id="kr.kyg.ijplugin.egovframe.settings"
                              displayName="eGovFrame"
-                             instance="kr.kyg.intellij.plugin.egovframe.settings.EgovSettingsConfigurable"/>
-    <newProjectWizard.generator implementation="kr.kyg.intellij.plugin.egovframe.project.EgovProjectWizard"/>
+                             instance="kr.kyg.ijplugin.egovframe.settings.EgovSettingsConfigurable"/>
+    <newProjectWizard.generator implementation="kr.kyg.ijplugin.egovframe.project.EgovProjectWizard"/>
   </extensions>
 
   <actions>
-    <action id="kr.kyg.intellij.plugin.egovframe.openConfig"
-            class="kr.kyg.intellij.plugin.egovframe.config.OpenConfigToolWindowAction"
+    <action id="kr.kyg.ijplugin.egovframe.openConfig"
+            class="kr.kyg.ijplugin.egovframe.config.OpenConfigToolWindowAction"
             text="eGovFrame Configuration Generator"
             description="Open the eGovFrame configuration generator">
       <add-to-group group-id="ToolsMenu" anchor="last"/>
