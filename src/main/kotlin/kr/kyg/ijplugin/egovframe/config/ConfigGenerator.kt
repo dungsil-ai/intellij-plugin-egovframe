@@ -88,18 +88,23 @@ object ConfigGenerator {
             }
 
             val packageName = formData["txtConfigPackage"]?.toString()
-            if (!packageName.isNullOrBlank() && !PACKAGE_NAME_REGEX.matches(packageName)) {
+            if (
+                generationType == GenerationType.JAVA &&
+                !packageName.isNullOrBlank() &&
+                !PACKAGE_NAME_REGEX.matches(packageName)
+            ) {
                 return ValidationIssue("Invalid Java package name", "txtConfigPackage")
             }
 
+            val baseFileName = stripOptionalExtension(rawFileName, generationType)
             if (generationType == GenerationType.JAVA) {
-                if (!JAVA_CLASS_NAME_REGEX.matches(rawFileName)) {
+                if (!JAVA_CLASS_NAME_REGEX.matches(baseFileName)) {
                     return ValidationIssue(
                         "JavaConfig file name must be a PascalCase class name",
                         template.fileNameProperty,
                     )
                 }
-            } else if (!FILE_NAME_REGEX.matches(rawFileName)) {
+            } else if (!FILE_NAME_REGEX.matches(baseFileName)) {
                 return ValidationIssue("Invalid file name", template.fileNameProperty)
             }
 
@@ -198,6 +203,11 @@ object ConfigGenerator {
         require(baseName.isNotEmpty() && baseName != "." && baseName != "..") { "Invalid file name" }
         require(baseName.none { it in INVALID_FILE_NAME_CHARACTERS }) { "Invalid file name: $baseName" }
         return baseName
+    }
+
+    private fun stripOptionalExtension(fileName: String, generationType: GenerationType): String {
+        val suffix = ".${generationType.extension}"
+        return if (fileName.endsWith(suffix, ignoreCase = true)) fileName.dropLast(suffix.length) else fileName
     }
 
     private val PACKAGE_NAME_REGEX = Regex("^[a-z]([a-z0-9.]*[a-z0-9])?$")

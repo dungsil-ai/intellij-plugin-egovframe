@@ -82,15 +82,25 @@ class ConfigGeneratorTest {
     }
 
     @Test
-    fun validateRejectsInvalidPackageName() {
+    fun validateRejectsInvalidJavaPackageName() {
+        val template = TemplateCatalog.configs.first { it.javaConfigTemplate.isNotBlank() }
+        val prepared = ConfigGenerator.prepare(
+            template, ConfigGenerator.GenerationType.JAVA,
+            mapOf(template.fileNameProperty to "EgovConfig", "txtConfigPackage" to "123bad"), "pkg",
+        )
+        val issue = prepared.validate(Path.of("build"))
+        assertNotNull(issue)
+        assertEquals("Invalid Java package name", issue!!.message)
+    }
+
+    @Test
+    fun validateIgnoresStaleJavaPackageForNonJavaVariants() {
         val template = TemplateCatalog.configs.first()
         val prepared = ConfigGenerator.prepare(
             template, ConfigGenerator.GenerationType.XML,
             mapOf(template.fileNameProperty to "file", "txtConfigPackage" to "123bad"), "pkg",
         )
-        val issue = prepared.validate(Path.of("build"))
-        assertNotNull(issue)
-        assertEquals("Invalid Java package name", issue!!.message)
+        assertNull(prepared.validate(Path.of("build")))
     }
 
     @Test
@@ -120,7 +130,39 @@ class ConfigGeneratorTest {
         assertNotNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file.name", "pkg"))
         assertNotNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file name", "pkg"))
         assertNotNull(validate(javaTemplate, ConfigGenerator.GenerationType.JAVA, "Egov_Config", "pkg"))
-        assertNotNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file", "Pkg"))
+        assertNotNull(validate(javaTemplate, ConfigGenerator.GenerationType.JAVA, "EgovConfig", "Pkg"))
+    }
+
+    @Test
+    fun validationAcceptsAnOptionalMatchingExtension() {
+        val xmlTemplate = TemplateCatalog.configs.first()
+        val javaTemplate = TemplateCatalog.configs.first { it.javaConfigTemplate.isNotBlank() }
+        val output = Path.of("build")
+
+        assertNull(
+            ConfigGenerator.prepare(
+                xmlTemplate,
+                ConfigGenerator.GenerationType.XML,
+                mapOf(xmlTemplate.fileNameProperty to "context-cache.xml"),
+                "pkg",
+            ).validate(output),
+        )
+        assertNull(
+            ConfigGenerator.prepare(
+                javaTemplate,
+                ConfigGenerator.GenerationType.JAVA,
+                mapOf(javaTemplate.fileNameProperty to "EgovConfig.java", "txtConfigPackage" to "pkg"),
+                "pkg",
+            ).validate(output),
+        )
+        assertNotNull(
+            ConfigGenerator.prepare(
+                xmlTemplate,
+                ConfigGenerator.GenerationType.XML,
+                mapOf(xmlTemplate.fileNameProperty to "context-cache.yaml"),
+                "pkg",
+            ).validate(output),
+        )
     }
 
     @Test

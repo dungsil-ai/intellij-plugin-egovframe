@@ -62,8 +62,16 @@ private val PACKAGE_REGEX = Regex("""^[a-z]([a-z0-9.]*[a-z0-9])?$""")
 private val CLASS_NAME_REGEX = Regex("""^[A-Z][A-Za-z0-9]*$""")
 private val FILE_NAME_REGEX = Regex("""^[A-Za-z0-9_-]+$""")
 
+private fun stripOptionalExtension(value: String, generationType: ConfigGenerator.GenerationType?): String {
+    val suffix = generationType?.let { ".${it.extension}" } ?: return value
+    return if (value.endsWith(suffix, ignoreCase = true)) value.dropLast(suffix.length) else value
+}
+
 fun ConfigFormSpec.validate(state: FormState): ConfigGenerator.ValidationIssue? {
-    val isJava = state.getString("generationType") == "javaConfig"
+    val generationType = ConfigGenerator.GenerationType.entries.firstOrNull {
+        it.id == state.getString("generationType")
+    }
+    val isJava = generationType == ConfigGenerator.GenerationType.JAVA
     for (field in fields) {
         if (field.visibleWhen != null && !field.visibleWhen.invoke(state)) continue
 
@@ -81,16 +89,18 @@ fun ConfigFormSpec.validate(state: FormState): ConfigGenerator.ValidationIssue? 
         if (field.noSpecialChars && SPECIAL_CHARS.containsMatchIn(value)) {
             return ConfigGenerator.ValidationIssue("${field.label} contains invalid characters", field.key)
         }
-        if (field.packageField && !PACKAGE_REGEX.matches(value)) {
+        if (field.packageField && isJava && !PACKAGE_REGEX.matches(value)) {
             return ConfigGenerator.ValidationIssue("${field.label} is not a valid Java package name", field.key)
         }
+
+        val baseFileName = stripOptionalExtension(value, generationType)
         if (field.classField && isJava) {
-            if (!CLASS_NAME_REGEX.matches(value)) {
+            if (!CLASS_NAME_REGEX.matches(baseFileName)) {
                 return ConfigGenerator.ValidationIssue(
                     "${field.label} must be a valid Java class name", field.key,
                 )
             }
-        } else if (field.fileNameField && !FILE_NAME_REGEX.matches(value)) {
+        } else if (field.fileNameField && !FILE_NAME_REGEX.matches(baseFileName)) {
             return ConfigGenerator.ValidationIssue(
                 "${field.label} contains invalid file name characters", field.key,
             )
@@ -698,6 +708,7 @@ object ConfigFormRegistry {
         if (!state.getBoolean("chkAopConfigTransaction") && !state.getBoolean("chkAnnotationTransaction")) {
             ConfigGenerator.ValidationIssue(
                 "At least one of AOP Config Transaction or Annotation Transaction must be selected",
+                "chkAopConfigTransaction",
             )
         } else null
     }

@@ -175,6 +175,7 @@ class ConfigFormModelTest {
         val issue = spec.validateExtra!!.invoke(stateNone)
         assertNotNull(issue)
         assertTrue(issue!!.message.contains("at least one", ignoreCase = true))
+        assertEquals("chkAopConfigTransaction", issue.field)
 
         val stateAop = FormState(mapOf(
             "chkAopConfigTransaction" to true,
@@ -322,18 +323,20 @@ class ConfigFormModelTest {
             )
 
         val packageField = FieldDef("package", "Package", packageField = true)
-        assertNull(issueFor(packageField, "a..b", "xml"))
-        assertNotNull(issueFor(packageField, "A.b", "xml"))
-        assertNotNull(issueFor(packageField, "a.", "xml"))
+        assertNull(issueFor(packageField, "A.b", "xml"))
+        assertNotNull(issueFor(packageField, "A.b", "javaConfig"))
+        assertNotNull(issueFor(packageField, "a.", "javaConfig"))
 
         val classField = FieldDef("file", "File", classField = true)
         assertNull(issueFor(classField, "EgovConfig2", "javaConfig"))
-        assertNotNull(issueFor(classField, "Egov_Config", "javaConfig"))
+        assertNull(issueFor(classField, "EgovConfig.java", "javaConfig"))
+        assertNotNull(issueFor(classField, "Egov_Config.java", "javaConfig"))
 
         val fileField = FieldDef("file", "File", fileNameField = true)
         assertNull(issueFor(fileField, "config-file_2", "xml"))
-        assertNotNull(issueFor(fileField, "config.file", "xml"))
-        assertNotNull(issueFor(fileField, "config file", "xml"))
+        assertNull(issueFor(fileField, "config-file.xml", "xml"))
+        assertNotNull(issueFor(fileField, "config-file.yaml", "xml"))
+        assertNotNull(issueFor(fileField, "config file.xml", "xml"))
 
         val specialField = FieldDef("name", "Name", noSpecialChars = true)
         assertNull(issueFor(specialField, "name-2_value", "xml"))
