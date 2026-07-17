@@ -1,11 +1,13 @@
 <idea-plugin>
   <id>kr.kyg.ijplugin.egovframe</id>
-  <name>eGovFrame Initializr</name>
-  <vendor url="https://github.com/eGovFramework/egovframe-vscode-initializr">kyg</vendor>
+  <name>eGovFrame Initializr (Community)</name>
+  <vendor url="https://github.com/dungsil-ai/intellij-plugin-egovframe">kyg</vendor>
 
   <description><![CDATA[
+    <strong>Unofficial community plugin.</strong> This plugin is independently developed and maintained. It is not an
+    official eGovFrame product and is not endorsed, supported, or distributed by the eGovFramework project.<br/><br/>
     Korean eGovernment Standard Framework (eGovFrame) 5.0 support for IntelliJ IDEA.<br/>
-    Native replacement of the official eGovFrame VS Code Initializr (v5.0.6):
+    Community-maintained IntelliJ IDEA alternative to the official eGovFrame VS Code Initializr (v5.0.6):
     <ul>
       <li>New Project wizard with the 22 official eGovFrame project templates (Maven auto-link)</li>
       <li>DDL-based CRUD code generation (11 artifacts) with preview and ERD summary</li>

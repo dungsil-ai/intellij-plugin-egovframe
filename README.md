@@ -1,6 +1,10 @@
-# eGovFrame Initializr for IDEA
+# eGovFrame Initializr for IDEA (Community)
 
 eGovFrame Initializr for IDEA는 IntelliJ IDEA에서 전자정부프레임워크 기반의 어플리케이션 개발을 지원하는 플러그인입니다.
+
+> [!IMPORTANT]
+> 이 프로젝트는 eGovFrame 공식 프로젝트나 공식 배포 플러그인이 아닌, 독립적으로 개발·유지보수되는
+> **비공식 커뮤니티 플러그인**입니다. eGovFramework의 공식 지원, 보증 또는 승인을 의미하지 않습니다.
 
 ## 개발 환경 준비
 
