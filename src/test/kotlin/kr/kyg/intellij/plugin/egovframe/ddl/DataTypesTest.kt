@@ -1,7 +1,7 @@
 package kr.kyg.intellij.plugin.egovframe.ddl
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 /** 1:1 port of upstream `webview-ui/src/utils/__tests__/dataTypes.spec.ts`. */
 class DataTypesTest {

@@ -138,7 +138,7 @@ index maps the full source digest to that readable path. Do not replace this wit
 
 ## Testing & QA
 
-Tests use JUnit 4.13.2 with the IntelliJ Platform test framework. There is no configured coverage threshold; protect observable contracts instead.
+Tests use JUnit Jupiter 5.14.4. IntelliJ 2025.1's JUnit 5 environment still requires JUnit 4.13.2 at runtime only (IJPL-159134); test sources must not use JUnit 4 APIs. There is no configured coverage threshold; protect observable contracts instead.
 
 - Renderer/template/helper/normalization changes: run `GoldenRenderTest` and `HandlebarsSyntaxTest`.
 - DDL/type/ERD changes: run parser tests plus `CrudContextEquivalenceTest` and CRUD renderer tests.

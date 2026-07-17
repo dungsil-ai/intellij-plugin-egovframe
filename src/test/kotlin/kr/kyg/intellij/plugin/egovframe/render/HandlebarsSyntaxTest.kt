@@ -1,9 +1,9 @@
 package kr.kyg.intellij.plugin.egovframe.render
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 class HandlebarsSyntaxTest {
 
@@ -101,15 +101,15 @@ class HandlebarsSyntaxTest {
 
     properties.forEach { (rawDigest, rawPath) ->
       val digest = rawDigest.toString()
-      assertTrue("Invalid source SHA-256 in normalization index: $digest", digest.matches(Regex("[0-9a-f]{64}")))
+      assertTrue(digest.matches(Regex("[0-9a-f]{64}")), "Invalid source SHA-256 in normalization index: $digest")
       val resourcePath = rawPath.toString()
       val fileName = resourcePath.substringAfterLast('/')
-      assertTrue("Missing readable template name in $resourcePath", fileName.substringBefore('@').isNotBlank())
+      assertTrue(fileName.substringBefore('@').isNotBlank(), "Missing readable template name in $resourcePath")
       assertTrue(
-        "Normalized resource path does not include its source digest: $resourcePath",
         fileName.endsWith("@$digest.hbs"),
+        "Normalized resource path does not include its source digest: $resourcePath",
       )
-      assertNotNull("Missing normalized runtime resource: $resourcePath", classLoader.getResource(resourcePath))
+      assertNotNull(classLoader.getResource(resourcePath), "Missing normalized runtime resource: $resourcePath")
     }
   }
 

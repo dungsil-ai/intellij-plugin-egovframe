@@ -1,8 +1,8 @@
 package kr.kyg.intellij.plugin.egovframe.ddl
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 /** 1:1 port of upstream `webview-ui/src/utils/__tests__/erdParser.spec.ts`. */
 class ErdParserTest {

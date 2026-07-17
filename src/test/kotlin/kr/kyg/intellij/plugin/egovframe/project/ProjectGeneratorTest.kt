@@ -1,8 +1,8 @@
 package kr.kyg.intellij.plugin.egovframe.project
 
 import kr.kyg.intellij.plugin.egovframe.assets.ProjectTemplate
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream

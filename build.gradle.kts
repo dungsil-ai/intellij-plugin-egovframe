@@ -1,4 +1,3 @@
-import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
   id("org.jetbrains.kotlin.jvm")
@@ -26,8 +25,11 @@ dependencies {
     exclude(group = "org.slf4j")
   }
 
-  testImplementation(kotlin("test"))
-  testImplementation("junit:junit:4.13.2")
+  testImplementation(platform("org.junit:junit-bom:5.14.4"))
+  testImplementation("org.junit.jupiter:junit-jupiter")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+  // IntelliJ 2025.1's JUnit 5 test environment still loads JUnit 4 TestRule (IJPL-159134).
+  testRuntimeOnly("junit:junit:4.13.2")
 
   intellijPlatform {
     intellijIdeaCommunity(providers.gradleProperty("platformVersion").get())
@@ -35,7 +37,6 @@ dependencies {
     bundledPlugin("com.intellij.java")
     bundledPlugin("org.jetbrains.idea.maven")
 
-    testFramework(TestFrameworkType.Platform)
     pluginVerifier()
   }
 }
@@ -71,7 +72,7 @@ intellijPlatform {
 
 tasks {
   test {
-    useJUnit()
+    useJUnitPlatform()
   }
 
   processResources {

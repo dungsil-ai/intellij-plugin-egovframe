@@ -1,8 +1,8 @@
 package kr.kyg.intellij.plugin.egovframe.assets
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Test
 
 class TemplateCatalogTest {
   @Test
@@ -30,8 +30,8 @@ class TemplateCatalogTest {
     val reference = TemplateCatalog.configs.single { it.templateFile == "timeBasedRollingFile.hbs" }.javaConfigTemplate
     assertEquals("timeBasedRollingFile-java.hbs", reference)
     assertFalse(
-      "Pinned upstream catalog references a Java template absent from the bundled upstream assets",
       EgovAssets::class.java.classLoader.getResource("${EgovAssets.CONFIG_DIR}/logging/$reference") != null,
+      "Pinned upstream catalog references a Java template absent from the bundled upstream assets",
     )
   }
 }

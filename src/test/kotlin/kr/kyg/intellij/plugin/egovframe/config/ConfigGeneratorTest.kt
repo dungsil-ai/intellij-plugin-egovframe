@@ -1,12 +1,8 @@
 package kr.kyg.intellij.plugin.egovframe.config
 
 import kr.kyg.intellij.plugin.egovframe.assets.TemplateCatalog
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -19,10 +15,10 @@ class ConfigGeneratorTest {
         val template = TemplateCatalog.configs.first { it.displayName == "Cache > New Cache" }
         val def = ConfigGenerator.definition(template)
         val visibleNames = def.visibleFields.map { it.first }
-        assertTrue("generationType should be excluded", "generationType" !in visibleNames)
-        assertTrue("underscore-prefixed keys should be excluded", visibleNames.none { it.startsWith("_") })
+        assertTrue("generationType" !in visibleNames, "generationType should be excluded")
+        assertTrue(visibleNames.none { it.startsWith("_") }, "underscore-prefixed keys should be excluded")
         val initial = def.initialFormData(ConfigGenerator.GenerationType.XML)
-        assertTrue("initialFormData should contain generationType", "generationType" in initial)
+        assertTrue("generationType" in initial, "initialFormData should contain generationType")
     }
 
     @Test
@@ -50,8 +46,8 @@ class ConfigGeneratorTest {
         val template = TemplateCatalog.configs.first { it.displayName == "ID Generation > New Sequence ID Generation" }
         val def = ConfigGenerator.definition(template)
         val data = def.initialFormData(ConfigGenerator.GenerationType.XML)
-        assertTrue("Hidden _javaFileName should be preserved", "_javaFileName" in data)
-        assertTrue("Hidden _formType should be preserved", "_formType" in data)
+        assertTrue("_javaFileName" in data, "Hidden _javaFileName should be preserved")
+        assertTrue("_formType" in data, "Hidden _formType should be preserved")
     }
 
     @Test
@@ -209,7 +205,7 @@ class ConfigGeneratorTest {
             def.initialFormData(ConfigGenerator.GenerationType.XML), "egovframework.example.sample",
         )
         val content = prepared.render()
-        assertTrue("Rendered content should be non-empty", content.isNotBlank())
+        assertTrue(content.isNotBlank(), "Rendered content should be non-empty")
     }
 
     @Test
@@ -222,9 +218,9 @@ class ConfigGeneratorTest {
                 template, ConfigGenerator.GenerationType.XML,
                 def.initialFormData(ConfigGenerator.GenerationType.XML), "egovframework.example.sample",
             ).generate(tmpDir)
-            assertTrue("Generated file should exist", Files.exists(result.path))
+            assertTrue(Files.exists(result.path), "Generated file should exist")
             assertEquals(result.content, Files.readString(result.path))
-            assertTrue("Path should be inside output folder", result.path.startsWith(tmpDir.toAbsolutePath().normalize()))
+            assertTrue(result.path.startsWith(tmpDir.toAbsolutePath().normalize()), "Path should be inside output folder")
         } finally {
             tmpDir.toFile().deleteRecursively()
         }

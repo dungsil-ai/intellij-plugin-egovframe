@@ -1,8 +1,8 @@
 package kr.kyg.intellij.plugin.egovframe.assets
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 class AssetIntegrityTest {
   @Test
@@ -10,7 +10,7 @@ class AssetIntegrityTest {
     val manifest = AssetManifest.instance
     assertEquals("v5.0.6", manifest.upstreamTag)
     manifest.zips.values.forEach { zip ->
-      assertTrue("ZIP URL is not pinned to v5.0.6: ${zip.mediaUrl}", zip.mediaUrl.contains("/v5.0.6/"))
+      assertTrue(zip.mediaUrl.contains("/v5.0.6/"), "ZIP URL is not pinned to v5.0.6: ${zip.mediaUrl}")
     }
   }
 
@@ -18,7 +18,7 @@ class AssetIntegrityTest {
   fun `every manifest asset retains its recorded sha256`() {
     val manifest = AssetManifest.instance
     manifest.assets.forEach { (path, asset) ->
-      assertEquals("SHA-256 mismatch for $path", asset.sha256, TemplateStore.sha256(EgovAssets.resourceBytes(path)))
+      assertEquals(asset.sha256, TemplateStore.sha256(EgovAssets.resourceBytes(path)), "SHA-256 mismatch for $path")
     }
   }
 
@@ -39,7 +39,7 @@ class AssetIntegrityTest {
       .filterValues(ZipAsset::bundled)
       .forEach { (zipName, zip) ->
         val bytes = EgovAssets.resourceBytes("${EgovAssets.EXAMPLES_DIR}/$zipName")
-        assertEquals("SHA-256 mismatch for bundled ZIP $zipName", zip.sha256, TemplateStore.sha256(bytes))
+        assertEquals(zip.sha256, TemplateStore.sha256(bytes), "SHA-256 mismatch for bundled ZIP $zipName")
       }
   }
 }

@@ -1,7 +1,7 @@
 package kr.kyg.intellij.plugin.egovframe.ddl
 
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 /** 1:1 port of upstream `webview-ui/src/utils/__tests__/ddlParser.spec.ts`. */
 class DdlParserTest {
@@ -216,9 +216,11 @@ class DdlParserTest {
 
   // --- error messages ---
 
-  @Test(expected = IllegalArgumentException::class)
+  @Test
   fun `should throw Unable to parse table name from DDL`() {
-    DdlParser.parseDDL("SELECT 1")
+    assertThrows(IllegalArgumentException::class.java) {
+      DdlParser.parseDDL("SELECT 1")
+    }
   }
 
   @Test
