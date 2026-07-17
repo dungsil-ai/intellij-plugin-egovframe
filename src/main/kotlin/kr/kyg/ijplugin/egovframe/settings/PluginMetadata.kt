@@ -1,7 +1,5 @@
 package kr.kyg.ijplugin.egovframe.settings
 
-import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.openapi.extensions.PluginId
 
 /**
  * Deterministic plugin metadata constants.
@@ -27,12 +25,17 @@ object PluginMetadata {
   const val LICENSE_URL = "https://www.apache.org/licenses/LICENSE-2.0"
 
   /**
-   * Returns the plugin version from the runtime descriptor.
-   * Falls back to `"dev"` when running outside a packaged environment
-   * (e.g. unit tests without full IDE startup).
+   * Returns the version embedded into the plugin resources during `processResources`.
+   * Falls back to `"dev"` only when running from incomplete development outputs.
    */
-  fun version(): String =
-    PluginManagerCore.getPlugin(PluginId.getId(ID))?.version ?: "dev"
+  fun version(): String = PluginMetadata::class.java.classLoader
+    .getResourceAsStream("egovframe/plugin-metadata.properties")
+    ?.bufferedReader()
+    ?.useLines { lines ->
+      lines.firstOrNull { it.startsWith("version=") }?.substringAfter("version=")
+    }
+    ?.takeIf(String::isNotBlank)
+    ?: "dev"
 
   fun description(language: String): String =
     if (language == "ko") DESCRIPTION_KO else DESCRIPTION_EN

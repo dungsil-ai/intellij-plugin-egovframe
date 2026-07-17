@@ -9,6 +9,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.WriteProperties
 import org.gradle.work.DisableCachingByDefault
 import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
@@ -153,6 +154,11 @@ intellijPlatform {
     token = providers.environmentVariable("PUBLISH_TOKEN")
   }
 }
+val generatePluginMetadata = tasks.register<WriteProperties>("generatePluginMetadata") {
+  destinationFile = layout.buildDirectory.file("generated/pluginMetadata/plugin-metadata.properties").get().asFile
+  property("version", providers.gradleProperty("pluginVersion").get())
+}
+
 
 tasks {
   buildPlugin {
@@ -201,6 +207,9 @@ tasks {
   }
 
   processResources {
+    from(generatePluginMetadata) {
+      into("egovframe")
+    }
     from(upstreamDir.dir("templates/code")) {
       into("egovframe/code")
     }
