@@ -65,6 +65,7 @@ internal class CrudSqlEditorAdapter(
           document.setText(model.sqlText)
         }
       }
+      applyHighlighting()
       applyDiagnosticMarkers()
     }
   }

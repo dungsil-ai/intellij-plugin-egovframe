@@ -38,7 +38,7 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
   private val editorModel = CrudEditorModel()
   private val crudGeneration = CrudGeneration()
   private val crudWriteAdapter = CrudWriteAdapter()
-  private val ddlEditor = JBTextArea(18, 80)
+  private val editorAdapter = CrudSqlEditorAdapter(editorModel)
   private val packageField = JBTextField(EgovSettings.getInstance().state.defaultPackageName)
   private val outputFolderField = JBTextField(project.basePath.orEmpty())
   private val autoPreview = JBCheckBox("Auto preview", false)
@@ -72,7 +72,6 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
       val selected = dialectCombo.selectedItem as? SqlDialect ?: return@addActionListener
       editorModel.switchDialect(selected)
       refreshSampleCombo()
-      ddlEditor.text = editorModel.sqlText
       restartValidation()
     }
 
@@ -82,11 +81,9 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
       val selected = sampleCombo.selectedItem
       if (selected is CrudSampleCatalog.Sample) {
         editorModel.selectSample(selected)
-        ddlEditor.text = editorModel.sqlText
         restartValidation()
       } else {
         editorModel.clearSample()
-        ddlEditor.text = ""
         restartValidation()
       }
     }
@@ -109,17 +106,14 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
       }
     }
 
-    val inputListener = object : DocumentListener {
-      override fun insertUpdate(event: DocumentEvent) = onDdlInput()
-      override fun removeUpdate(event: DocumentEvent) = onDdlInput()
-      override fun changedUpdate(event: DocumentEvent) = onDdlInput()
-    }
-    ddlEditor.document.addDocumentListener(inputListener)
     packageField.document.addDocumentListener(object : DocumentListener {
       override fun insertUpdate(event: DocumentEvent) = restartValidation()
       override fun removeUpdate(event: DocumentEvent) = restartValidation()
       override fun changedUpdate(event: DocumentEvent) = restartValidation()
     })
+    editorModel.addChangeListener {
+      restartValidation()
+    }
 
     val dialectRow = JPanel(FlowLayout(FlowLayout.LEFT, 6, 0)).apply {
       add(JBLabel("Dialect"))
@@ -145,7 +139,7 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
 
     val left = JPanel(BorderLayout(0, 8)).apply {
       add(inputs, BorderLayout.NORTH)
-      add(JBScrollPane(ddlEditor), BorderLayout.CENTER)
+      add(editorAdapter.component, BorderLayout.CENTER)
       add(JPanel(BorderLayout()).apply {
         add(buttons, BorderLayout.NORTH)
         add(statusLabel, BorderLayout.SOUTH)
@@ -159,11 +153,6 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
       dividerLocation = 720
     }
     add(split, BorderLayout.CENTER)
-  }
-
-  private fun onDdlInput() {
-    editorModel.setSqlText(ddlEditor.text)
-    restartValidation()
   }
 
   private fun refreshSampleCombo() {
@@ -186,6 +175,8 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
     if (diag is DdlSyntaxDiagnostics.DiagnosticResult.Error) {
       val first = diag.diagnostics.first()
       statusLabel.text = "${first.message} (line ${first.line}, column ${first.column})"
+      erdSummary.text = ""
+      return
     }
     runCatching { preparation() }
       .onSuccess { preparation ->
@@ -292,7 +283,7 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
   }
 
   private fun preparation(): CrudPreparation =
-    crudGeneration.prepare(ddlEditor.text, packageField.text.trim())
+    crudGeneration.prepare(editorModel.sqlText, packageField.text.trim())
 
   private fun requireReady(): PreparedCrud? = when (val preparation = preparation()) {
     is CrudPreparation.Ready -> preparation.prepared
@@ -340,5 +331,6 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
 
   override fun dispose() {
     validationTimer.stop()
+    Disposer.dispose(editorAdapter)
   }
 }

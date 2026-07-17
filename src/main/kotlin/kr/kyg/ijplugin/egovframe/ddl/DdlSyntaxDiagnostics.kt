@@ -22,19 +22,17 @@ internal object DdlSyntaxDiagnostics {
   }
 
   fun diagnose(sql: String, dialect: SqlDialect): DiagnosticResult {
-    val text = sql.trim()
-    if (text.isEmpty()) {
+    val start = skipWhitespace(sql, 0)
+    if (start >= sql.length) {
       return DiagnosticResult.Error(listOf(Diagnostic("Empty input", 1, 1, 0)))
     }
 
     val errors = mutableListOf<Diagnostic>()
 
-    // Check for balanced parentheses and quotes
-    checkBalance(text, errors)
+    checkBalance(sql, errors)
     if (errors.isNotEmpty()) return DiagnosticResult.Error(errors)
 
-    // Validate CREATE TABLE statements
-    validateStatements(text, dialect, errors)
+    validateStatements(sql, dialect, errors)
     if (errors.isNotEmpty()) return DiagnosticResult.Error(errors)
 
     return DiagnosticResult.Ok("Valid DDL")

@@ -166,6 +166,53 @@ class DdlSyntaxDiagnosticsTest {
   }
 
   @Test
+  fun `leading whitespace preserves original offsets`() {
+    val sql = "   INVALID"
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
+    val diag = error.diagnostics.first()
+    assertEquals(3, diag.offset, "offset should point to 'I' in original text")
+    assertEquals(1, diag.line)
+    assertEquals(4, diag.column)
+  }
+
+  @Test
+  fun `leading newlines report correct line`() {
+    val sql = "\n\n  INVALID"
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
+    val diag = error.diagnostics.first()
+    assertEquals(3, diag.line)
+    assertEquals(3, diag.column)
+    assertEquals(4, diag.offset)
+  }
+
+  @Test
+  fun `valid DDL with leading whitespace returns Ok`() {
+    val sql = "  \n  CREATE TABLE test (id INT PRIMARY KEY);"
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    assertTrue(result is DdlSyntaxDiagnostics.DiagnosticResult.Ok)
+  }
+
+  @Test
+  fun `blank input returns Empty input error`() {
+    val result = DdlSyntaxDiagnostics.diagnose("   ", SqlDialect.MYSQL)
+    val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
+    assertEquals("Empty input", error.diagnostics.first().message)
+  }
+
+  @Test
+  fun `unmatched paren with leading whitespace reports correct offset`() {
+    val sql = "    )CREATE TABLE test (id INT PRIMARY KEY);"
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
+    val diag = error.diagnostics.first()
+    assertEquals(4, diag.offset)
+    assertEquals(1, diag.line)
+    assertEquals(5, diag.column)
+  }
+
+  @Test
   fun `all sample DDLs pass diagnostics`() {
     val samples = kr.kyg.ijplugin.egovframe.crud.CrudSampleCatalog.all()
     for (sample in samples) {
