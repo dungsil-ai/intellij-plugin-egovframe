@@ -13,9 +13,33 @@ class ConfigFormModelTest {
     }
 
     @Test
-    fun totalActiveVariantsIs45() {
-        val total = ConfigFormRegistry.all().sumOf { it.activeTypes.size }
-        assertEquals(45, total)
+    fun activeVariantsMatchUpstreamMatrix() {
+        assertEquals(
+            mapOf(
+                "Cache > New Cache" to listOf("xml"),
+                "Cache > New Ehcache Configuration" to listOf("xml", "javaConfig"),
+                "Datasource > New Datasource" to listOf("xml", "javaConfig"),
+                "Datasource > New JNDI Datasource" to listOf("xml", "javaConfig"),
+                "ID Generation > New Sequence ID Generation" to listOf("xml", "javaConfig"),
+                "ID Generation > New Table ID Generation" to listOf("xml", "javaConfig"),
+                "ID Generation > New UUID Generation" to listOf("xml", "javaConfig"),
+                "Logging > New Console Appender" to listOf("xml", "yaml", "properties"),
+                "Logging > New File Appender" to listOf("xml", "yaml", "properties"),
+                "Logging > New Rolling File Appender" to listOf("xml", "yaml", "properties"),
+                "Logging > New Time-Based Rolling File Appender" to listOf("xml", "yaml", "properties"),
+                "Logging > New JDBC Appender" to listOf("xml", "yaml"),
+                "Property > New Property" to listOf("xml", "javaConfig"),
+                "Scheduling > New Detail Bean Job" to listOf("xml", "javaConfig"),
+                "Scheduling > New Method Invoking Job" to listOf("xml", "javaConfig"),
+                "Scheduling > New Simple Trigger" to listOf("xml", "javaConfig"),
+                "Scheduling > New Cron Trigger" to listOf("xml", "javaConfig"),
+                "Scheduling > New Scheduler" to listOf("xml", "javaConfig"),
+                "Transaction > New Datasource Transaction" to listOf("xml", "javaConfig"),
+                "Transaction > New JPA Transaction" to listOf("xml", "javaConfig"),
+                "Transaction > New JTA Transaction" to listOf("xml", "javaConfig"),
+            ),
+            ConfigFormRegistry.all().associate { spec -> spec.displayName to spec.activeTypes.map { it.id } },
+        )
     }
 
     // ── Control types and field order ───────────────────────────────────
@@ -277,7 +301,7 @@ class ConfigFormModelTest {
         val spec = ConfigFormRegistry.forTemplate("Datasource > New Datasource")!!
         val state = FormState(mapOf(
             "generationType" to "xml",
-            "txtFileName" to "file<name",
+            "txtFileName" to "file.name",
             "txtDatasourceName" to "ds",
             "rdoType" to "DBCP",
             "txtDriver" to "driver",
@@ -288,6 +312,85 @@ class ConfigFormModelTest {
         assertNotNull(issue)
         assertEquals("txtFileName", issue!!.field)
         assertTrue(issue.message.contains("file name", ignoreCase = true))
+    }
+
+    @Test
+    fun validationMatchesUpstreamCodeUtilsRegexes() {
+        fun issueFor(field: FieldDef, value: String, generationType: String): ConfigGenerator.ValidationIssue? =
+            ConfigFormSpec("test", listOf(field), ConfigGenerator.GenerationType.entries).validate(
+                FormState(mapOf("generationType" to generationType, field.key to value)),
+            )
+
+        val packageField = FieldDef("package", "Package", packageField = true)
+        assertNull(issueFor(packageField, "a..b", "xml"))
+        assertNotNull(issueFor(packageField, "A.b", "xml"))
+        assertNotNull(issueFor(packageField, "a.", "xml"))
+
+        val classField = FieldDef("file", "File", classField = true)
+        assertNull(issueFor(classField, "EgovConfig2", "javaConfig"))
+        assertNotNull(issueFor(classField, "Egov_Config", "javaConfig"))
+
+        val fileField = FieldDef("file", "File", fileNameField = true)
+        assertNull(issueFor(fileField, "config-file_2", "xml"))
+        assertNotNull(issueFor(fileField, "config.file", "xml"))
+        assertNotNull(issueFor(fileField, "config file", "xml"))
+
+        val specialField = FieldDef("name", "Name", noSpecialChars = true)
+        assertNull(issueFor(specialField, "name-2_value", "xml"))
+        assertNotNull(issueFor(specialField, "name.value", "xml"))
+        assertNotNull(issueFor(specialField, "name value", "xml"))
+    }
+
+    @Test
+    fun cacheAndTransactionsRetainSingleScrollFieldsAndConditions() {
+        val cache = ConfigFormRegistry.forTemplate("Cache > New Cache")!!
+        assertEquals(
+            setOf("txtDftLiveTime", "txtIdleTime"),
+            cache.fields.filter { it.visibleWhen != null }.map { it.key }.toSet(),
+        )
+
+        assertEquals(
+            setOf("txtFileName", "txtDiskStore", "txtDftEternal", "txtCacheName", "txtEternal"),
+            cache.fields.filter { it.required || it.requiredWhen != null }.map { it.key }.toSet(),
+        )
+
+        for (name in listOf(
+            "Transaction > New Datasource Transaction",
+            "Transaction > New JPA Transaction",
+            "Transaction > New JTA Transaction",
+        )) {
+            val spec = ConfigFormRegistry.forTemplate(name)!!
+            assertTrue(spec.fields.any { it.key == "chkAopConfigTransaction" })
+            assertTrue(spec.fields.any { it.key == "chkAnnotationTransaction" })
+            assertEquals(
+                setOf(
+                    "txtConfigPackage",
+                    "txtPointCutName", "txtPointCutExpression", "txtAdviceName", "txtMethodName",
+                    "chkReadOnly", "txtRollbackFor", "txtNoRollbackFor", "txtTimeout",
+                    "cmbPropagation", "cmbIsolation",
+                ),
+                spec.fields.filter { it.visibleWhen != null }.map { it.key }.toSet(),
+            )
+            val requiredBase = when (name) {
+                "Transaction > New Datasource Transaction" -> setOf(
+                    "txtFileName", "txtConfigPackage", "txtTransactionName", "txtDataSourceName",
+                )
+                "Transaction > New JPA Transaction" -> setOf(
+                    "txtFileName", "txtConfigPackage", "txtTransactionName", "txtEntityManagerFactory",
+                    "txtDataSourceName", "txtPackagesToScan", "cmbDialectName", "txtSpringDataJpaRepositoriesPackage",
+                )
+                else -> setOf(
+                    "txtFileName", "txtConfigPackage", "txtTransactionName", "txtGlobalTimeout",
+                )
+            }
+            assertEquals(
+                requiredBase + setOf(
+                    "txtPointCutName", "txtPointCutExpression", "txtAdviceName", "txtMethodName",
+                    "cmbPropagation", "cmbIsolation",
+                ),
+                spec.fields.filter { it.required || it.requiredWhen != null }.map { it.key }.toSet(),
+            )
+        }
     }
 
     // ── Ehcache resource path normalization ─────────────────────────────

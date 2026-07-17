@@ -27,6 +27,29 @@ import javax.swing.JComboBox
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JRadioButton
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
+
+internal object ConfigFormControlListener {
+    fun install(control: JComponent, onChange: () -> Unit) {
+        when (control) {
+            is JComboBox<*> -> control.addActionListener { onChange() }
+            is JBTextField -> control.document.addDocumentListener(object : DocumentListener {
+                override fun insertUpdate(event: DocumentEvent) = onChange()
+                override fun removeUpdate(event: DocumentEvent) = onChange()
+                override fun changedUpdate(event: DocumentEvent) = onChange()
+            })
+        }
+    }
+}
+internal fun validateOutputFolderPath(value: String, component: JComponent): ValidationInfo? = when {
+    value.isBlank() -> ValidationInfo("Select an output folder", component)
+    else -> runCatching { Path.of(value) }.exceptionOrNull()?.let {
+        ValidationInfo("Invalid output path", component)
+    }
+}
+
+
 
 class ConfigFormDialog(
     private val project: Project,
@@ -40,13 +63,16 @@ class ConfigFormDialog(
     private val controls = LinkedHashMap<String, JComponent>()
     private val radioGroups = LinkedHashMap<String, List<JRadioButton>>()
     private val fieldRows = LinkedHashMap<String, List<JComponent>>()
+    private var applyingControlUpdates = false
 
     init {
         title = template.displayName
         generationTypeCombo.renderer = GenerationTypeRenderer()
         generationTypeCombo.addActionListener {
-            applyVariantFileName()
-            updateVisibility()
+            updateControls {
+                applyVariantFileName()
+                updateVisibility()
+            }
         }
         init()
     }
@@ -113,9 +139,12 @@ class ConfigFormDialog(
     }
 
     private fun createControl(field: FieldDef, defaultValue: Any?): JComponent = when (field.control) {
-        ControlType.TEXT -> JBTextField(displayValue(defaultValue))
+        ControlType.TEXT -> JBTextField(displayValue(defaultValue)).apply {
+            ConfigFormControlListener.install(this) { handleControlChange(field.key) }
+        }
         ControlType.SELECT -> JComboBox(field.options.map { it.value }.toTypedArray()).apply {
             selectedItem = defaultValue?.toString() ?: field.options.firstOrNull()?.value
+            ConfigFormControlListener.install(this) { handleControlChange(field.key) }
         }
         ControlType.RADIO -> {
             val panel = JPanel(java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 4, 0))
@@ -126,10 +155,7 @@ class ConfigFormDialog(
                     isSelected = option.value == defaultValue?.toString()
                     group.add(this)
                     panel.add(this)
-                    addActionListener {
-                        applyLinkedUpdates(field.key)
-                        updateVisibility()
-                    }
+                    addActionListener { handleControlChange(field.key) }
                 }
             }
             radioGroups[field.key] = buttons
@@ -137,17 +163,16 @@ class ConfigFormDialog(
         }
         ControlType.CHECK -> JBCheckBox().apply {
             isSelected = defaultValue as? Boolean ?: false
-            addActionListener {
-                applyLinkedUpdates(field.key)
-                updateVisibility()
-            }
+            addActionListener { handleControlChange(field.key) }
         }
         ControlType.FILE -> {
-            val textField = JBTextField(displayValue(defaultValue))
+            val textField = JBTextField(displayValue(defaultValue)).apply {
+                ConfigFormControlListener.install(this) { handleControlChange(field.key) }
+            }
             val panel = JPanel(BorderLayout(6, 0))
             panel.add(textField, BorderLayout.CENTER)
             panel.add(JButton("Browse...").apply {
-                addActionListener { chooseFile(textField, field.key) }
+                addActionListener { chooseFile(textField) }
             }, BorderLayout.EAST)
             panel.putClientProperty("textField", textField)
             panel
@@ -162,6 +187,23 @@ class ConfigFormDialog(
                 link.update(state)
                 syncStateToControls(state)
             }
+        }
+    }
+
+    private fun handleControlChange(sourceKey: String) {
+        updateControls {
+            applyLinkedUpdates(sourceKey)
+            updateVisibility()
+        }
+    }
+
+    private inline fun updateControls(update: () -> Unit) {
+        if (applyingControlUpdates) return
+        applyingControlUpdates = true
+        try {
+            update()
+        } finally {
+            applyingControlUpdates = false
         }
     }
 
@@ -228,7 +270,7 @@ class ConfigFormDialog(
 
     override fun doValidate(): ValidationInfo? {
         val outputFolder = outputFolderField.text.trim()
-        if (outputFolder.isEmpty()) return ValidationInfo("Select an output folder", outputFolderField)
+        validateOutputFolderPath(outputFolder, outputFolderField)?.let { return it }
 
         if (spec != null) {
             val state = buildFormState()
@@ -325,12 +367,10 @@ class ConfigFormDialog(
         FileChooser.chooseFile(descriptor, project, initial)?.let { outputFolderField.text = it.path }
     }
 
-    private fun chooseFile(textField: JBTextField, fieldKey: String) {
+    private fun chooseFile(textField: JBTextField) {
         val descriptor = FileChooserDescriptorFactory.createSingleFileDescriptor()
         FileChooser.chooseFile(descriptor, project, null)?.let {
-            val raw = it.path
-            textField.text = normalizeConfigLocation(raw)
-            applyLinkedUpdates(fieldKey)
+            textField.text = normalizeConfigLocation(it.path)
         }
     }
 

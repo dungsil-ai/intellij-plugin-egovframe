@@ -93,13 +93,14 @@ object ConfigGenerator {
             }
 
             if (generationType == GenerationType.JAVA) {
-                val className = rawFileName.removeSuffix(".java")
-                if (!JAVA_CLASS_NAME_REGEX.matches(className)) {
+                if (!JAVA_CLASS_NAME_REGEX.matches(rawFileName)) {
                     return ValidationIssue(
                         "JavaConfig file name must be a PascalCase class name",
                         template.fileNameProperty,
                     )
                 }
+            } else if (!FILE_NAME_REGEX.matches(rawFileName)) {
+                return ValidationIssue("Invalid file name", template.fileNameProperty)
             }
 
             val target = runCatching { targetPath(outputFolder) }.getOrElse {
@@ -199,7 +200,8 @@ object ConfigGenerator {
         return baseName
     }
 
-    private val PACKAGE_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$")
-    private val JAVA_CLASS_NAME_REGEX = Regex("^[A-Z][A-Za-z0-9_]*$")
+    private val PACKAGE_NAME_REGEX = Regex("^[a-z]([a-z0-9.]*[a-z0-9])?$")
+    private val JAVA_CLASS_NAME_REGEX = Regex("^[A-Z][A-Za-z0-9]*$")
+    private val FILE_NAME_REGEX = Regex("^[A-Za-z0-9_-]+$")
     private const val INVALID_FILE_NAME_CHARACTERS = "<>:\"/\\|?*"
 }

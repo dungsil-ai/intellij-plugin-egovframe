@@ -42,8 +42,6 @@ data class ConfigFormSpec(
     val fields: List<FieldDef>,
     val activeTypes: List<ConfigGenerator.GenerationType>,
     val linkedUpdates: List<LinkedUpdate> = emptyList(),
-    val multiPage: Boolean = false,
-    val page1Fields: Set<String> = emptySet(),
     val validateExtra: ((FormState) -> ConfigGenerator.ValidationIssue?)? = null,
     val javaDefaultFileName: String? = null,
 )
@@ -59,10 +57,10 @@ fun normalizeConfigLocation(rawPath: String, resourceRoot: String = "src/main/re
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-private val SPECIAL_CHARS = Regex("""[<>'";\\]""")
-private val PACKAGE_REGEX = Regex("""^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$""")
-private val CLASS_NAME_REGEX = Regex("""^[A-Z][A-Za-z0-9_]*$""")
-private const val INVALID_FILENAME_CHARS = "<>:\"/\\|?*"
+private val SPECIAL_CHARS = Regex("""[^A-Za-z0-9_-]""")
+private val PACKAGE_REGEX = Regex("""^[a-z]([a-z0-9.]*[a-z0-9])?$""")
+private val CLASS_NAME_REGEX = Regex("""^[A-Z][A-Za-z0-9]*$""")
+private val FILE_NAME_REGEX = Regex("""^[A-Za-z0-9_-]+$""")
 
 fun ConfigFormSpec.validate(state: FormState): ConfigGenerator.ValidationIssue? {
     val isJava = state.getString("generationType") == "javaConfig"
@@ -87,17 +85,15 @@ fun ConfigFormSpec.validate(state: FormState): ConfigGenerator.ValidationIssue? 
             return ConfigGenerator.ValidationIssue("${field.label} is not a valid Java package name", field.key)
         }
         if (field.classField && isJava) {
-            if (!CLASS_NAME_REGEX.matches(value.removeSuffix(".java"))) {
+            if (!CLASS_NAME_REGEX.matches(value)) {
                 return ConfigGenerator.ValidationIssue(
                     "${field.label} must be a valid Java class name", field.key,
                 )
             }
-        } else if (field.fileNameField) {
-            if (value.any { it in INVALID_FILENAME_CHARS }) {
-                return ConfigGenerator.ValidationIssue(
-                    "${field.label} contains invalid file name characters", field.key,
-                )
-            }
+        } else if (field.fileNameField && !FILE_NAME_REGEX.matches(value)) {
+            return ConfigGenerator.ValidationIssue(
+                "${field.label} contains invalid file name characters", field.key,
+            )
         }
     }
     return validateExtra?.invoke(state)
@@ -170,11 +166,6 @@ object ConfigFormRegistry {
         return ConfigFormSpec(
             displayName = "Cache > New Cache",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML),
-            multiPage = true,
-            page1Fields = setOf(
-                "txtFileName", "txtDiskStore", "txtDftEternal", "txtDftLiveTime",
-                "txtDftHeapEntries", "txtDftOffheapSize", "txtDftDiskPersistence",
-            ),
             fields = listOf(
                 FieldDef(key = "txtFileName", label = "File Name", required = true, fileNameField = true),
                 FieldDef(key = "txtDiskStore", label = "Disk Store", required = true),
@@ -762,11 +753,6 @@ object ConfigFormRegistry {
         )
     }
 
-    private val txAopPage2Keys = setOf(
-        "txtPointCutName", "txtPointCutExpression", "txtAdviceName", "txtMethodName",
-        "chkReadOnly", "txtRollbackFor", "txtNoRollbackFor", "txtTimeout",
-        "cmbPropagation", "cmbIsolation",
-    )
 
     private fun transactionDatasource(): ConfigFormSpec {
         val page1 = listOf(
@@ -782,8 +768,6 @@ object ConfigFormRegistry {
             displayName = "Transaction > New Datasource Transaction",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
             javaDefaultFileName = "EgovTransactionConfig",
-            multiPage = true,
-            page1Fields = page1.map { it.key }.toSet(),
             validateExtra = transactionExtraValidation,
             fields = page1 + aopFields(),
         )
@@ -809,8 +793,6 @@ object ConfigFormRegistry {
             displayName = "Transaction > New JPA Transaction",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
             javaDefaultFileName = "EgovTransactionJpaConfig",
-            multiPage = true,
-            page1Fields = page1.map { it.key }.toSet(),
             validateExtra = transactionExtraValidation,
             fields = page1 + aopFields(),
         )
@@ -836,8 +818,6 @@ object ConfigFormRegistry {
             displayName = "Transaction > New JTA Transaction",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
             javaDefaultFileName = "EgovTransactionJtaConfig",
-            multiPage = true,
-            page1Fields = page1.map { it.key }.toSet(),
             validateExtra = transactionExtraValidation,
             fields = page1 + aopFields(),
         )
