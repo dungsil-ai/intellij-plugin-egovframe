@@ -1,0 +1,38 @@
+name: Remote ZIP Verification
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch sources
+        uses: actions/checkout@v4
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          submodules: recursive
+
+      - name: Fetch bundled upstream ZIPs
+        run: git -C vendor/egovframe-vscode-initializr lfs pull --include="templates/projects/examples/egovframe-boot-web.zip,templates/projects/examples/egovframe-boot-simple-backend.zip"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache downloaded ZIPs
+        uses: actions/cache@v4
+        with:
+          path: /tmp/egovframe-remote-zip-cache
+          key: remote-zips-${{ hashFiles('src/main/resources/egovframe/asset-manifest.json') }}
+
+      - name: Download and verify remote ZIPs
+        run: ./gradlew remoteZipTest
