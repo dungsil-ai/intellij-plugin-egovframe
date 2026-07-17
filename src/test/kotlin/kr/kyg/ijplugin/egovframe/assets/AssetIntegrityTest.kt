@@ -1,7 +1,6 @@
 package kr.kyg.ijplugin.egovframe.assets
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class AssetIntegrityTest {
@@ -30,16 +29,24 @@ class AssetIntegrityTest {
     assertEquals(18, paths.count { it.startsWith("${EgovAssets.POM_DIR}/") && it.endsWith(".xml") })
     assertEquals(2, paths.count { it == EgovAssets.PROJECT_CATALOG || it == EgovAssets.CONFIG_CATALOG })
     assertEquals(22, AssetManifest.instance.zips.size)
-    assertEquals(2, AssetManifest.instance.zips.values.count(ZipAsset::bundled))
+    assertEquals(22, AssetManifest.instance.zips.values.count(ZipAsset::bundled))
   }
 
   @Test
-  fun `bundled zip resources retain their recorded sha256`() {
-    AssetManifest.instance.zips
-      .filterValues(ZipAsset::bundled)
-      .forEach { (zipName, zip) ->
-        val bytes = EgovAssets.resourceBytes("${EgovAssets.EXAMPLES_DIR}/$zipName")
-        assertEquals(zip.sha256, TemplateStore.sha256(bytes), "SHA-256 mismatch for bundled ZIP $zipName")
-      }
+  fun `all 22 bundled zip resources retain their recorded sha256`() {
+    AssetManifest.instance.zips.forEach { (zipName, zip) ->
+      assertTrue(zip.bundled, "ZIP $zipName should be bundled")
+      val bytes = EgovAssets.resourceBytes("${EgovAssets.EXAMPLES_DIR}/$zipName")
+      assertTrue(bytes.isNotEmpty(), "Bundled ZIP $zipName should not be empty")
+      assertEquals(zip.sha256, TemplateStore.sha256(bytes), "SHA-256 mismatch for bundled ZIP $zipName")
+    }
+  }
+
+  @Test
+  fun `all 22 bundled zip resources have expected size`() {
+    AssetManifest.instance.zips.forEach { (zipName, zip) ->
+      val bytes = EgovAssets.resourceBytes("${EgovAssets.EXAMPLES_DIR}/$zipName")
+      assertEquals(zip.size, bytes.size.toLong(), "Size mismatch for bundled ZIP $zipName")
+    }
   }
 }

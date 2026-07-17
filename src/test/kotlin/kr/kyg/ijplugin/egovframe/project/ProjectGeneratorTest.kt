@@ -48,4 +48,88 @@ class ProjectGeneratorTest {
       ProjectGenerator.validate(ProjectGenerator.ProjectConfig("../escape", "com.example", "demo", template))
     }
   }
+
+  @Test
+  fun `validate skips Maven fields for no-POM templates`() {
+    val noPomTemplate = ProjectTemplate("test", "test.zip", "", "desc", "MSA", "test-project")
+    // These Maven fields are invalid but should not cause validation failure for no-POM templates
+    assertDoesNotThrow {
+      ProjectGenerator.validate(
+        ProjectGenerator.ProjectConfig("test-project", "INVALID", "ALSO_INVALID", noPomTemplate),
+      )
+    }
+  }
+
+  @Test
+  fun `validate enforces Maven fields for POM templates`() {
+    val pomTemplate = ProjectTemplate("test", "test.zip", "some-pom.xml", "desc", "Boot", "test-project")
+    assertThrows(IllegalArgumentException::class.java) {
+      ProjectGenerator.validate(
+        ProjectGenerator.ProjectConfig("test-project", "INVALID", "demo", pomTemplate),
+      )
+    }
+  }
+
+  @Test
+  fun `generateWithProgress reports steps in order`() {
+    val output = Files.createTempDirectory("egov-progress-test")
+    val zip = output.resolve("template.zip")
+    ZipOutputStream(Files.newOutputStream(zip)).use { stream ->
+      stream.putNextEntry(ZipEntry("README.md"))
+      stream.write("hello".toByteArray())
+      stream.closeEntry()
+    }
+    val template = ProjectTemplate("Test", "template.zip", "egovframe-boot-web-pom.xml", "d", "Boot", "test-prog")
+    val config = ProjectGenerator.ProjectConfig("test-prog", "com.example", "demo", template)
+    val steps = mutableListOf<String>()
+
+    val result = ProjectGenerator.generateWithProgress(output, zip, config) { steps += it }
+
+    assertTrue(result is GenerationResult.Success)
+    assertTrue(steps.contains("Extracting template"))
+    assertTrue(steps.contains("Writing POM"))
+    assertTrue(steps.contains("Complete"))
+    assertEquals("Extracting template", steps.first())
+    assertEquals("Complete", steps.last())
+  }
+
+  @Test
+  fun `generateWithProgress cleans up on failure for new directory`() {
+    val output = Files.createTempDirectory("egov-cleanup-test")
+    val zip = output.resolve("template.zip")
+    ZipOutputStream(Files.newOutputStream(zip)).use { stream ->
+      stream.putNextEntry(ZipEntry("README.md"))
+      stream.write("hello".toByteArray())
+      stream.closeEntry()
+    }
+    // Reference a nonexistent POM to trigger failure after extraction
+    val template = ProjectTemplate("Test", "template.zip", "nonexistent-pom.xml", "d", "Boot", "cleanup-test")
+    val config = ProjectGenerator.ProjectConfig("cleanup-test", "com.example", "demo", template)
+
+    val result = ProjectGenerator.generateWithProgress(output, zip, config)
+
+    assertTrue(result is GenerationResult.Failure, "Should fail due to missing POM template")
+    assertFalse(Files.exists(output.resolve("cleanup-test")), "Newly created project dir should be cleaned up")
+  }
+
+  @Test
+  fun `generateWithProgress preserves pre-existing empty directory on failure`() {
+    val output = Files.createTempDirectory("egov-preserve-test")
+    val projectDir = output.resolve("preserve-test")
+    Files.createDirectories(projectDir)
+    val zip = output.resolve("template.zip")
+    ZipOutputStream(Files.newOutputStream(zip)).use { stream ->
+      stream.putNextEntry(ZipEntry("README.md"))
+      stream.write("hello".toByteArray())
+      stream.closeEntry()
+    }
+    // Reference a nonexistent POM to trigger failure after extraction
+    val template = ProjectTemplate("Test", "template.zip", "nonexistent-pom.xml", "d", "Boot", "preserve-test")
+    val config = ProjectGenerator.ProjectConfig("preserve-test", "com.example", "demo", template)
+
+    val result = ProjectGenerator.generateWithProgress(output, zip, config, allowExistingEmptyDirectory = true)
+
+    assertTrue(result is GenerationResult.Failure, "Should fail due to missing POM template")
+    assertTrue(Files.exists(projectDir), "Pre-existing directory should be preserved")
+  }
 }

@@ -7,10 +7,7 @@ const UPSTREAM_TAG = 'v5.0.6'
 const ROOT = path.resolve(__dirname, '../..')
 const UPSTREAM_DIR = path.join(ROOT, 'vendor/egovframe-vscode-initializr')
 const EGOVFRAME_DIR = path.join(ROOT, 'src/main/resources/egovframe')
-const BUNDLED_ZIPS: Record<string, true> = {
-  'egovframe-boot-simple-backend.zip': true,
-  'egovframe-boot-web.zip': true,
-}
+const ALL_ZIPS_BUNDLED = true
 
 interface ProjectTemplate {
   displayName: string;
@@ -102,10 +99,10 @@ function main(): void {
     const zipPath = path.join(UPSTREAM_DIR, 'templates/projects/examples', project.fileName)
     const bytes = fs.readFileSync(zipPath)
     const pointer = parseLfsPointer(bytes)
-    const bundledZip = BUNDLED_ZIPS[project.fileName] === true
+    const bundledZip = ALL_ZIPS_BUNDLED
     if (bundledZip && pointer) {
       throw new Error(
-        `Bundled ZIP is still an LFS pointer: ${project.fileName}. Run git lfs pull for the two bundled ZIPs.`,
+        `Bundled ZIP is still an LFS pointer: ${project.fileName}. Run git lfs pull for all bundled ZIPs.`,
       )
     }
     const digest = pointer?.sha256 ?? sha256(bytes)

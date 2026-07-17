@@ -113,11 +113,11 @@ The packaged plugin is written under `build/distributions/`. No dedicated lint o
 - **Maven:** optional at plugin runtime. Keep integration in `egovframe-maven.xml`.
 - The fixed plugin ID and Marketplace name intentionally mute `TemplateWordInPluginId` and `TemplateWordInPluginName` in Plugin Verifier. Do not change these identifiers casually.
 
-The submodule must be initialized before building. Git LFS smudge should stay disabled except for the two bundled ZIPs:
+The submodule must be initialized before building. Git LFS smudge should stay disabled except for the 22 bundled ZIPs:
 
 ```bash
 git submodule update --init
-git -C vendor/egovframe-vscode-initializr lfs pull --include="templates/projects/examples/egovframe-boot-web.zip,templates/projects/examples/egovframe-boot-simple-backend.zip"
+git -C vendor/egovframe-vscode-initializr lfs pull --include="templates/projects/examples/*.zip"
 ```
 
 Manifest and derivative regeneration rewrites committed resources. Run from `tools/golden-gen/` only when relevant

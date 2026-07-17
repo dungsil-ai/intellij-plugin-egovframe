@@ -1,7 +1,6 @@
 package kr.kyg.ijplugin.egovframe.assets
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class TemplateCatalogTest {
@@ -23,6 +22,30 @@ class TemplateCatalogTest {
       ),
       TemplateCatalog.projects.filter { it.pomFile.isEmpty() }.map(ProjectTemplate::fileName).toSet(),
     )
+  }
+
+  @Test
+  fun `18 templates have a POM and 4 do not`() {
+    val withPom = TemplateCatalog.projects.count { it.pomFile.isNotBlank() }
+    val withoutPom = TemplateCatalog.projects.count { it.pomFile.isBlank() }
+    assertEquals(18, withPom)
+    assertEquals(4, withoutPom)
+  }
+
+  @Test
+  fun `every catalog project fileName exists in manifest zips`() {
+    val manifest = AssetManifest.instance
+    TemplateCatalog.projects.forEach { template ->
+      assertTrue(manifest.zips.containsKey(template.fileName), "Missing ZIP in manifest: ${template.fileName}")
+    }
+  }
+
+  @Test
+  fun `all 22 manifest zips correspond to catalog entries`() {
+    val catalogFileNames = TemplateCatalog.projects.map(ProjectTemplate::fileName).toSet()
+    AssetManifest.instance.zips.keys.forEach { zipName ->
+      assertTrue(catalogFileNames.contains(zipName), "Manifest ZIP not in catalog: $zipName")
+    }
   }
 
   @Test
