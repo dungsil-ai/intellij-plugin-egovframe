@@ -1,16 +1,18 @@
 package kr.kyg.ijplugin.egovframe.settings
 
+import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.openapi.extensions.PluginId
+
 /**
  * Deterministic plugin metadata constants.
  *
- * Exposed via the IntelliJ Plugin Manager description and optionally through
- * a small About dialog. All values are compile-time constants so they can be
- * tested without a running IDE.
+ * Exposed via the IntelliJ Plugin Manager description and through the
+ * About dialog. The version is resolved at runtime from the plugin
+ * descriptor so it never drifts from `gradle.properties`.
  */
 object PluginMetadata {
   const val ID = "kr.kyg.ijplugin.egovframe"
   const val NAME = "eGovFrame Initializr (Community)"
-  const val VERSION = "0.1.0-5.0.6"
   const val DESCRIPTION_EN =
     "Korean eGovernment Standard Framework (eGovFrame) 5.0 support for IntelliJ IDEA. " +
       "Requires an open project for Config/CRUD generation."
@@ -23,6 +25,14 @@ object PluginMetadata {
   const val AUTHOR = "dungsil"
   const val LICENSE = "Apache-2.0"
   const val LICENSE_URL = "https://www.apache.org/licenses/LICENSE-2.0"
+
+  /**
+   * Returns the plugin version from the runtime descriptor.
+   * Falls back to `"dev"` when running outside a packaged environment
+   * (e.g. unit tests without full IDE startup).
+   */
+  fun version(): String =
+    PluginManagerCore.getPlugin(PluginId.getId(ID))?.version ?: "dev"
 
   fun description(language: String): String =
     if (language == "ko") DESCRIPTION_KO else DESCRIPTION_EN

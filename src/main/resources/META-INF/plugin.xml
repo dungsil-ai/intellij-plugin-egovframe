@@ -13,8 +13,12 @@
       <li>DDL-based CRUD code generation (11 artifacts) with preview and ERD summary</li>
       <li>21 runtime configuration generators (XML / JavaConfig / YAML / Properties)</li>
     </ul>
+    <strong>Note:</strong> Config/CRUD generation requires an open project.<br/><br/>
     Bundled templates are redistributed unmodified from the Apache-2.0 licensed
-    <a href="https://github.com/eGovFramework/egovframe-vscode-initializr">eGovFramework/egovframe-vscode-initializr</a> project.
+    <a href="https://github.com/eGovFramework/egovframe-vscode-initializr">eGovFramework/egovframe-vscode-initializr</a> project.<br/>
+    <strong>License:</strong> <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a><br/>
+    <strong>Repository:</strong> <a href="https://github.com/dungsil-ai/intellij-plugin-egovframe">https://github.com/dungsil-ai/intellij-plugin-egovframe</a><br/>
+    <strong>Guide:</strong> <a href="https://github.com/dungsil-ai/intellij-plugin-egovframe#readme">README</a>
     <br/><br/>
     <strong>한국어</strong><br/>
     <strong>비공식 커뮤니티 플러그인입니다.</strong> 이 플러그인은 독립적으로 개발·유지보수되며,
@@ -26,8 +30,12 @@
       <li>미리보기와 ERD 요약을 제공하는 DDL 기반 CRUD 산출물 11종 생성</li>
       <li>XML, JavaConfig, YAML, Properties 형식의 런타임 설정 21종 생성</li>
     </ul>
+    <strong>참고:</strong> 설정/CRUD 생성에는 열린 프로젝트가 필요합니다.<br/><br/>
     번들 템플릿은 Apache-2.0 라이선스의
-    <a href="https://github.com/eGovFramework/egovframe-vscode-initializr">eGovFramework/egovframe-vscode-initializr</a> 프로젝트에서 수정 없이 재배포합니다.
+    <a href="https://github.com/eGovFramework/egovframe-vscode-initializr">eGovFramework/egovframe-vscode-initializr</a> 프로젝트에서 수정 없이 재배포합니다.<br/>
+    <strong>라이선스:</strong> <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a><br/>
+    <strong>저장소:</strong> <a href="https://github.com/dungsil-ai/intellij-plugin-egovframe">https://github.com/dungsil-ai/intellij-plugin-egovframe</a><br/>
+    <strong>가이드:</strong> <a href="https://github.com/dungsil-ai/intellij-plugin-egovframe#readme">README</a>
     ]]></description>
 
   <depends>com.intellij.modules.platform</depends>
@@ -52,6 +60,12 @@
             key="action.open.config"
             description-key="action.open.config.description">
       <add-to-group group-id="ToolsMenu" anchor="last"/>
+    </action>
+    <action id="kr.kyg.ijplugin.egovframe.about"
+            class="kr.kyg.ijplugin.egovframe.settings.AboutEgovAction"
+            key="action.about"
+            description-key="action.about.description">
+      <add-to-group group-id="HelpMenu" anchor="before" relative-to-action="About"/>
     </action>
   </actions>
 </idea-plugin>
