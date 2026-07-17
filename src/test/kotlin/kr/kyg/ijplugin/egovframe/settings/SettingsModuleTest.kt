@@ -154,7 +154,7 @@ class SettingsModuleTest {
     fun metadataConstantsNonBlank() {
         assertTrue(PluginMetadata.ID.isNotBlank())
         assertTrue(PluginMetadata.NAME.isNotBlank())
-        assertTrue(PluginMetadata.VERSION.isNotBlank())
+        assertTrue(PluginMetadata.version().isNotBlank())
         assertTrue(PluginMetadata.DESCRIPTION_EN.isNotBlank())
         assertTrue(PluginMetadata.DESCRIPTION_KO.isNotBlank())
         assertTrue(PluginMetadata.REPOSITORY.isNotBlank())
@@ -273,5 +273,72 @@ class SettingsModuleTest {
 
         val result = listOf("USERS", "5").foldIndexed(pattern) { i, acc, arg -> acc.replace("{$i}", arg) }
         assertEquals("Valid: USERS (5 columns)", result)
+    }
+
+    // ── 8. About action content ────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("buildAboutText contains version, author, license, repository, homepage, guide, and project boundary")
+    fun aboutTextContainsAllMetadata() {
+        val text = AboutEgovAction.buildAboutText()
+        assertTrue(text.contains(PluginMetadata.version()), "About text should contain version")
+        assertTrue(text.contains(PluginMetadata.AUTHOR), "About text should contain author")
+        assertTrue(text.contains(PluginMetadata.LICENSE), "About text should contain license")
+        assertTrue(text.contains(PluginMetadata.REPOSITORY), "About text should contain repository")
+        assertTrue(text.contains(PluginMetadata.HOMEPAGE), "About text should contain homepage")
+        assertTrue(text.contains(PluginMetadata.GUIDE), "About text should contain guide")
+        // projectless boundary
+        assertTrue(
+            text.contains("open project") || text.contains("프로젝트"),
+            "About text should mention project-required boundary",
+        )
+    }
+
+    @Test
+    @DisplayName("buildAboutText contains localized description")
+    fun aboutTextContainsDescription() {
+        val text = AboutEgovAction.buildAboutText()
+        // The description line comes from the bundle (en or ko depending on settings fallback)
+        val enDesc = enBundle.getString("about.description")
+        val koDesc = koBundle.getString("about.description")
+        assertTrue(
+            text.contains(enDesc) || text.contains(koDesc),
+            "About text should contain the localized description",
+        )
+    }
+
+    // ── 9. plugin.xml metadata ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("plugin.xml description contains repository, license, guide, and project boundary in both languages")
+    fun pluginXmlDescriptionMetadata() {
+        val xml = SettingsModuleTest::class.java.getResource("/META-INF/plugin.xml")!!.readText()
+        // Repository
+        assertTrue(xml.contains(PluginMetadata.REPOSITORY), "plugin.xml should contain repository URL")
+        // License
+        assertTrue(xml.contains("Apache-2.0"), "plugin.xml should mention Apache-2.0 license")
+        assertTrue(xml.contains(PluginMetadata.LICENSE_URL), "plugin.xml should contain license URL")
+        // Guide
+        assertTrue(xml.contains(PluginMetadata.GUIDE), "plugin.xml should contain guide URL")
+        // EN project boundary
+        assertTrue(
+            xml.contains("Config/CRUD generation requires an open project") ||
+                xml.contains("Requires an open project"),
+            "plugin.xml should mention project requirement in English",
+        )
+        // KO project boundary
+        assertTrue(
+            xml.contains("열린 프로젝트가 필요합니다"),
+            "plugin.xml should mention project requirement in Korean",
+        )
+    }
+
+    @Test
+    @DisplayName("plugin.xml registers About action in HelpMenu")
+    fun pluginXmlAboutActionRegistered() {
+        val xml = SettingsModuleTest::class.java.getResource("/META-INF/plugin.xml")!!.readText()
+        assertTrue(xml.contains("kr.kyg.ijplugin.egovframe.about"), "plugin.xml should register About action id")
+        assertTrue(xml.contains("AboutEgovAction"), "plugin.xml should reference AboutEgovAction class")
+        assertTrue(xml.contains("HelpMenu"), "About action should be in HelpMenu")
     }
 }
