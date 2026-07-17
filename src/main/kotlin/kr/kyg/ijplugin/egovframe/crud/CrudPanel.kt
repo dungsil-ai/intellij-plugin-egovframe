@@ -1,10 +1,12 @@
 package kr.kyg.ijplugin.egovframe.crud
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
@@ -13,13 +15,16 @@ import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.util.ui.JBUI
 import kr.kyg.ijplugin.egovframe.EgovNotifications
+import kr.kyg.ijplugin.egovframe.ddl.DdlSyntaxDiagnostics
 import kr.kyg.ijplugin.egovframe.settings.EgovSettings
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.GridLayout
 import java.nio.file.Files
 import java.nio.file.Path
+import javax.swing.DefaultComboBoxModel
 import javax.swing.JButton
+import javax.swing.JComboBox
 import javax.swing.JFileChooser
 import javax.swing.JPanel
 import javax.swing.JSplitPane
@@ -28,30 +33,98 @@ import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
-class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
+class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disposable {
 
+  private val editorModel = CrudEditorModel()
   private val crudGeneration = CrudGeneration()
   private val crudWriteAdapter = CrudWriteAdapter()
-  private val ddlEditor = JBTextArea(18, 80)
+  private val editorAdapter = CrudSqlEditorAdapter(editorModel)
   private val packageField = JBTextField(EgovSettings.getInstance().state.defaultPackageName)
   private val outputFolderField = JBTextField(project.basePath.orEmpty())
   private val autoPreview = JBCheckBox("Auto preview", false)
   private val statusLabel = JBLabel("Enter a CREATE TABLE statement.")
   private val erdSummary = JBTextArea()
   private val validationTimer = Timer(500) { validateAndRefresh(openPreview = autoPreview.isSelected) }
+  private val dialectCombo = JComboBox(SqlDialect.entries.toTypedArray())
+  private val sampleCombo = JComboBox<CrudSampleCatalog.Sample>()
+  private val directInputItem = "Direct input"
+  private var updatingSample = false
 
   init {
+    Disposer.register(project, this)
     border = JBUI.Borders.empty(10)
     validationTimer.isRepeats = false
-    val inputListener = object : DocumentListener {
+
+    dialectCombo.selectedItem = editorModel.dialect
+    dialectCombo.renderer = javax.swing.DefaultListCellRenderer().let { renderer ->
+      object : javax.swing.ListCellRenderer<Any?> {
+        override fun getListCellRendererComponent(
+          list: javax.swing.JList<out Any?>?,
+          value: Any?,
+          index: Int,
+          isSelected: Boolean,
+          cellHasFocus: Boolean,
+        ) = renderer.getListCellRendererComponent(
+          list, (value as? SqlDialect)?.displayName ?: value, index, isSelected, cellHasFocus,
+        )
+      }
+    }
+    dialectCombo.addActionListener {
+      val selected = dialectCombo.selectedItem as? SqlDialect ?: return@addActionListener
+      editorModel.switchDialect(selected)
+      refreshSampleCombo()
+      restartValidation()
+    }
+
+    refreshSampleCombo()
+    sampleCombo.addActionListener {
+      if (updatingSample) return@addActionListener
+      val selected = sampleCombo.selectedItem
+      if (selected is CrudSampleCatalog.Sample) {
+        editorModel.selectSample(selected)
+        restartValidation()
+      } else {
+        editorModel.clearSample()
+        restartValidation()
+      }
+    }
+    sampleCombo.renderer = javax.swing.DefaultListCellRenderer().let { renderer ->
+      object : javax.swing.ListCellRenderer<Any?> {
+        override fun getListCellRendererComponent(
+          list: javax.swing.JList<out Any?>?,
+          value: Any?,
+          index: Int,
+          isSelected: Boolean,
+          cellHasFocus: Boolean,
+        ) = renderer.getListCellRendererComponent(
+          list,
+          when (value) {
+            is CrudSampleCatalog.Sample -> value.name
+            else -> directInputItem
+          },
+          index, isSelected, cellHasFocus,
+        )
+      }
+    }
+
+    packageField.document.addDocumentListener(object : DocumentListener {
       override fun insertUpdate(event: DocumentEvent) = restartValidation()
       override fun removeUpdate(event: DocumentEvent) = restartValidation()
       override fun changedUpdate(event: DocumentEvent) = restartValidation()
+    })
+    editorModel.addChangeListener {
+      if (editorModel.isPendingInput) restartValidation()
     }
-    ddlEditor.document.addDocumentListener(inputListener)
-    packageField.document.addDocumentListener(inputListener)
+
+    val dialectRow = JPanel(FlowLayout(FlowLayout.LEFT, 6, 0)).apply {
+      add(JBLabel("Dialect"))
+      add(dialectCombo)
+      add(JBLabel("Sample"))
+      add(sampleCombo)
+    }
 
     val inputs = JPanel(GridLayout(0, 1, 0, 6)).apply {
+      add(dialectRow)
       add(labeledField("Package", packageField))
       add(labeledOutputFolder())
     }
@@ -67,7 +140,7 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
 
     val left = JPanel(BorderLayout(0, 8)).apply {
       add(inputs, BorderLayout.NORTH)
-      add(JBScrollPane(ddlEditor), BorderLayout.CENTER)
+      add(editorAdapter.component, BorderLayout.CENTER)
       add(JPanel(BorderLayout()).apply {
         add(buttons, BorderLayout.NORTH)
         add(statusLabel, BorderLayout.SOUTH)
@@ -83,7 +156,29 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
     add(split, BorderLayout.CENTER)
   }
 
+  private fun refreshSampleCombo() {
+    updatingSample = true
+    try {
+      val model = DefaultComboBoxModel<Any>()
+      model.addElement(directInputItem)
+      CrudSampleCatalog.forDialect(editorModel.dialect).forEach { model.addElement(it) }
+      @Suppress("UNCHECKED_CAST")
+      (sampleCombo as JComboBox<Any>).model = model
+      sampleCombo.selectedItem = editorModel.selectedSample ?: directInputItem
+    } finally {
+      updatingSample = false
+    }
+  }
+
   private fun validateAndRefresh(openPreview: Boolean) {
+    editorModel.markInputSettled()
+    val diag = editorModel.diagnosticResult
+    if (diag is DdlSyntaxDiagnostics.DiagnosticResult.Error) {
+      val first = diag.diagnostics.first()
+      statusLabel.text = "${first.message} (line ${first.line}, column ${first.column})"
+      erdSummary.text = ""
+      return
+    }
     runCatching { preparation() }
       .onSuccess { preparation ->
         when (preparation) {
@@ -189,7 +284,7 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
   }
 
   private fun preparation(): CrudPreparation =
-    crudGeneration.prepare(ddlEditor.text, packageField.text.trim())
+    prepareCrudInput(editorModel, crudGeneration, packageField.text.trim())
 
   private fun requireReady(): PreparedCrud? = when (val preparation = preparation()) {
     is CrudPreparation.Ready -> preparation.prepared
@@ -234,4 +329,23 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
     val initial = runCatching { LocalFileSystem.getInstance().findFileByNioFile(Path.of(initialPath)) }.getOrNull()
     FileChooser.chooseFile(descriptor, project, initial)?.let { outputFolderField.text = it.path }
   }
+
+  override fun dispose() {
+    validationTimer.stop()
+    Disposer.dispose(editorAdapter)
+  }
+}
+
+internal fun prepareCrudInput(
+  editorModel: CrudEditorModel,
+  crudGeneration: CrudGeneration,
+  packageName: String,
+): CrudPreparation {
+  editorModel.requestPreview()
+  val diagnostic = editorModel.diagnosticResult
+  if (diagnostic is DdlSyntaxDiagnostics.DiagnosticResult.Error) {
+    val first = diagnostic.diagnostics.first()
+    return CrudPreparation.Rejected("${first.message} (line ${first.line}, column ${first.column})")
+  }
+  return crudGeneration.prepare(editorModel.sqlText, packageName)
 }

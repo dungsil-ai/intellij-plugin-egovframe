@@ -1,0 +1,9 @@
+CREATE TABLE users(
+  id VARCHAR(36) PRIMARY KEY COMMENT 'User ID',
+  username VARCHAR(50) UNIQUE NOT NULL COMMENT 'Username',
+  email VARCHAR(100) UNIQUE NOT NULL COMMENT 'Email',
+  password VARCHAR(255) NOT NULL COMMENT 'Password',
+  full_name VARCHAR(100) COMMENT 'Full Name',
+  phone VARCHAR(20) COMMENT 'Phone',
+  is_active BOOLEAN DEFAULT TRUE COMMENT 'Active'
+) COMMENT 'User Table';

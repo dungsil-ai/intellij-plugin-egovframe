@@ -206,6 +206,43 @@ class DdlAnalysisTest {
     assertFalse(column.isForeignKey)
   }
 
+  @Test
+  fun `skips PostgreSQL COMMENT ON TABLE and COLUMN after CREATE TABLE`() {
+    val analysis = success(
+      """
+        CREATE TABLE board (
+          id VARCHAR(36) PRIMARY KEY,
+          title VARCHAR(200) NOT NULL
+        );
+        COMMENT ON TABLE board IS 'Board Table';
+        COMMENT ON COLUMN board.id IS 'Board ID';
+        COMMENT ON COLUMN board.title IS 'Title';
+      """.trimIndent()
+    )
+
+    assertEquals("board", analysis.tables.single().dbName)
+    assertEquals(listOf("id", "title"), analysis.tables.single().columns.map(DdlColumn::name))
+  }
+
+  @Test
+  fun `rejects arbitrary trailing SQL after CREATE TABLE`() {
+    assertInvalid(
+      "CREATE TABLE board (id INT PRIMARY KEY);\nDROP TABLE board;",
+      "Invalid DDL",
+    )
+  }
+
+  @Test
+  fun `all sample DDLs parse successfully`() {
+    kr.kyg.ijplugin.egovframe.crud.CrudSampleCatalog.all().forEach { sample ->
+      val result = DdlAnalyzer.analyze(sample.ddl)
+      assertTrue(
+        result is DdlAnalysisResult.Success,
+        "Sample ${sample.key} should parse successfully but got: $result",
+      )
+    }
+  }
+
   private fun success(ddl: String): DdlAnalysis = when (val result = DdlAnalyzer.analyze(ddl)) {
     is DdlAnalysisResult.Success -> result.analysis
     is DdlAnalysisResult.Invalid -> error("Expected successful analysis but got: ${result.message}")
