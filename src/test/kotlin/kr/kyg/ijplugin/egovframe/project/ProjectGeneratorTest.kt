@@ -71,7 +71,7 @@ class ProjectGeneratorTest {
   }
 
   @Test
-  fun `generateWithProgress reports steps in order`() {
+  fun `generateWithProgress reports typed stages in order`() {
     val output = Files.createTempDirectory("egov-progress-test")
     val zip = output.resolve("template.zip")
     ZipOutputStream(Files.newOutputStream(zip)).use { stream ->
@@ -81,16 +81,15 @@ class ProjectGeneratorTest {
     }
     val template = ProjectTemplate("Test", "template.zip", "egovframe-boot-web-pom.xml", "d", "Boot", "test-prog")
     val config = ProjectGenerator.ProjectConfig("test-prog", "com.example", "demo", template)
-    val steps = mutableListOf<String>()
+    val stages = mutableListOf<ProjectGenerationStage>()
 
-    val result = ProjectGenerator.generateWithProgress(output, zip, config) { steps += it }
+    val result = ProjectGenerator.generateWithProgress(output, zip, config) { stages += it }
 
     assertTrue(result is GenerationResult.Success)
-    assertTrue(steps.contains("Extracting template"))
-    assertTrue(steps.contains("Writing POM"))
-    assertTrue(steps.contains("Complete"))
-    assertEquals("Extracting template", steps.first())
-    assertEquals("Complete", steps.last())
+    assertEquals(
+      listOf(ProjectGenerationStage.EXTRACT, ProjectGenerationStage.WRITE_POM),
+      stages,
+    )
   }
 
   @Test
@@ -110,6 +109,24 @@ class ProjectGeneratorTest {
 
     assertTrue(result is GenerationResult.Failure, "Should fail due to missing POM template")
     assertFalse(Files.exists(output.resolve("cleanup-test")), "Newly created project dir should be cleaned up")
+  }
+
+  @Test
+  fun `generateWithProgress reports failing stage`() {
+    val output = Files.createTempDirectory("egov-failing-stage-test")
+    val zip = output.resolve("template.zip")
+    ZipOutputStream(Files.newOutputStream(zip)).use { stream ->
+      stream.putNextEntry(ZipEntry("README.md"))
+      stream.write("hello".toByteArray())
+      stream.closeEntry()
+    }
+    val template = ProjectTemplate("Test", "template.zip", "nonexistent-pom.xml", "d", "Boot", "stage-test")
+    val config = ProjectGenerator.ProjectConfig("stage-test", "com.example", "demo", template)
+
+    val result = ProjectGenerator.generateWithProgress(output, zip, config)
+
+    assertTrue(result is GenerationResult.Failure)
+    assertEquals(ProjectGenerationStage.WRITE_POM, (result as GenerationResult.Failure).stage)
   }
 
   @Test

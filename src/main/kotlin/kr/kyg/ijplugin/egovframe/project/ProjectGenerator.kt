@@ -7,13 +7,26 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.zip.ZipInputStream
 
+enum class ProjectGenerationStage(val label: String) {
+  RESOLVE_TEMPLATE("Loading template"),
+  EXTRACT("Extracting template"),
+  WRITE_POM("Writing POM"),
+  LINK_MAVEN("Linking Maven project"),
+  CONFIGURE_JDK("Configuring JDK 17"),
+  COMPLETE("Complete"),
+}
+
 fun interface GenerationProgress {
-  fun update(step: String)
+  fun update(stage: ProjectGenerationStage)
 }
 
 sealed class GenerationResult {
   data class Success(val projectRoot: Path) : GenerationResult()
-  data class Failure(val error: String, val cause: Throwable? = null) : GenerationResult()
+  data class Failure(
+    val stage: ProjectGenerationStage,
+    val error: String,
+    val cause: Throwable? = null,
+  ) : GenerationResult()
 }
 
 object ProjectGenerator {
@@ -79,23 +92,24 @@ object ProjectGenerator {
       Files.createDirectories(projectRoot)
     }
 
+    var stage = ProjectGenerationStage.EXTRACT
     return try {
-      progress.update("Extracting template")
+      progress.update(stage)
       extractZip(zipPath, projectRoot)
 
       if (config.template.pomFile.isNotBlank()) {
-        progress.update("Writing POM")
+        stage = ProjectGenerationStage.WRITE_POM
+        progress.update(stage)
         val pomTemplate = EgovAssets.resourceText("${EgovAssets.POM_DIR}/${config.template.pomFile}")
         Files.writeString(projectRoot.resolve("pom.xml"), replacePomTokens(pomTemplate, config), Charsets.UTF_8)
       }
 
-      progress.update("Complete")
       GenerationResult.Success(projectRoot)
     } catch (e: Exception) {
       if (!preExisting) {
         cleanupDirectory(projectRoot)
       }
-      GenerationResult.Failure(e.message ?: "Project generation failed", e)
+      GenerationResult.Failure(stage, e.message ?: "Project generation failed", e)
     }
   }
 

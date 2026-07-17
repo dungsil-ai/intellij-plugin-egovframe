@@ -7,6 +7,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
@@ -42,7 +43,12 @@ private class EgovTemplateStep(
 ) : AbstractNewProjectWizardStep(parent) {
 
   private val settings = EgovSettings.getInstance().state
-  private val model = ProjectWizardModel(settings.defaultGroupId, settings.defaultArtifactId)
+  private val initialOutputPath = baseData.path
+  private val model = ProjectWizardModel(
+    settings.defaultGroupId,
+    settings.defaultArtifactId,
+    initialOutputPath,
+  )
   private val categories = listOf("All") + TemplateCatalog.projectCategories()
   private val categoryCombo = JComboBox(categories.toTypedArray())
   private val templateCombo = JComboBox<ProjectTemplate>()
@@ -50,6 +56,9 @@ private class EgovTemplateStep(
   private val artifactIdField = JBTextField(model.artifactId)
   private val descriptionArea = JTextArea(4, 50)
   private val availabilityLabel = JBLabel()
+  private var groupIdRow: com.intellij.ui.dsl.builder.Row? = null
+  private var artifactIdRow: com.intellij.ui.dsl.builder.Row? = null
+  private var applyingTemplateDefaults = false
 
   init {
     descriptionArea.isEditable = false
@@ -58,13 +67,20 @@ private class EgovTemplateStep(
     templateCombo.renderer = ProjectTemplateRenderer()
     categoryCombo.addActionListener { updateTemplates() }
     templateCombo.addActionListener { updateTemplateDetails() }
+    baseData.nameProperty.afterChange { name ->
+      if (!applyingTemplateDefaults) {
+        model.deriveFromProjectName(name)
+        groupIdField.text = model.groupId
+        artifactIdField.text = model.artifactId
+      }
+    }
+    baseData.pathProperty.afterChange { path ->
+      if (!applyingTemplateDefaults) model.outputPath = path
+    }
     updateTemplates()
   }
 
   override fun setupUI(builder: Panel) {
-    if (baseData.name.isBlank() || baseData.name == "untitled") {
-      (templateCombo.selectedItem as? ProjectTemplate)?.let { baseData.name = it.projectName }
-    }
     builder.row("Category") { cell(categoryCombo) }
     builder.row("Template") { cell(templateCombo) }
     builder.row("Availability") { cell(availabilityLabel) }
@@ -73,9 +89,6 @@ private class EgovTemplateStep(
     builder.row("Maven artifactId") { cell(artifactIdField) }.also { artifactIdRow = it }
     updateMavenFieldVisibility()
   }
-
-  private var groupIdRow: com.intellij.ui.dsl.builder.Row? = null
-  private var artifactIdRow: com.intellij.ui.dsl.builder.Row? = null
 
   private fun updateMavenFieldVisibility() {
     val visible = model.hasPom
@@ -86,61 +99,98 @@ private class EgovTemplateStep(
   override fun setupProject(project: Project) {
     val template = templateCombo.selectedItem as? ProjectTemplate
       ?: throw IllegalStateException("Select an eGovFrame project template")
-    val projectName = baseData.name
-    val groupId = groupIdField.text.trim()
-    val artifactId = artifactIdField.text.trim()
-    val config = ProjectGenerator.ProjectConfig(projectName, groupId, artifactId, template)
+    val config = ProjectGenerator.ProjectConfig(
+      projectName = baseData.name,
+      groupId = groupIdField.text.trim(),
+      artifactId = artifactIdField.text.trim(),
+      template = template,
+    )
     ProjectGenerator.validate(config)
 
     val store = ApplicationManager.getApplication().getService(TemplateStoreService::class.java).store
+    var generation: GenerationResult? = null
+    var workflowFailure: Pair<ProjectGenerationStage, Throwable>? = null
+    var mavenWarning: String? = null
+    var jdkMissing = false
+    var currentStage = ProjectGenerationStage.RESOLVE_TEMPLATE
 
-    val zipPath: Path
-    try {
-      zipPath = store.ensure(template.fileName)
-    } catch (e: Exception) {
-      EgovNotifications.error(project, "eGovFrame template download failed: ${e.message}")
+    val completed = ProgressManager.getInstance().runProcessWithProgressSynchronously(
+      {
+        val indicator = ProgressManager.getInstance().progressIndicator
+        fun report(stage: ProjectGenerationStage) {
+          currentStage = stage
+          indicator?.text = stage.label
+        }
+
+        try {
+          report(ProjectGenerationStage.RESOLVE_TEMPLATE)
+          val zipPath = store.ensure(template.fileName)
+          val result = ProjectGenerator.generateWithProgress(
+            outputDirectory = Path.of(baseData.path),
+            zipPath = zipPath,
+            config = config,
+            allowExistingEmptyDirectory = true,
+            progress = GenerationProgress(::report),
+          )
+          generation = result
+
+          if (result is GenerationResult.Success) {
+            if (template.pomFile.isNotBlank()) {
+              report(ProjectGenerationStage.LINK_MAVEN)
+              val linker = project.getService(MavenProjectLinker::class.java)
+              if (linker == null) {
+                mavenWarning = "Maven integration is unavailable. Import pom.xml manually."
+              } else {
+                runCatching { linker.link(project, result.projectRoot.resolve("pom.xml")) }
+                  .onFailure {
+                    mavenWarning = "Maven project linking failed: ${it.message}. Import pom.xml manually."
+                  }
+              }
+            }
+
+            report(ProjectGenerationStage.CONFIGURE_JDK)
+            val jdk17 = ProjectJdkTable.getInstance().allJdks.firstOrNull { sdk ->
+              sdk.versionString?.contains(Regex("(?:^|\\D)17(?:\\D|$)")) == true
+            }
+            if (jdk17 == null) {
+              jdkMissing = true
+            } else {
+              WriteCommandAction.runWriteCommandAction(project) {
+                ProjectRootManager.getInstance(project).projectSdk = jdk17
+              }
+            }
+            report(ProjectGenerationStage.COMPLETE)
+          }
+        } catch (error: Throwable) {
+          workflowFailure = currentStage to error
+        }
+      },
+      "Creating eGovFrame Project",
+      true,
+      project,
+    )
+
+    if (!completed) {
+      EgovNotifications.warning(project, "eGovFrame project creation was cancelled.")
+      return
+    }
+    workflowFailure?.let { (stage, error) ->
+      EgovNotifications.error(project, "${stage.label} failed: ${error.message}")
       return
     }
 
-    val result = ProjectGenerator.generateWithProgress(
-      outputDirectory = Path.of(baseData.path),
-      zipPath = zipPath,
-      config = config,
-      allowExistingEmptyDirectory = true,
-    )
-
-    when (result) {
+    when (val result = generation) {
       is GenerationResult.Failure -> {
-        EgovNotifications.error(project, "eGovFrame project generation failed: ${result.error}")
-        return
+        EgovNotifications.error(project, "${result.stage.label} failed: ${result.error}")
       }
       is GenerationResult.Success -> {
-        val projectRoot = result.projectRoot
-        val pomPath = projectRoot.resolve("pom.xml")
-        if (template.pomFile.isNotBlank()) {
-          val linkResult = runCatching {
-            project.getService(MavenProjectLinker::class.java)?.link(project, pomPath)
-          }
-          if (linkResult.isFailure) {
-            EgovNotifications.warning(
-              project,
-              "Maven project linking failed: ${linkResult.exceptionOrNull()?.message}. Import the pom.xml manually.",
-            )
-          }
-        }
-
-        val jdk17 = ProjectJdkTable.getInstance().allJdks.firstOrNull { sdk ->
-          sdk.versionString?.contains(Regex("(?:^|\\D)17(?:\\D|$)")) == true
-        }
-        if (jdk17 != null) {
-          WriteCommandAction.runWriteCommandAction(project) {
-            ProjectRootManager.getInstance(project).projectSdk = jdk17
-          }
-        } else {
+        mavenWarning?.let { EgovNotifications.warning(project, it) }
+        if (jdkMissing) {
           EgovNotifications.warning(project, "JDK 17 was not found. Configure the project SDK manually.")
         }
-        EgovNotifications.info(project, "eGovFrame project created: $projectRoot")
+        EgovNotifications.info(project, "eGovFrame project created: ${result.projectRoot}")
       }
+      null -> EgovNotifications.error(project, "eGovFrame project generation did not produce a result.")
     }
   }
 
@@ -153,14 +203,18 @@ private class EgovTemplateStep(
 
   private fun updateTemplateDetails() {
     val template = templateCombo.selectedItem as? ProjectTemplate ?: return
-    model.selectTemplate(template)
+    applyingTemplateDefaults = true
+    try {
+      model.selectTemplate(template)
+      baseData.name = model.projectName
+      baseData.path = model.outputPath
+      groupIdField.text = model.groupId
+      artifactIdField.text = model.artifactId
+    } finally {
+      applyingTemplateDefaults = false
+    }
     descriptionArea.text = template.description
     availabilityLabel.text = "Ready offline (bundled)"
-    groupIdField.text = model.groupId
-    artifactIdField.text = model.artifactId
-    if (baseData.name.isBlank() || TemplateCatalog.projects.any { it.projectName == baseData.name }) {
-      baseData.name = template.projectName
-    }
     updateMavenFieldVisibility()
   }
 

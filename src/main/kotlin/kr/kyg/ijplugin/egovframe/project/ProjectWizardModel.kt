@@ -9,10 +9,12 @@ import kr.kyg.ijplugin.egovframe.assets.ProjectTemplate
 class ProjectWizardModel(
   private val defaultGroupId: String = "egovframework.com",
   private val defaultArtifactId: String = "egovframe-project",
+  private val initialOutputPath: String = "",
 ) {
   var projectName: String = ""
   var groupId: String = defaultGroupId
   var artifactId: String = defaultArtifactId
+  var outputPath: String = initialOutputPath
   var template: ProjectTemplate? = null
     private set
 
@@ -20,22 +22,20 @@ class ProjectWizardModel(
   val hasPom: Boolean get() = template?.pomFile?.isNotBlank() == true
 
   /**
-   * Select a new template and reset derived fields to upstream defaults.
-   * groupId resets to the configured default; artifactId is derived from projectName.
+   * Selects a template and restores the exact upstream defaults.
+   * Project-name edits derive Maven coordinates only after this reset.
    */
   fun selectTemplate(newTemplate: ProjectTemplate) {
     template = newTemplate
     projectName = newTemplate.projectName
     groupId = defaultGroupId
-    artifactId = deriveArtifactId(newTemplate.projectName)
+    artifactId = defaultArtifactId
+    outputPath = initialOutputPath
   }
 
   /**
-   * Derive groupId and artifactId from the current projectName.
-   * Rule: split on the LAST dot.
-   *   - "com.example.demo" → groupId="com.example", artifactId="demo"
-   *   - "demo" (no dot) → groupId=defaultGroupId, artifactId="demo"
-   *   - blank → defaults
+   * Derives groupId and artifactId from the current project name by splitting on the last dot.
+   * A blank value restores defaults; a name without a dot keeps the default groupId.
    */
   fun deriveFromProjectName(name: String) {
     projectName = name

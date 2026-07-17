@@ -25,28 +25,34 @@ class ProjectWizardModelTest {
   )
 
   @Test
-  fun `selectTemplate resets fields to upstream defaults`() {
-    val model = ProjectWizardModel("egovframework.com", "egovframe-project")
+  fun `selectTemplate resets fields and output to upstream defaults`() {
+    val model = ProjectWizardModel("egovframework.com", "egovframe-project", "C:/initial")
     model.groupId = "custom.group"
     model.artifactId = "custom-artifact"
+    model.outputPath = "C:/changed"
 
     model.selectTemplate(pomTemplate)
 
     assertEquals("egov-boot-web", model.projectName)
     assertEquals("egovframework.com", model.groupId)
-    assertEquals("egov-boot-web", model.artifactId)
+    assertEquals("egovframe-project", model.artifactId)
+    assertEquals("C:/initial", model.outputPath)
   }
 
   @Test
   fun `selectTemplate resets when switching between templates`() {
-    val model = ProjectWizardModel()
+    val model = ProjectWizardModel(initialOutputPath = "C:/initial")
     model.selectTemplate(pomTemplate)
     model.groupId = "modified.group"
+    model.artifactId = "modified-artifact"
+    model.outputPath = "C:/changed"
 
     model.selectTemplate(noPomTemplate)
 
     assertEquals("egov-msa-frontend", model.projectName)
     assertEquals("egovframework.com", model.groupId)
+    assertEquals("egovframe-project", model.artifactId)
+    assertEquals("C:/initial", model.outputPath)
   }
 
   @Test
