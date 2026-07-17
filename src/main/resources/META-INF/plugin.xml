@@ -1,6 +1,6 @@
 <idea-plugin>
   <id>kr.kyg.intellij.plugin.egovframe</id>
-  <name>eGovFrame Initializr for IDEA</name>
+  <name>eGovFrame Initializr</name>
   <vendor url="https://github.com/eGovFramework/egovframe-vscode-initializr">kyg</vendor>
 
   <description><![CDATA[

@@ -1,4 +1,4 @@
-eGovFrame Support IntelliJ Plugin
+eGovFrame Initializr for IDEA
 Copyright (c) 2026 dungsil <opensource@younggeon.kim>
 
 This plugin bundles unmodified template and catalog assets from the
@@ -25,3 +25,35 @@ handlebars.js whitespace semantics with Handlebars.java.
 
 This plugin also uses Handlebars.java (com.github.jknack:handlebars),
 licensed under the Apache License, Version 2.0.
+
+-------------------------------------------------------------------------------
+
+한국어 안내
+
+eGovFrame Initializr for IDEA
+Copyright (c) 2026 dungsil <opensource@younggeon.kim>
+
+이 플러그인은 eGovFramework/egovframe-vscode-initializr 프로젝트
+(https://github.com/eGovFramework/egovframe-vscode-initializr)의 수정되지 않은
+템플릿 및 카탈로그 자산을 포함합니다. 해당 자산은 공식 v5.0.6 태그로
+고정되어 있으며 Apache License, Version 2.0에 따라 사용됩니다.
+이에 대응하는 상류 소스 체크아웃은
+`vendor/egovframe-vscode-initializr` Git 서브모듈로 추적됩니다.
+
+포함된 상류 프로젝트 자산:
+  - templates/templates-projects.json, templates/templates-context-xml.json
+  - templates/code/*.hbs (11개 파일)
+  - templates/config/**/*.hbs (52개 파일)
+  - templates/projects/pom/*.xml (18개 파일)
+  - templates/projects/examples/egovframe-boot-web.zip,
+    templates/projects/examples/egovframe-boot-simple-backend.zip
+  (나머지 예제 ZIP 파일은 동일한 버전 태그에서 필요할 때 다운로드하며,
+   고정된 SHA-256 체크섬으로 무결성을 검증합니다.)
+
+`egovframe/normalized/` 아래의 Handlebars 공백 정규화 리소스는 동일한
+수정되지 않은 Apache-2.0 템플릿 소스로부터 결정론적으로 생성된 파생물입니다.
+이 리소스는 Handlebars.java에서 handlebars.js의 공백 처리 방식을 재현하기
+위해서만 존재합니다.
+
+이 플러그인은 Apache License, Version 2.0으로 라이선스된
+Handlebars.java(com.github.jknack:handlebars)도 사용합니다.

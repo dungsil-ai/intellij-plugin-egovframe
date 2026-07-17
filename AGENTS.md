@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This repository builds **eGovFrame Support**, a Kotlin IntelliJ IDEA plugin that replaces the official eGovFrame VS Code Initializr 5.0.6 workflow. It provides:
+This repository builds **eGovFrame Initializr**, a Kotlin IntelliJ IDEA plugin that replaces the official eGovFrame VS Code Initializr 5.0.6 workflow. It provides:
 
 - a New Project wizard for 22 official project templates;
 - DDL-driven CRUD generation for 11 artifacts;
