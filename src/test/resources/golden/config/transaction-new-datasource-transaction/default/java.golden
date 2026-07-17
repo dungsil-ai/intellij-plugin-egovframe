@@ -1,0 +1,84 @@
+package egovframework.example.config;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import jakarta.sql.DataSource;
+
+import org.springframework.aop.Advisor;
+import org.springframework.aop.aspectj.AspectJExpressionPointcut;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.interceptor.NameMatchTransactionAttributeSource;
+import org.springframework.transaction.interceptor.NoRollbackRuleAttribute;
+import org.springframework.transaction.interceptor.RollbackRuleAttribute;
+import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
+import org.springframework.transaction.interceptor.TransactionAttribute;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
+import org.springframework.transaction.support.TransactionTemplate;
+
+@Configuration
+@EnableAspectJAutoProxy(proxyTargetClass = true) // 포인트컷/어드바이저 동작
+@EnableTransactionManagement // 어노테이션(@Transactional) 기반 트랜잭션 관리
+public class EgovTransactionConfig {
+
+    @Bean(name = "txManager")
+    public DataSourceTransactionManager txManager(@Qualifier("dataSource") DataSource dataSource) {
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
+        dataSourceTransactionManager.setDataSource(dataSource);
+        return dataSourceTransactionManager;
+    }
+
+    @Bean(name = "transactionTemplate")
+    public TransactionTemplate transactionTemplate(@Qualifier("txManager") DataSourceTransactionManager transactionManager) {
+       return new TransactionTemplate(transactionManager);
+    }
+
+    @Bean(name = "txAdvice")
+    public TransactionInterceptor txAdvice(@Qualifier("txManager") DataSourceTransactionManager transactionManager) {
+        TransactionInterceptor txAdvice = new TransactionInterceptor();
+        txAdvice.setTransactionManager(transactionManager);
+        txAdvice.setTransactionAttributeSource(getNameMatchTransactionAttributeSource());
+        return txAdvice;
+    }
+
+    private NameMatchTransactionAttributeSource getNameMatchTransactionAttributeSource() {
+        NameMatchTransactionAttributeSource txAttributeSource = new NameMatchTransactionAttributeSource();
+        txAttributeSource.setNameMap(getRuleBasedTxAttributeMap());
+        return txAttributeSource;
+    }
+
+    private HashMap<String, TransactionAttribute> getRuleBasedTxAttributeMap() {
+        HashMap<String, TransactionAttribute> txMethods = new HashMap<String, TransactionAttribute>();
+
+        RuleBasedTransactionAttribute txAttribute = new RuleBasedTransactionAttribute();
+        txAttribute.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        txAttribute.setIsolationLevel(TransactionDefinition.ISOLATION_DEFAULT);
+
+        List<RollbackRuleAttribute> rollbackRules = new ArrayList<>();
+        rollbackRules.add(new RollbackRuleAttribute(Exception.class));
+        rollbackRules.add(new NoRollbackRuleAttribute(RuntimeException.class));
+
+        txAttribute.setRollbackRules(rollbackRules);
+
+        txAttribute.setTimeout(20);
+
+        txMethods.put("*", txAttribute);
+        return txMethods;
+    }
+
+    // TransactionAdvisor 설정
+    @Bean
+    public Advisor txAdvisor(@Qualifier("txManager") DataSourceTransactionManager txManager) {
+        AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+        pointcut.setExpression("execution(* egovframework.example..*Impl.*(..)) || execution(* org.egovframe.rte.fdl.excel.impl.*Impl.*(..))");
+        return new DefaultPointcutAdvisor(pointcut, txAdvice(txManager));
+    }
+}

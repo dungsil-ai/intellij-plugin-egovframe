@@ -1,0 +1,7 @@
+{
+  "generationType": "xml",
+  "txtConfigPackage": "egovframework.example.config",
+  "txtComponentScanBasePackage": "egovframework.example",
+  "txtFileName": "context-cache",
+  "txtConfigLocation": ""
+}

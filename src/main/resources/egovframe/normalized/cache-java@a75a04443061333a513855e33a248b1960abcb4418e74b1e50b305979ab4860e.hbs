@@ -1,0 +1,105 @@
+package {{txtConfigPackage}};
+
+import java.time.Duration;
+
+import org.ehcache.config.builders.CacheConfigurationBuilder;
+import org.ehcache.config.builders.CacheManagerBuilder;
+import org.ehcache.config.builders.ExpiryPolicyBuilder;
+import org.ehcache.config.builders.ResourcePoolsBuilder;
+import org.ehcache.config.units.EntryUnit;
+import org.ehcache.config.units.MemoryUnit;
+import org.ehcache.core.config.DefaultConfiguration;
+import org.ehcache.jsr107.EhcacheCachingProvider;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.jcache.JCacheCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import jakarta.cache.CacheManager;
+import jakarta.cache.Caching;
+
+/**
+ * Cache Configuration for Spring Framework 6.x with Ehcache 3.x and JCache (JSR-107)
+ * 
+ * Requirements:
+ * - Spring Framework 6.x
+ * - JDK 17+
+ * - Ehcache 3.10.8+ (jakarta classifier)
+ * - jakarta.cache-api 3.1.1+ (JCache/JSR-107)
+ */
+@Configuration
+@EnableCaching
+public class {{txtFileName}} {
+
+  @Bean
+  public org.springframework.cache.CacheManager cacheManager() {
+    CacheManager jCacheManager = createJCacheCacheManager();
+    return new JCacheCacheManager(jCacheManager);
+  }
+
+  private CacheManager createJCacheCacheManager() {
+    // Default cache configuration
+    org.ehcache.config.CacheConfiguration<Object, Object> defaultCacheConfig = 
+      CacheConfigurationBuilder.newCacheConfigurationBuilder(
+        Object.class, 
+        Object.class,
+        ResourcePoolsBuilder.newResourcePoolsBuilder()
+          .heap({{txtDftMaxElements}}, EntryUnit.ENTRIES)
+{{#if txtDftOverfow}}          .disk(100, MemoryUnit.MB)
+{{/if}}      )
+{{#unless txtDftEternal}}      .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds({{txtDftLiveTime}})))
+{{/unless}}      .build();
+
+    // Custom cache configuration
+    org.ehcache.config.CacheConfiguration<Object, Object> customCacheConfig = 
+      CacheConfigurationBuilder.newCacheConfigurationBuilder(
+        Object.class, 
+        Object.class,
+        ResourcePoolsBuilder.newResourcePoolsBuilder()
+          .heap({{txtMaxElements}}, EntryUnit.ENTRIES)
+{{#if txtOverflowToDisk}}          .disk(100, MemoryUnit.MB)
+{{/if}}      )
+{{#unless txtEternal}}      .withExpiry(ExpiryPolicyBuilder.timeToIdleExpiration(Duration.ofSeconds({{txtIdleTime}})))
+{{/unless}}      .build();
+
+    // Create Ehcache manager
+    org.ehcache.CacheManager ehcacheManager = CacheManagerBuilder.newCacheManagerBuilder()
+      .withCache("default", defaultCacheConfig)
+      .withCache("{{txtCacheName}}", customCacheConfig)
+      .build(true);
+
+    // Wrap with JCache CacheManager
+    EhcacheCachingProvider cachingProvider = (EhcacheCachingProvider) Caching.getCachingProvider();
+    DefaultConfiguration configuration = new DefaultConfiguration(
+      ehcacheManager.getRuntimeConfiguration().getCacheConfigurations(),
+      ehcacheManager.getRuntimeConfiguration().getClassLoader()
+    );
+    
+    return cachingProvider.getCacheManager(
+      ehcacheManager.getRuntimeConfiguration().getClassLoader().getResource(".").toURI(),
+      configuration
+    );
+  }
+
+  /*
+   * pom.xml에 다음 라이브러리 추가 필요:
+   * 
+   * <dependency>
+   *   <groupId>org.ehcache</groupId>
+   *   <artifactId>ehcache</artifactId>
+   *   <version>3.10.8</version>
+   *   <classifier>jakarta</classifier>
+   * </dependency>
+   * 
+   * <dependency>
+   *   <groupId>jakarta.cache</groupId>
+   *   <artifactId>jakarta.cache-api</artifactId>
+   *   <version>3.1.1</version>
+   * </dependency>
+   * 
+   * <dependency>
+   *   <groupId>org.springframework</groupId>
+   *   <artifactId>spring-context-support</artifactId>
+   * </dependency>
+   */
+}

@@ -1,0 +1,43 @@
+package egovframework.example.config;
+
+import org.apache.log4j.jdbc.JDBCAppender;
+import org.apache.log4j.Logger;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class EgovLog4j2JdbcConfig {
+
+    @Bean(name = "jdbc")
+    public JDBCAppender jdbc() {
+        JDBCAppender jdbcAppender = new JDBCAppender();
+
+        // Set the JDBC connection details
+        jdbcAppender.setDriver("com.mysql.cj.jdbc.Driver");
+        jdbcAppender.setURL("jdbc:mysql://localhost:3306/log");
+        jdbcAppender.setUser("log");
+        jdbcAppender.setPassword("");
+
+        // Set the SQL query to be executed
+        jdbcAppender.setSql("");
+
+        return jdbcAppender;
+    }
+
+    @Bean
+    public Logger springLogger() {
+        Logger logger = Logger.getLogger("org.springframework");
+        logger.setAdditivity(false);
+        logger.setLevel(org.apache.log4j.Level.DEBUG);
+        logger.addAppender(jdbc());
+        return logger;
+    }
+
+    @Bean
+    public Logger rootLogger() {
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(org.apache.log4j.Level.OFF);
+        rootLogger.addAppender(jdbc());
+        return rootLogger;
+    }
+}

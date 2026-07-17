@@ -1,0 +1,87 @@
+{
+  "tableName": "OrderItem",
+  "dbTableName": "order_item",
+  "attributes": [
+    {
+      "ccName": "orderId",
+      "columnName": "order_id",
+      "isPrimaryKey": true,
+      "pcName": "OrderId",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    },
+    {
+      "ccName": "itemSeq",
+      "columnName": "item_seq",
+      "isPrimaryKey": true,
+      "pcName": "ItemSeq",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    },
+    {
+      "ccName": "productName",
+      "columnName": "product_name",
+      "isPrimaryKey": false,
+      "pcName": "ProductName",
+      "dataType": "VARCHAR",
+      "javaType": "java.lang.String"
+    },
+    {
+      "ccName": "quantity",
+      "columnName": "quantity",
+      "isPrimaryKey": false,
+      "pcName": "Quantity",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    },
+    {
+      "ccName": "unitPrice",
+      "columnName": "unit_price",
+      "isPrimaryKey": false,
+      "pcName": "UnitPrice",
+      "dataType": "DECIMAL",
+      "javaType": "java.math.BigDecimal"
+    },
+    {
+      "ccName": "addr1",
+      "columnName": "addr_1",
+      "isPrimaryKey": false,
+      "pcName": "Addr1",
+      "dataType": "VARCHAR",
+      "javaType": "java.lang.String"
+    },
+    {
+      "ccName": "addr2",
+      "columnName": "addr_2",
+      "isPrimaryKey": false,
+      "pcName": "Addr2",
+      "dataType": "VARCHAR",
+      "javaType": "java.lang.String"
+    }
+  ],
+  "pkAttributes": [
+    {
+      "ccName": "orderId",
+      "columnName": "order_id",
+      "isPrimaryKey": true,
+      "pcName": "OrderId",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    },
+    {
+      "ccName": "itemSeq",
+      "columnName": "item_seq",
+      "isPrimaryKey": true,
+      "pcName": "ItemSeq",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    }
+  ],
+  "packageName": "egovframework.example.sample",
+  "className": "OrderItem",
+  "classNameFirstCharLower": "orderItem",
+  "author": "author",
+  "date": "2026-07-16",
+  "version": "1.0.0",
+  "packagePath": "egovframework/example/sample"
+}

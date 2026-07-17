@@ -1,0 +1,842 @@
+{
+  "crud": [
+    {
+      "case": "single_pk",
+      "ddl": "golden/crud/single_pk/ddl.sql",
+      "context": "golden/crud/single_pk/context.json",
+      "outputs": {
+        "sample-vo-template.hbs": "golden/crud/single_pk/out/sample-vo-template.golden",
+        "sample-default-vo-template.hbs": "golden/crud/single_pk/out/sample-default-vo-template.golden",
+        "sample-controller-template.hbs": "golden/crud/single_pk/out/sample-controller-template.golden",
+        "sample-service-template.hbs": "golden/crud/single_pk/out/sample-service-template.golden",
+        "sample-service-impl-template.hbs": "golden/crud/single_pk/out/sample-service-impl-template.golden",
+        "sample-mapper-interface-template.hbs": "golden/crud/single_pk/out/sample-mapper-interface-template.golden",
+        "sample-mapper-template.hbs": "golden/crud/single_pk/out/sample-mapper-template.golden",
+        "sample-thymeleaf-list.hbs": "golden/crud/single_pk/out/sample-thymeleaf-list.golden",
+        "sample-thymeleaf-register.hbs": "golden/crud/single_pk/out/sample-thymeleaf-register.golden",
+        "sample-jsp-list.hbs": "golden/crud/single_pk/out/sample-jsp-list.golden",
+        "sample-jsp-register.hbs": "golden/crud/single_pk/out/sample-jsp-register.golden"
+      }
+    },
+    {
+      "case": "composite_pk",
+      "ddl": "golden/crud/composite_pk/ddl.sql",
+      "context": "golden/crud/composite_pk/context.json",
+      "outputs": {
+        "sample-vo-template.hbs": "golden/crud/composite_pk/out/sample-vo-template.golden",
+        "sample-default-vo-template.hbs": "golden/crud/composite_pk/out/sample-default-vo-template.golden",
+        "sample-controller-template.hbs": "golden/crud/composite_pk/out/sample-controller-template.golden",
+        "sample-service-template.hbs": "golden/crud/composite_pk/out/sample-service-template.golden",
+        "sample-service-impl-template.hbs": "golden/crud/composite_pk/out/sample-service-impl-template.golden",
+        "sample-mapper-interface-template.hbs": "golden/crud/composite_pk/out/sample-mapper-interface-template.golden",
+        "sample-mapper-template.hbs": "golden/crud/composite_pk/out/sample-mapper-template.golden",
+        "sample-thymeleaf-list.hbs": "golden/crud/composite_pk/out/sample-thymeleaf-list.golden",
+        "sample-thymeleaf-register.hbs": "golden/crud/composite_pk/out/sample-thymeleaf-register.golden",
+        "sample-jsp-list.hbs": "golden/crud/composite_pk/out/sample-jsp-list.golden",
+        "sample-jsp-register.hbs": "golden/crud/composite_pk/out/sample-jsp-register.golden"
+      }
+    },
+    {
+      "case": "no_pk_two_cols",
+      "ddl": "golden/crud/no_pk_two_cols/ddl.sql",
+      "context": "golden/crud/no_pk_two_cols/context.json",
+      "outputs": {
+        "sample-vo-template.hbs": "golden/crud/no_pk_two_cols/out/sample-vo-template.golden",
+        "sample-default-vo-template.hbs": "golden/crud/no_pk_two_cols/out/sample-default-vo-template.golden",
+        "sample-controller-template.hbs": "golden/crud/no_pk_two_cols/out/sample-controller-template.golden",
+        "sample-service-template.hbs": "golden/crud/no_pk_two_cols/out/sample-service-template.golden",
+        "sample-service-impl-template.hbs": "golden/crud/no_pk_two_cols/out/sample-service-impl-template.golden",
+        "sample-mapper-interface-template.hbs": "golden/crud/no_pk_two_cols/out/sample-mapper-interface-template.golden",
+        "sample-mapper-template.hbs": "golden/crud/no_pk_two_cols/out/sample-mapper-template.golden",
+        "sample-thymeleaf-list.hbs": "golden/crud/no_pk_two_cols/out/sample-thymeleaf-list.golden",
+        "sample-thymeleaf-register.hbs": "golden/crud/no_pk_two_cols/out/sample-thymeleaf-register.golden",
+        "sample-jsp-list.hbs": "golden/crud/no_pk_two_cols/out/sample-jsp-list.golden",
+        "sample-jsp-register.hbs": "golden/crud/no_pk_two_cols/out/sample-jsp-register.golden"
+      }
+    },
+    {
+      "case": "special_chars",
+      "ddl": "golden/crud/special_chars/ddl.sql",
+      "context": "golden/crud/special_chars/context.json",
+      "outputs": {
+        "sample-vo-template.hbs": "golden/crud/special_chars/out/sample-vo-template.golden",
+        "sample-default-vo-template.hbs": "golden/crud/special_chars/out/sample-default-vo-template.golden",
+        "sample-controller-template.hbs": "golden/crud/special_chars/out/sample-controller-template.golden",
+        "sample-service-template.hbs": "golden/crud/special_chars/out/sample-service-template.golden",
+        "sample-service-impl-template.hbs": "golden/crud/special_chars/out/sample-service-impl-template.golden",
+        "sample-mapper-interface-template.hbs": "golden/crud/special_chars/out/sample-mapper-interface-template.golden",
+        "sample-mapper-template.hbs": "golden/crud/special_chars/out/sample-mapper-template.golden",
+        "sample-thymeleaf-list.hbs": "golden/crud/special_chars/out/sample-thymeleaf-list.golden",
+        "sample-thymeleaf-register.hbs": "golden/crud/special_chars/out/sample-thymeleaf-register.golden",
+        "sample-jsp-list.hbs": "golden/crud/special_chars/out/sample-jsp-list.golden",
+        "sample-jsp-register.hbs": "golden/crud/special_chars/out/sample-jsp-register.golden"
+      }
+    }
+  ],
+  "config": [
+    {
+      "slug": "cache-new-cache",
+      "displayName": "Cache > New Cache",
+      "templateFolder": "cache",
+      "contextName": "default",
+      "formData": "golden/config/cache-new-cache/default/formData.json",
+      "templates": {
+        "xml": "cache/cache.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/cache-new-cache/default/xml.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        }
+      }
+    },
+    {
+      "slug": "cache-new-ehcache-configuration",
+      "displayName": "Cache > New Ehcache Configuration",
+      "templateFolder": "cache",
+      "contextName": "default",
+      "formData": "golden/config/cache-new-ehcache-configuration/default/formData.json",
+      "templates": {
+        "xml": "cache/ehcacheConfigForSpring.hbs",
+        "java": "cache/ehcacheConfigForSpring-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/cache-new-ehcache-configuration/default/xml.golden",
+        "java": "golden/config/cache-new-ehcache-configuration/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "datasource-new-datasource",
+      "displayName": "Datasource > New Datasource",
+      "templateFolder": "datasource",
+      "contextName": "default",
+      "formData": "golden/config/datasource-new-datasource/default/formData.json",
+      "templates": {
+        "xml": "datasource/datasource.hbs",
+        "java": "datasource/datasource-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/datasource-new-datasource/default/xml.golden",
+        "java": "golden/config/datasource-new-datasource/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "datasource-new-datasource",
+      "displayName": "Datasource > New Datasource",
+      "templateFolder": "datasource",
+      "contextName": "alt-c3p0",
+      "formData": "golden/config/datasource-new-datasource/alt-c3p0/formData.json",
+      "templates": {
+        "xml": "datasource/datasource.hbs",
+        "java": "datasource/datasource-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/datasource-new-datasource/alt-c3p0/xml.golden",
+        "java": "golden/config/datasource-new-datasource/alt-c3p0/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "datasource-new-datasource",
+      "displayName": "Datasource > New Datasource",
+      "templateFolder": "datasource",
+      "contextName": "alt-jdbc",
+      "formData": "golden/config/datasource-new-datasource/alt-jdbc/formData.json",
+      "templates": {
+        "xml": "datasource/datasource.hbs",
+        "java": "datasource/datasource-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/datasource-new-datasource/alt-jdbc/xml.golden",
+        "java": "golden/config/datasource-new-datasource/alt-jdbc/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "datasource-new-jndi-datasource",
+      "displayName": "Datasource > New JNDI Datasource",
+      "templateFolder": "datasource",
+      "contextName": "default",
+      "formData": "golden/config/datasource-new-jndi-datasource/default/formData.json",
+      "templates": {
+        "xml": "datasource/jndiDatasource.hbs",
+        "java": "datasource/jndiDatasource-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/datasource-new-jndi-datasource/default/xml.golden",
+        "java": "golden/config/datasource-new-jndi-datasource/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "id-generation-new-sequence-id-generation",
+      "displayName": "ID Generation > New Sequence ID Generation",
+      "templateFolder": "idGeneration",
+      "contextName": "default",
+      "formData": "golden/config/id-generation-new-sequence-id-generation/default/formData.json",
+      "templates": {
+        "xml": "idGeneration/xml-id-gnr-sequence-service.hbs",
+        "java": "idGeneration/xml-id-gnr-sequence-service-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/id-generation-new-sequence-id-generation/default/xml.golden",
+        "java": "golden/config/id-generation-new-sequence-id-generation/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovIdgnSequenceConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "id-generation-new-table-id-generation",
+      "displayName": "ID Generation > New Table ID Generation",
+      "templateFolder": "idGeneration",
+      "contextName": "default",
+      "formData": "golden/config/id-generation-new-table-id-generation/default/formData.json",
+      "templates": {
+        "xml": "idGeneration/xml-id-gnr-table-service.hbs",
+        "java": "idGeneration/xml-id-gnr-table-service-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/id-generation-new-table-id-generation/default/xml.golden",
+        "java": "golden/config/id-generation-new-table-id-generation/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovIdgnTableConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "id-generation-new-table-id-generation",
+      "displayName": "ID Generation > New Table ID Generation",
+      "templateFolder": "idGeneration",
+      "contextName": "alt-strategy",
+      "formData": "golden/config/id-generation-new-table-id-generation/alt-strategy/formData.json",
+      "templates": {
+        "xml": "idGeneration/xml-id-gnr-table-service.hbs",
+        "java": "idGeneration/xml-id-gnr-table-service-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/id-generation-new-table-id-generation/alt-strategy/xml.golden",
+        "java": "golden/config/id-generation-new-table-id-generation/alt-strategy/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovIdgnTableConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "id-generation-new-uuid-generation",
+      "displayName": "ID Generation > New UUID Generation",
+      "templateFolder": "idGeneration",
+      "contextName": "default",
+      "formData": "golden/config/id-generation-new-uuid-generation/default/formData.json",
+      "templates": {
+        "xml": "idGeneration/xml-id-gnr-uuid-service.hbs",
+        "java": "idGeneration/xml-id-gnr-uuid-service-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/id-generation-new-uuid-generation/default/xml.golden",
+        "java": "golden/config/id-generation-new-uuid-generation/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovIdgnUuidConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "id-generation-new-uuid-generation",
+      "displayName": "ID Generation > New UUID Generation",
+      "templateFolder": "idGeneration",
+      "contextName": "alt-address",
+      "formData": "golden/config/id-generation-new-uuid-generation/alt-address/formData.json",
+      "templates": {
+        "xml": "idGeneration/xml-id-gnr-uuid-service.hbs",
+        "java": "idGeneration/xml-id-gnr-uuid-service-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/id-generation-new-uuid-generation/alt-address/xml.golden",
+        "java": "golden/config/id-generation-new-uuid-generation/alt-address/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovIdgnUuidConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "logging-new-console-appender",
+      "displayName": "Logging > New Console Appender",
+      "templateFolder": "logging",
+      "contextName": "default",
+      "formData": "golden/config/logging-new-console-appender/default/formData.json",
+      "templates": {
+        "xml": "logging/console.hbs",
+        "java": "logging/console-java.hbs",
+        "yaml": "logging/console-yaml.hbs",
+        "properties": "logging/console-properties.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/logging-new-console-appender/default/xml.golden",
+        "java": "golden/config/logging-new-console-appender/default/java.golden",
+        "yaml": "golden/config/logging-new-console-appender/default/yaml.golden",
+        "properties": "golden/config/logging-new-console-appender/default/properties.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovLog4j2ConsoleConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        },
+        "yaml": {
+          "generationType": "yaml"
+        },
+        "properties": {
+          "generationType": "properties"
+        }
+      }
+    },
+    {
+      "slug": "logging-new-file-appender",
+      "displayName": "Logging > New File Appender",
+      "templateFolder": "logging",
+      "contextName": "default",
+      "formData": "golden/config/logging-new-file-appender/default/formData.json",
+      "templates": {
+        "xml": "logging/file.hbs",
+        "java": "logging/file-java.hbs",
+        "yaml": "logging/file-yaml.hbs",
+        "properties": "logging/file-properties.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/logging-new-file-appender/default/xml.golden",
+        "java": "golden/config/logging-new-file-appender/default/java.golden",
+        "yaml": "golden/config/logging-new-file-appender/default/yaml.golden",
+        "properties": "golden/config/logging-new-file-appender/default/properties.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovLog4j2FileConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        },
+        "yaml": {
+          "generationType": "yaml"
+        },
+        "properties": {
+          "generationType": "properties"
+        }
+      }
+    },
+    {
+      "slug": "logging-new-rolling-file-appender",
+      "displayName": "Logging > New Rolling File Appender",
+      "templateFolder": "logging",
+      "contextName": "default",
+      "formData": "golden/config/logging-new-rolling-file-appender/default/formData.json",
+      "templates": {
+        "xml": "logging/rollingFile.hbs",
+        "java": "logging/rollingFile-java.hbs",
+        "yaml": "logging/rollingFile-yaml.hbs",
+        "properties": "logging/rollingFile-properties.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/logging-new-rolling-file-appender/default/xml.golden",
+        "java": "golden/config/logging-new-rolling-file-appender/default/java.golden",
+        "yaml": "golden/config/logging-new-rolling-file-appender/default/yaml.golden",
+        "properties": "golden/config/logging-new-rolling-file-appender/default/properties.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovLog4j2RollingFileConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        },
+        "yaml": {
+          "generationType": "yaml"
+        },
+        "properties": {
+          "generationType": "properties"
+        }
+      }
+    },
+    {
+      "slug": "logging-new-time-based-rolling-file-appender",
+      "displayName": "Logging > New Time-Based Rolling File Appender",
+      "templateFolder": "logging",
+      "contextName": "default",
+      "formData": "golden/config/logging-new-time-based-rolling-file-appender/default/formData.json",
+      "templates": {
+        "xml": "logging/timeBasedRollingFile.hbs",
+        "yaml": "logging/timeBasedRollingFile-yaml.hbs",
+        "properties": "logging/timeBasedRollingFile-properties.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/logging-new-time-based-rolling-file-appender/default/xml.golden",
+        "yaml": "golden/config/logging-new-time-based-rolling-file-appender/default/yaml.golden",
+        "properties": "golden/config/logging-new-time-based-rolling-file-appender/default/properties.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "yaml": {
+          "generationType": "yaml"
+        },
+        "properties": {
+          "generationType": "properties"
+        }
+      }
+    },
+    {
+      "slug": "logging-new-jdbc-appender",
+      "displayName": "Logging > New JDBC Appender",
+      "templateFolder": "logging",
+      "contextName": "default",
+      "formData": "golden/config/logging-new-jdbc-appender/default/formData.json",
+      "templates": {
+        "xml": "logging/jdbc.hbs",
+        "java": "logging/jdbc-java.hbs",
+        "yaml": "logging/jdbc-yaml.hbs",
+        "properties": "logging/jdbc-properties.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/logging-new-jdbc-appender/default/xml.golden",
+        "java": "golden/config/logging-new-jdbc-appender/default/java.golden",
+        "yaml": "golden/config/logging-new-jdbc-appender/default/yaml.golden",
+        "properties": "golden/config/logging-new-jdbc-appender/default/properties.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovLog4j2JdbcConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        },
+        "yaml": {
+          "generationType": "yaml"
+        },
+        "properties": {
+          "generationType": "properties"
+        }
+      }
+    },
+    {
+      "slug": "logging-new-jdbc-appender",
+      "displayName": "Logging > New JDBC Appender",
+      "templateFolder": "logging",
+      "contextName": "alt-connection-factory",
+      "formData": "golden/config/logging-new-jdbc-appender/alt-connection-factory/formData.json",
+      "templates": {
+        "xml": "logging/jdbc.hbs",
+        "java": "logging/jdbc-java.hbs",
+        "yaml": "logging/jdbc-yaml.hbs",
+        "properties": "logging/jdbc-properties.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/logging-new-jdbc-appender/alt-connection-factory/xml.golden",
+        "java": "golden/config/logging-new-jdbc-appender/alt-connection-factory/java.golden",
+        "yaml": "golden/config/logging-new-jdbc-appender/alt-connection-factory/yaml.golden",
+        "properties": "golden/config/logging-new-jdbc-appender/alt-connection-factory/properties.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovLog4j2JdbcConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        },
+        "yaml": {
+          "generationType": "yaml"
+        },
+        "properties": {
+          "generationType": "properties"
+        }
+      }
+    },
+    {
+      "slug": "property-new-property",
+      "displayName": "Property > New Property",
+      "templateFolder": "property",
+      "contextName": "default",
+      "formData": "golden/config/property-new-property/default/formData.json",
+      "templates": {
+        "xml": "property/property.hbs",
+        "java": "property/property-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/property-new-property/default/xml.golden",
+        "java": "golden/config/property-new-property/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "property-new-property",
+      "displayName": "Property > New Property",
+      "templateFolder": "property",
+      "contextName": "alt-external-file",
+      "formData": "golden/config/property-new-property/alt-external-file/formData.json",
+      "templates": {
+        "xml": "property/property.hbs",
+        "java": "property/property-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/property-new-property/alt-external-file/xml.golden",
+        "java": "golden/config/property-new-property/alt-external-file/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "scheduling-new-detail-bean-job",
+      "displayName": "Scheduling > New Detail Bean Job",
+      "templateFolder": "scheduling",
+      "contextName": "default",
+      "formData": "golden/config/scheduling-new-detail-bean-job/default/formData.json",
+      "templates": {
+        "xml": "scheduling/beanJob.hbs",
+        "java": "scheduling/beanJob-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/scheduling-new-detail-bean-job/default/xml.golden",
+        "java": "golden/config/scheduling-new-detail-bean-job/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovSchedulingJobDetailConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "scheduling-new-method-invoking-job",
+      "displayName": "Scheduling > New Method Invoking Job",
+      "templateFolder": "scheduling",
+      "contextName": "default",
+      "formData": "golden/config/scheduling-new-method-invoking-job/default/formData.json",
+      "templates": {
+        "xml": "scheduling/methodJob.hbs",
+        "java": "scheduling/methodJob-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/scheduling-new-method-invoking-job/default/xml.golden",
+        "java": "golden/config/scheduling-new-method-invoking-job/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovSchedulingMethodInvokingJobDetailConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "scheduling-new-simple-trigger",
+      "displayName": "Scheduling > New Simple Trigger",
+      "templateFolder": "scheduling",
+      "contextName": "default",
+      "formData": "golden/config/scheduling-new-simple-trigger/default/formData.json",
+      "templates": {
+        "xml": "scheduling/simpleTrigger.hbs",
+        "java": "scheduling/simpleTrigger-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/scheduling-new-simple-trigger/default/xml.golden",
+        "java": "golden/config/scheduling-new-simple-trigger/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovSchedulingSimpleTriggerConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "scheduling-new-cron-trigger",
+      "displayName": "Scheduling > New Cron Trigger",
+      "templateFolder": "scheduling",
+      "contextName": "default",
+      "formData": "golden/config/scheduling-new-cron-trigger/default/formData.json",
+      "templates": {
+        "xml": "scheduling/cronTrigger.hbs",
+        "java": "scheduling/cronTrigger-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/scheduling-new-cron-trigger/default/xml.golden",
+        "java": "golden/config/scheduling-new-cron-trigger/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovSchedulingCronTriggerConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "scheduling-new-scheduler",
+      "displayName": "Scheduling > New Scheduler",
+      "templateFolder": "scheduling",
+      "contextName": "default",
+      "formData": "golden/config/scheduling-new-scheduler/default/formData.json",
+      "templates": {
+        "xml": "scheduling/scheduler.hbs",
+        "java": "scheduling/scheduler-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/scheduling-new-scheduler/default/xml.golden",
+        "java": "golden/config/scheduling-new-scheduler/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovSchedulingSchedulerConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "transaction-new-datasource-transaction",
+      "displayName": "Transaction > New Datasource Transaction",
+      "templateFolder": "transaction",
+      "contextName": "default",
+      "formData": "golden/config/transaction-new-datasource-transaction/default/formData.json",
+      "templates": {
+        "xml": "transaction/datasource.hbs",
+        "java": "transaction/datasource-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/transaction-new-datasource-transaction/default/xml.golden",
+        "java": "golden/config/transaction-new-datasource-transaction/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovTransactionConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "transaction-new-datasource-transaction",
+      "displayName": "Transaction > New Datasource Transaction",
+      "templateFolder": "transaction",
+      "contextName": "alt-aop-only",
+      "formData": "golden/config/transaction-new-datasource-transaction/alt-aop-only/formData.json",
+      "templates": {
+        "xml": "transaction/datasource.hbs",
+        "java": "transaction/datasource-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/transaction-new-datasource-transaction/alt-aop-only/xml.golden",
+        "java": "golden/config/transaction-new-datasource-transaction/alt-aop-only/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovTransactionConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "transaction-new-datasource-transaction",
+      "displayName": "Transaction > New Datasource Transaction",
+      "templateFolder": "transaction",
+      "contextName": "alt-annotation-only",
+      "formData": "golden/config/transaction-new-datasource-transaction/alt-annotation-only/formData.json",
+      "templates": {
+        "xml": "transaction/datasource.hbs",
+        "java": "transaction/datasource-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/transaction-new-datasource-transaction/alt-annotation-only/xml.golden",
+        "java": "golden/config/transaction-new-datasource-transaction/alt-annotation-only/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovTransactionConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "transaction-new-jpa-transaction",
+      "displayName": "Transaction > New JPA Transaction",
+      "templateFolder": "transaction",
+      "contextName": "default",
+      "formData": "golden/config/transaction-new-jpa-transaction/default/formData.json",
+      "templates": {
+        "xml": "transaction/jpa.hbs",
+        "java": "transaction/jpa-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/transaction-new-jpa-transaction/default/xml.golden",
+        "java": "golden/config/transaction-new-jpa-transaction/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovTransactionJpaConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    },
+    {
+      "slug": "transaction-new-jta-transaction",
+      "displayName": "Transaction > New JTA Transaction",
+      "templateFolder": "transaction",
+      "contextName": "default",
+      "formData": "golden/config/transaction-new-jta-transaction/default/formData.json",
+      "templates": {
+        "xml": "transaction/jta.hbs",
+        "java": "transaction/jta-java.hbs"
+      },
+      "outputs": {
+        "xml": "golden/config/transaction-new-jta-transaction/default/xml.golden",
+        "java": "golden/config/transaction-new-jta-transaction/default/java.golden"
+      },
+      "variantOverrides": {
+        "xml": {
+          "generationType": "xml"
+        },
+        "java": {
+          "generationType": "javaConfig",
+          "txtFileName": "EgovTransactionJtaConfig",
+          "txtConfigPackage": "egovframework.example.config"
+        }
+      }
+    }
+  ]
+}

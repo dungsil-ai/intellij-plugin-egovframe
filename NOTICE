@@ -1,0 +1,27 @@
+eGovFrame Support IntelliJ Plugin
+Copyright (c) 2026 dungsil <opensource@younggeon.kim>
+
+This plugin bundles unmodified template and catalog assets from the
+eGovFramework/egovframe-vscode-initializr project
+(https://github.com/eGovFramework/egovframe-vscode-initializr),
+pinned to the official v5.0.6 tag and licensed
+under the Apache License, Version 2.0.
+The corresponding upstream source checkout is tracked as the `vendor/egovframe-vscode-initializr` Git submodule.
+
+Bundled upstream assets:
+  - templates/templates-projects.json, templates/templates-context-xml.json
+  - templates/code/*.hbs (11 files)
+  - templates/config/**/*.hbs (52 files)
+  - templates/projects/pom/*.xml (18 files)
+  - templates/projects/examples/egovframe-boot-web.zip,
+    templates/projects/examples/egovframe-boot-simple-backend.zip
+  (remaining example ZIPs are downloaded on demand from the same version tag
+   and verified against pinned SHA-256 checksums)
+
+Handlebars whitespace-normalization resources under
+`egovframe/normalized/` are deterministic generated derivatives of the same
+unmodified Apache-2.0 template sources. They exist only to reproduce
+handlebars.js whitespace semantics with Handlebars.java.
+
+This plugin also uses Handlebars.java (com.github.jknack:handlebars),
+licensed under the Apache License, Version 2.0.

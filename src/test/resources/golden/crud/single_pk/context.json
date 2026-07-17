@@ -1,0 +1,87 @@
+{
+  "tableName": "BoardArticle",
+  "dbTableName": "board_article",
+  "attributes": [
+    {
+      "ccName": "articleId",
+      "columnName": "article_id",
+      "isPrimaryKey": true,
+      "pcName": "ArticleId",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    },
+    {
+      "ccName": "title",
+      "columnName": "title",
+      "isPrimaryKey": false,
+      "pcName": "Title",
+      "dataType": "VARCHAR",
+      "javaType": "java.lang.String"
+    },
+    {
+      "ccName": "content",
+      "columnName": "content",
+      "isPrimaryKey": false,
+      "pcName": "Content",
+      "dataType": "TEXT",
+      "javaType": "java.lang.String"
+    },
+    {
+      "ccName": "viewCount",
+      "columnName": "view_count",
+      "isPrimaryKey": false,
+      "pcName": "ViewCount",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    },
+    {
+      "ccName": "createdAt",
+      "columnName": "created_at",
+      "isPrimaryKey": false,
+      "pcName": "CreatedAt",
+      "dataType": "DATETIME",
+      "javaType": "java.util.Date"
+    },
+    {
+      "ccName": "price",
+      "columnName": "price",
+      "isPrimaryKey": false,
+      "pcName": "Price",
+      "dataType": "DECIMAL",
+      "javaType": "java.math.BigDecimal"
+    },
+    {
+      "ccName": "useYn",
+      "columnName": "use_yn",
+      "isPrimaryKey": false,
+      "pcName": "UseYn",
+      "dataType": "CHAR",
+      "javaType": "java.lang.String"
+    },
+    {
+      "ccName": "writerName",
+      "columnName": "writer_name",
+      "isPrimaryKey": false,
+      "pcName": "WriterName",
+      "dataType": "VARCHAR",
+      "javaType": "java.lang.String"
+    }
+  ],
+  "pkAttributes": [
+    {
+      "ccName": "articleId",
+      "columnName": "article_id",
+      "isPrimaryKey": true,
+      "pcName": "ArticleId",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    }
+  ],
+  "packageName": "egovframework.example.sample",
+  "className": "BoardArticle",
+  "classNameFirstCharLower": "boardArticle",
+  "author": "author",
+  "date": "2026-07-16",
+  "version": "1.0.0",
+  "packagePath": "egovframework/example/sample"
+}

@@ -1,0 +1,14 @@
+{
+  "generationType": "xml",
+  "txtFileName": "ehcache-default",
+  "txtDiskStore": "user.dir/second",
+  "txtDftEternal": "false",
+  "txtDftLiveTime": "10",
+  "txtDftHeapEntries": "100",
+  "txtDftOffheapSize": "",
+  "txtDftDiskPersistence": "true",
+  "txtCacheName": "cache",
+  "txtEternal": "false",
+  "txtIdleTime": "300",
+  "txtHeapEntries": "10"
+}

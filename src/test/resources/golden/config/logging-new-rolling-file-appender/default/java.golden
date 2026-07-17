@@ -1,0 +1,53 @@
+package egovframework.example.config;
+
+import org.apache.log4j.rolling.RollingFileAppender;
+import org.apache.log4j.rolling.FixedWindowRollingPolicy;
+import org.apache.log4j.rolling.SizeBasedTriggeringPolicy;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.Logger;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class EgovLog4j2RollingFileConfig {
+
+    @Bean(name = "rolling-file")
+    public RollingFileAppender rolling-file() {
+        RollingFileAppender rollingFileAppender = new RollingFileAppender();
+
+        // Configure rolling policy
+        FixedWindowRollingPolicy rollingPolicy = new FixedWindowRollingPolicy();
+        rollingPolicy.setFileNamePattern("./logs/rolling/rollingSample.%i.log");
+        rollingPolicy.setMaxIndex(20);
+        rollingFileAppender.setRollingPolicy(rollingPolicy);
+
+        // Configure triggering policy
+        SizeBasedTriggeringPolicy triggeringPolicy = new SizeBasedTriggeringPolicy();
+        triggeringPolicy.setMaxFileSize("3000");
+        rollingFileAppender.setTriggeringPolicy(triggeringPolicy);
+
+        // Set layout
+        PatternLayout layout = new PatternLayout();
+        layout.setConversionPattern("%d %5p [%c] %m%n");
+        rollingFileAppender.setLayout(layout);
+
+        return rollingFileAppender;
+    }
+
+    @Bean
+    public Logger springLogger() {
+        Logger logger = Logger.getLogger("org.springframework");
+        logger.setAdditivity(false);
+        logger.setLevel(org.apache.log4j.Level.DEBUG);
+        logger.addAppender(rolling-file());
+        return logger;
+    }
+
+    @Bean
+    public Logger rootLogger() {
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(org.apache.log4j.Level.OFF);
+        rootLogger.addAppender(rolling-file());
+        return rootLogger;
+    }
+}

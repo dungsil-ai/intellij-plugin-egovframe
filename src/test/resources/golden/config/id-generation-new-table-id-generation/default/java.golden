@@ -1,0 +1,24 @@
+package egovframework.example.config;
+
+import jakarta.sql.DataSource;
+
+import org.egovframe.rte.fdl.idgnr.impl.EgovTableIdGnrServiceImpl;
+import org.egovframe.rte.fdl.idgnr.impl.strategy.EgovIdGnrStrategyImpl;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class EgovIdgnTableConfig {
+
+    @Bean(name = "idGnrService", destroyMethod = "destroy")
+    public EgovTableIdGnrServiceImpl idGnrService(@Qualifier("dataSource") DataSource dataSource) {
+        EgovTableIdGnrServiceImpl egovTableIdGnrService = new EgovTableIdGnrServiceImpl();
+        egovTableIdGnrService.setDataSource(dataSource);
+        egovTableIdGnrService.setTable("IDS");
+        egovTableIdGnrService.setTableName("SAMPLE");
+        egovTableIdGnrService.setBlockSize(10);
+        return egovTableIdGnrService;
+    }
+
+}

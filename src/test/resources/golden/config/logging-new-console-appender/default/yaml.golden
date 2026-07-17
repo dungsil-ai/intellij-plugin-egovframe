@@ -1,0 +1,29 @@
+Configuration:
+  Appenders:
+    Console:
+      name: "console"
+      target: SYSTEM_OUT
+      PatternLayout:
+        pattern: "%d %5p [%c] %m%n"
+
+  Loggers:
+    Logger:
+      - name: "egovframework"
+        level: DEBUG
+        additivity: false
+        AppenderRef:
+          ref: "console"
+      - name: "org.egovframe"
+        level: DEBUG
+        additivity: false
+        AppenderRef:
+          ref: "console"
+      - name: "org.springframework"
+        level: DEBUG
+        additivity: false
+        AppenderRef:
+          ref: "console"
+    Root:
+      level: INFO
+      AppenderRef:
+        ref: "console"

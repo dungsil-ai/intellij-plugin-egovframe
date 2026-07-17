@@ -1,0 +1,38 @@
+package egovframework.example.config;
+
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class EgovLog4j2ConsoleConfig {
+
+    @Bean
+    public ConsoleAppender console() {
+        PatternLayout layout = new PatternLayout();
+        layout.setConversionPattern("%d %5p [%c] %m%n");
+
+        ConsoleAppender consoleAppender = new ConsoleAppender();
+        consoleAppender.setLayout(layout);
+        return consoleAppender;
+    }
+
+    @Bean
+    public Logger springLogger() {
+        Logger logger = Logger.getLogger("org.springframework");
+        logger.setAdditivity(false);
+        logger.setLevel(org.apache.log4j.Level.DEBUG);
+        logger.addAppender(console());
+        return logger;
+    }
+
+    @Bean
+    public Logger rootLogger() {
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(org.apache.log4j.Level.OFF);
+        rootLogger.addAppender(console());
+        return rootLogger;
+    }
+}

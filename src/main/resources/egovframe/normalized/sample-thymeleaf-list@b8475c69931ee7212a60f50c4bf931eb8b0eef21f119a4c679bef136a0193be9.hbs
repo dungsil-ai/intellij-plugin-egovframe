@@ -1,0 +1,134 @@
+{{setVar "voInstanceName" (concat classNameFirstCharLower "VO")}}{{setVar "listPath" (concat "/" classNameFirstCharLower "/" classNameFirstCharLower "List.do")}}{{setVar "addViewPath" (concat "/" classNameFirstCharLower "/add" className "View.do")}}{{setVar "updateViewPath" (concat "/" classNameFirstCharLower "/update" className "View.do")}}<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>List</title>
+
+	<!-- KRDS CSS -->
+	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}"/>
+	<link rel="stylesheet" type="text/css" th:href="@{/css/egovframe.css}"/>
+	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
+	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
+	<script th:inline="javascript" defer>
+		const contextPath = $('#contextPathHolder').attr('data-contextPath') ? $('#contextPathHolder').attr('data-contextPath') : '';
+
+		function notNullCheck(value) {
+		    return !(value === '' || value == null || (typeof value == 'object' && !Object.keys(value).length));
+		}
+
+		function fn_egov_selectList() {
+            if (notNullCheck($('#searchKeyword').val())) {
+				$('#listForm').attr('method', 'get').attr('action', contextPath + '{{listPath}}').submit();
+            } else {
+            	alert('Please enter search keyword');
+            }
+		}
+
+		function fn_egov_link_page(pageIndex) {
+        	$('#pageIndex').val(pageIndex);
+        	$('#listForm').attr('method', 'get').attr('action', contextPath + '{{listPath}}').submit();
+        }
+
+        function fn_egov_addView() {
+        	$('#listForm').attr('method', `post`).attr('action', contextPath + '{{addViewPath}}').submit();
+        }
+
+        function fn_egov_select({{#if pkAttributes.length}}{{#each pkAttributes}}{{ccName}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}{{attributes.[0].ccName}}{{/if}}) {
+{{#if pkAttributes.length}}{{#each pkAttributes}}            $('#{{ccName}}').val({{ccName}});
+{{/each}}{{else}}			$('#{{attributes.[0].ccName}}').val({{attributes.[0].ccName}});
+{{/if}}            $('#listForm').attr('method', 'post').attr('action', contextPath + '{{updateViewPath}}').submit();
+        }
+    </script>
+</head>
+
+<body>
+<div id="container" class="inner">
+
+	<!-- Page Title -->
+	<h2 class="heading-large">List</h2>
+
+	<div id="content_pop">
+		<form id="listForm" th:object="{{concat "${" voInstanceName "}"}}">
+{{#if pkAttributes.length}}{{#each pkAttributes}}			<input type="hidden" th:id="{{ccName}}" th:name="{{ccName}}" />
+{{/each}}{{else}}			<input type="hidden" th:id="{{attributes.[0].ccName}}" th:name="{{attributes.[0].ccName}}" />
+{{/if}}			<input type="hidden" th:id="pageIndex" th:name="pageIndex" th:value="1" />
+
+			<!-- Search Form -->
+			<div class="form-group">
+				<div class="search-wrap">
+					<div class="search-body">
+						<div class="form-conts searchOption">
+							<select id="searchCondition" name="searchCondition" class="krds-form-select medium" title="Choose search condition">
+{{#if pkAttributes.length}}{{#if (eq pkAttributes.length 1)}}{{!-- Case 1. PK 컬럼이 있고, 1개 뿐이라면 : PK 컬럼을 제외한 일반 컬럼 중 맨 앞의 1개와 PK 컬럼이 검색 조건 --}}{{setVar "foundFirst" false}}{{#each attributes}}								      {{#unless isPrimaryKey}}{{#unless @root.foundFirst}}
+								<option value="1" th:selected="{{concat "${" @root.voInstanceName ".searchCondition} == 1"}}">{{pcName}}</option>{{setVar "foundFirst" true}}{{/unless}}{{/unless}}
+{{/each}}								<option value="0" th:selected="{{concat "${" voInstanceName ".searchCondition} == 0"}}">{{pkAttributes.[0].pcName}}</option>
+{{else}}{{!-- Case 2. PK 컬럼이 있고, 2개 이상이라면 : PK 컬럼 2개가 검색 조건 --}}								<option value="1" th:selected="{{concat "${" voInstanceName ".searchCondition} == 1"}}">{{pkAttributes.[1].pcName}}</option>
+								<option value="0" th:selected="{{concat "${" voInstanceName ".searchCondition} == 0"}}">{{pkAttributes.[0].pcName}}</option>
+{{/if}}{{else}}{{!-- Case 3. PK 컬럼이 없다면 : 일반 컬럼 앞 2개가 검색 조건 --}}								<option value="1" th:selected="{{concat "${" voInstanceName ".searchCondition} == 1"}}">{{attributes.[1].pcName}}</option>
+								<option value="0" th:selected="{{concat "${" voInstanceName ".searchCondition} == 0"}}">{{attributes.[0].pcName}}</option>
+{{/if}}							</select>
+						</div>
+						<div class="form-conts btn-ico-wrap searchKeyword">
+							<input type="text" id="searchKeyword" name="searchKeyword" th:value="{{concat "${" voInstanceName ".searchKeyword}"}}" class="krds-input medium" placeholder="Search keyword">
+							<button type="button" class="krds-btn medium icon" th:onclick="fn_egov_selectList()">
+								<span class="sr-only">Search</span>
+								<i class="svg-icon ico-sch"></i>
+							</button>
+						</div>
+					</div>
+					<div class="page-btn-wrap">
+						<button type="button" class="krds-btn medium" th:onclick="fn_egov_addView()">Regist</button>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		<!-- List -->
+		<div class="krds-table-wrap">
+			<table class="tbl col data">
+				<colgroup>
+					<col style="width: 10%;">
+{{#each attributes}}					<col style="width: auto;">
+{{/each}}				</colgroup>
+
+				<thead>
+					<tr>
+						<th scope="col" class="text-center">No</th>
+{{#each attributes}}						<th scope="col" class="text-center">{{pcName}}</th>
+{{/each}}					</tr>
+				</thead>
+
+				<tbody>
+					<tr th:each="result, iterStat : ${resultList}">
+					  <!-- 순번 계산 -->
+						<td class="text-center" th:text="${paginationInfo.totalRecordCount + 1 - (({{voInstanceName}}.pageIndex - 1) * {{voInstanceName}}.pageSize + iterStat.count)}"></td>
+{{#each attributes}}{{#if isPrimaryKey}}						<!-- PK 컬럼: 클릭 가능한 링크 / 이 result 객체의 모든 PK 컬럼들이 SQL 문의 WHERE 조건에 사용됨 -->
+						<td class="text-center">
+							<a href="#" th:onclick="fn_egov_select({{#each @root.pkAttributes}}[[{{concat "${result." ccName "}"}}]]{{#unless @last}}, {{/unless}}{{/each}})" th:text="{{concat "${result." ccName "}"}}"></a>
+						</td>
+{{else}}{{#unless @root.pkAttributes.length}}{{#if @first}}						<!-- PK 컬럼이 없다면, 첫 번째 컬럼이 PK 역할 수행하여 SQL문의 WHERE 조건에 사용됨 -->
+						<td class="text-center">
+							<a href="#" th:onclick="fn_egov_select([[{{concat "${result." ccName "}"}}]])" th:text="{{concat "${result." ccName "}"}}"></a>
+						</td>
+{{else}}						<!-- 일반 컬럼: 단순 출력 -->
+						<td class="text-center" th:text="{{concat "${result." ccName "}"}}"></td>
+{{/if}}{{else}}						<!-- 일반 컬럼: 단순 출력 -->
+						<td class="text-center" th:text="{{concat "${result." ccName "}"}}"></td>
+{{/unless}}{{/if}}{{/each}}					</tr>
+					<tr th:if="${resultList == null or resultList.isEmpty()}">
+						<td class="text-center" colspan="{{add attributes.length 1}}">No data found</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Pagination -->
+		<div id="paging" class="krds-pagination w-page" th:utext="${#egovKrdsPaginationRenderer.renderPagination(paginationInfo, 'fn_egov_link_page')}"></div>
+
+	</div>
+
+</div>
+
+</body>
+</html>

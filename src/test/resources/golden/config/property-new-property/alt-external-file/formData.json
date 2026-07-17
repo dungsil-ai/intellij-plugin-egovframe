@@ -1,0 +1,11 @@
+{
+  "generationType": "xml",
+  "txtConfigPackage": "egovframework.example.config",
+  "txtFileName": "context-properties",
+  "txtPropertyServiceName": "propertiesService",
+  "rdoType": "External File",
+  "txtKey": "pageUnit",
+  "txtValue": "20",
+  "cboEncoding": "UTF-8",
+  "txtPropertyFile": "classpath*:/egovframework/egovProps/conf/config.properties"
+}

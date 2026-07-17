@@ -1,0 +1,22 @@
+{
+  "generationType": "xml",
+  "txtConfigPackage": "egovframework.example.config",
+  "txtFileName": "log4j2-jdbc",
+  "txtAppenderName": "jdbc",
+  "txtConversionPattern": "%d %5p [%c] %m%n",
+  "txtLogFileName": "",
+  "cboAppend": true,
+  "txtLogFileNamePattern": "",
+  "txtMaxIndex": "20",
+  "txtMaxFileSize": "3000",
+  "txtInterval": "1",
+  "cboModulate": true,
+  "txtTableName": "LOG",
+  "rdoConnectionType": "ConnectionFactory",
+  "txtDriver": "com.mysql.cj.jdbc.Driver",
+  "txtUrl": "jdbc:mysql://localhost:3306/log",
+  "txtUser": "log",
+  "txtPasswrd": "log01",
+  "txtConnectionFactoryClass": "org.egovframe.rte.fdl.logging.db.EgovConnectionFactory",
+  "txtConnectionFactoryMethod": "getDatabaseConnection"
+}

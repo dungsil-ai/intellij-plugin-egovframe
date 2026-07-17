@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="{{packageName}}.service.impl.{{className}}Mapper">
+
+	<resultMap id="{{classNameFirstCharLower}}" type="{{packageName}}.service.{{className}}VO">
+{{#each attributes}}		<result property="{{ccName}}" column="{{columnName}}"/>
+{{/each}}	</resultMap>
+
+	<insert id="insert{{className}}">
+
+			INSERT INTO {{dbTableName}} (
+{{#each attributes}}{{#if @first}}				{{columnName}}
+{{else}}				, {{columnName}}
+{{/if}}			{{/each}} )
+			VALUES (
+{{#each attributes}}{{#if @first}}				{{concat "#{" ccName "}"}}
+{{else}}				, {{concat "#{" ccName "}"}}
+{{/if}}			{{/each}} )
+
+	</insert>
+
+	<update id="update{{className}}">
+
+			UPDATE {{dbTableName}}
+			SET{{setVar "isFirstSet" true}}{{#each attributes}}{{#unless isPrimaryKey}}{{#if @root.isFirstSet}}				{{columnName}}={{concat "#{" ccName "}"}}{{setVar "isFirstSet" false}}{{else}}				, {{columnName}}={{concat "#{" ccName "}"}}
+{{/if}}{{/unless}}{{/each}}			WHERE
+{{#if pkAttributes.length}}{{#each pkAttributes}}{{#if @first}}				{{columnName}}={{concat "#{" ccName "}"}}
+{{else}}				AND {{columnName}}={{concat "#{" ccName "}"}}
+{{/if}}{{/each}}{{else}}				{{attributes.[0].columnName}}={{concat "#{" attributes.[0].ccName "}"}}
+{{/if}}
+	</update>
+
+	<delete id="delete{{className}}">
+
+			DELETE FROM {{dbTableName}}
+			WHERE
+{{#if pkAttributes.length}}{{#each pkAttributes}}{{#if @first}}				{{columnName}}={{concat "#{" ccName "}"}}
+{{else}}				AND {{columnName}}={{concat "#{" ccName "}"}}
+{{/if}}{{/each}}{{else}}				{{attributes.[0].columnName}}={{concat "#{" attributes.[0].ccName "}"}}
+{{/if}}
+	</delete>
+
+	<select id="select{{className}}" resultMap="{{classNameFirstCharLower}}">
+
+			SELECT
+{{#each attributes}}				{{#if @first}}{{columnName}}{{else}}, {{columnName}}{{/if}}
+{{/each}}			FROM {{dbTableName}}
+			WHERE
+{{#if pkAttributes.length}}{{#each pkAttributes}}{{#if @first}}				{{columnName}} = {{concat "#{" ccName "}"}}
+{{else}}				AND {{columnName}} = {{concat "#{" ccName "}"}}
+{{/if}}{{/each}}{{else}}				{{attributes.[0].columnName}} = {{concat "#{" attributes.[0].ccName "}"}}
+{{/if}}
+	</select>
+
+	<select id="select{{className}}List" resultMap="{{classNameFirstCharLower}}">
+
+			SELECT
+{{#each attributes}}				{{#if @first}}{{columnName}}{{else}}, {{columnName}}{{/if}}
+{{/each}}			FROM {{dbTableName}}
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+{{#if pkAttributes.length}}						AND	{{pkAttributes.[0].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+{{else}}						AND	{{attributes.[0].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+{{/if}}					</when>
+		            <when test="searchCondition == 1">
+{{#if pkAttributes.length}}{{setVar "foundFirst" false}}{{#if (eq pkAttributes.length 1)}}{{#each attributes}}								{{#unless isPrimaryKey}}{{#unless @root.foundFirst}}AND {{columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'{{setVar "foundFirst" true}}{{/unless}}{{/unless}}
+{{/each}}{{else}}						AND	{{pkAttributes.[1].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+{{/if}}{{else}}{{#unless (eq attributes.length 1)}}						AND	{{attributes.[1].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+{{/unless}}{{/if}}					</when>
+				</choose>
+			</if>
+			ORDER BY {{#if pkAttributes.length}}{{pkAttributes.[0].columnName}}{{else}}{{attributes.[0].columnName}}{{/if}} DESC
+			LIMIT {{concat "#{" "recordCountPerPage" "}"}} OFFSET {{concat "#{" "firstIndex" "}"}}
+
+	</select>
+
+	<select id="select{{className}}ListTotCnt" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM {{dbTableName}}
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+{{#if pkAttributes.length}}						AND {{pkAttributes.[0].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+{{else}}						AND {{attributes.[0].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+{{/if}}					</when>
+		            <when test="searchCondition == 1">
+{{#if pkAttributes.length}}{{#if (eq pkAttributes.length 1)}}{{setVar "foundFirst" false}}{{#each attributes}}								{{#unless isPrimaryKey}}{{#unless @root.foundFirst}}
+						AND {{columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'{{setVar "foundFirst" true}}{{/unless}}{{/unless}}
+{{/each}}{{else}}						AND {{pkAttributes.[1].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+{{/if}}{{else}}{{#unless (eq attributes.length 1)}}						AND {{attributes.[1].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+{{/unless}}{{/if}}					</when>
+				</choose>
+			</if>
+	</select>
+
+</mapper>

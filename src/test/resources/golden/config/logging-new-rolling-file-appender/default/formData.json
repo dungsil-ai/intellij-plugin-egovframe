@@ -1,0 +1,22 @@
+{
+  "generationType": "xml",
+  "txtConfigPackage": "egovframework.example.config",
+  "txtFileName": "log4j2-rollingFile",
+  "txtAppenderName": "rolling-file",
+  "txtConversionPattern": "%d %5p [%c] %m%n",
+  "txtLogFileName": "./logs/rolling/rollingSample.log",
+  "cboAppend": true,
+  "txtLogFileNamePattern": "./logs/rolling/rollingSample.%i.log",
+  "txtMaxIndex": "20",
+  "txtMaxFileSize": "3000",
+  "txtInterval": "1",
+  "cboModulate": true,
+  "txtTableName": "LOG",
+  "rdoConnectionType": "DriverManager",
+  "txtDriver": "com.mysql.cj.jdbc.Driver",
+  "txtUrl": "jdbc:mysql://localhost:3306/log",
+  "txtUser": "log",
+  "txtPasswrd": "log01",
+  "txtConnectionFactoryClass": "org.egovframe.rte.fdl.logging.db.EgovConnectionFactory",
+  "txtConnectionFactoryMethod": "getDatabaseConnection"
+}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<Configuration>
+    <Appenders>
+        <RollingFile name="rolling-file" fileName="./logs/rolling/rollingSample.log"
+            filePattern="./logs/rolling/rollingSample.%i.log">
+            <PatternLayout pattern="%d %5p [%c] %m%n" />
+            <Policies>
+                <SizeBasedTriggeringPolicy size="3000" />
+            </Policies>
+            <DefaultRolloverStrategy max="20" />
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="egovframework" level="DEBUG" additivity="false">
+            <AppenderRef ref="rolling-file" />
+        </Logger>
+        <Logger name="org.egovframe" level="DEBUG" additivity="false">
+            <AppenderRef ref="rolling-file" />
+        </Logger>
+        <Logger name="org.springframework" level="DEBUG" additivity="false">
+            <AppenderRef ref="rolling-file" />
+        </Logger>
+        <Root level="INFO">
+            <AppenderRef ref="rolling-file" />
+        </Root>
+    </Loggers>
+</Configuration>

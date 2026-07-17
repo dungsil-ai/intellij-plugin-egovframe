@@ -1,0 +1,52 @@
+Configuration:
+  Appenders:
+    JDBC:
+      name: jdbc
+      tableName: LOG
+      ConnectionFactory:
+        class: "org.egovframe.rte.fdl.logging.db.EgovConnectionFactory"
+        method: "getDatabaseConnection"
+      Column:
+        - name: "reg_dt"
+          isEventTimestamp: true
+        - name: "level"
+          pattern: "%p"
+        - name: "logger"
+          pattern: "%c"
+        - name: "message"
+          pattern: "%m"
+        - name: "exception"
+          pattern: "%ex{full}"
+      # Filters 설정
+      # Filters:
+      #   - ThresholdFilter:
+      #       level: "INFO"
+      #       onMatch: "DENY"
+      #       onMismatch: "NEUTRAL"
+      #   - RegexFilter:
+      #       regex: ".*Exception.*"
+      #       onMatch: "NEUTRAL"
+      #       onMismatch: "DENY"
+
+  Loggers:
+    Logger:
+      - name: "egovframework"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: jdbc
+      - name: "org.egovframe"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: jdbc
+      - name: "org.springframework"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: jdbc
+
+    Root:
+      level: INFO
+      appenderRef:
+        - ref: jdbc

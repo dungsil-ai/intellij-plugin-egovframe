@@ -1,0 +1,47 @@
+{
+  "tableName": "EventInfo",
+  "dbTableName": "event_info",
+  "attributes": [
+    {
+      "ccName": "eventId",
+      "columnName": "event_id",
+      "isPrimaryKey": true,
+      "pcName": "EventId",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    },
+    {
+      "ccName": "eventName",
+      "columnName": "event_name",
+      "isPrimaryKey": false,
+      "pcName": "EventName",
+      "dataType": "VARCHAR",
+      "javaType": "java.lang.String"
+    },
+    {
+      "ccName": "description",
+      "columnName": "description",
+      "isPrimaryKey": false,
+      "pcName": "Description",
+      "dataType": "TEXT",
+      "javaType": "java.lang.String"
+    }
+  ],
+  "pkAttributes": [
+    {
+      "ccName": "eventId",
+      "columnName": "event_id",
+      "isPrimaryKey": true,
+      "pcName": "EventId",
+      "dataType": "INT",
+      "javaType": "java.lang.Integer"
+    }
+  ],
+  "packageName": "egovframework.example.sample",
+  "className": "EventInfo",
+  "classNameFirstCharLower": "eventInfo",
+  "author": "author",
+  "date": "2026-07-16",
+  "version": "1.0.0",
+  "packagePath": "egovframework/example/sample"
+}

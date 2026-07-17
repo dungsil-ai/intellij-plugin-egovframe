@@ -1,0 +1,20 @@
+package egovframework.example.config;
+
+import jakarta.sql.DataSource;
+
+import org.egovframe.rte.fdl.idgnr.impl.EgovSequenceIdGnrServiceImpl;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class EgovIdgnSequenceConfig {
+
+    @Bean(name = "idGnrService", destroyMethod = "destroy")
+    public EgovSequenceIdGnrServiceImpl idGnrService(@Qualifier("dataSource") DataSource dataSource) {
+        EgovSequenceIdGnrServiceImpl egovSequenceIdGnrService = new EgovSequenceIdGnrServiceImpl();
+        egovSequenceIdGnrService.setDataSource(dataSource);
+        egovSequenceIdGnrService.setQuery("SELECT SEQ_SAMPLE.NEXTVAL FROM DUAL");
+        return egovSequenceIdGnrService;
+    }
+}

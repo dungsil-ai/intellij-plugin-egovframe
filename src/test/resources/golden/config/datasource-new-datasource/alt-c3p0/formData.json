@@ -1,0 +1,11 @@
+{
+  "generationType": "xml",
+  "txtConfigPackage": "egovframework.example.config",
+  "txtFileName": "context-datasource",
+  "txtDatasourceName": "dataSource",
+  "rdoType": "C3P0",
+  "txtDriver": "com.mysql.cj.jdbc.Driver",
+  "txtUrl": "jdbc:mysql://127.0.0.1:3306/myDB",
+  "txtUser": "root",
+  "txtPasswd": ""
+}

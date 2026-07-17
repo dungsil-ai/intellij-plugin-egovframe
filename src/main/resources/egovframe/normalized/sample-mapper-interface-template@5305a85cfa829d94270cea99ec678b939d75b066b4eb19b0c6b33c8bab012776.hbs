@@ -1,0 +1,76 @@
+package {{packageName}}.service.impl;
+
+import java.util.List;
+
+import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
+
+import {{packageName}}.service.{{className}}VO;
+
+/**
+* @Class Name : {{className}}Mapper.java
+* @Description : {{className}}에 관한 데이터처리 매퍼 클래스
+* @Modification Information
+* @
+* @ 수정일 수정자 수정내용
+* @ --------- --------- -------------------------------
+* @ {{date}} {{author}} 최초생성
+*
+* @author {{author}}
+* @since {{date}}
+* @version {{version}}
+* @see
+*
+* Copyright (C) All right reserved.
+*/
+@EgovMapper("{{classNameFirstCharLower}}Mapper")
+public interface {{className}}Mapper {
+
+	/**
+	 * 글을 등록한다.
+	 * @param vo - 등록할 정보가 담긴 {{className}}VO
+	 * @return 등록 결과
+	 * @exception Exception
+	 */
+	void insert{{className}}({{className}}VO vo) throws Exception;
+
+	/**
+	 * 글을 수정한다.
+	 * @param vo - 수정할 정보가 담긴 {{className}}VO
+	 * @return void형
+	 * @exception Exception
+	 */
+	void update{{className}}({{className}}VO vo) throws Exception;
+
+	/**
+	 * 글을 삭제한다.
+	 * @param vo - 삭제할 정보가 담긴 {{className}}VO
+	 * @return void형
+	 * @exception Exception
+	 */
+	void delete{{className}}({{className}}VO vo) throws Exception;
+
+	/**
+	 * 글을 조회한다.
+	 * @param vo - 조회할 정보가 담긴 {{className}}VO
+	 * @return 조회한 글
+	 * @exception Exception
+	 */
+	{{className}}VO select{{className}}({{className}}VO vo) throws Exception;
+
+	/**
+	 * 글 목록을 조회한다.
+	 * @param vo - 조회할 정보가 담긴 VO
+	 * @return 글 목록
+	 * @exception Exception
+	 */
+	List<?> select{{className}}List({{className}}VO vo) throws Exception;
+
+	/**
+	 * 글 총 갯수를 조회한다.
+	 * @param vo - 조회할 정보가 담긴 VO
+	 * @return 글 총 갯수
+	 * @exception
+	 */
+	int select{{className}}ListTotCnt({{className}}VO vo);
+
+}

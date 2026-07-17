@@ -1,0 +1,20 @@
+package egovframework.example.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jndi.JndiObjectFactoryBean;
+
+/**
+ * JNDI DataSource Configuration
+ * Spring Framework 6.x, Jakarta EE 9 호환
+ */
+@Configuration
+public class context-jndi-datasource {
+
+  @Bean(name = "dataSource")
+  public JndiObjectFactoryBean dataSource() {
+    JndiObjectFactoryBean jndiObjectFactoryBean = new JndiObjectFactoryBean();
+    jndiObjectFactoryBean.setJndiName("java:comp/env/jdbc/myDataSource");
+    return jndiObjectFactoryBean;
+  }
+}

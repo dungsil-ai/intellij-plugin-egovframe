@@ -1,0 +1,56 @@
+Configuration:
+  Appenders:
+    JDBC:
+      name: jdbc
+      tableName: LOG
+      DriverManager:
+        driverClassName: com.mysql.cj.jdbc.Driver
+        connectionString: jdbc:mysql://localhost:3306/log
+        userName: log
+        password: 
+        # 필요 시 추가 연결 속성 설정
+        # 예: useSSL: false
+      Column:
+        - name: "reg_dt"
+          isEventTimestamp: true
+        - name: "level"
+          pattern: "%p"
+        - name: "logger"
+          pattern: "%c"
+        - name: "message"
+          pattern: "%m"
+        - name: "exception"
+          pattern: "%ex{full}"
+      # Filters 설정
+      # Filters:
+      #   - ThresholdFilter:
+      #       level: "INFO"
+      #       onMatch: "DENY"
+      #       onMismatch: "NEUTRAL"
+      #   - RegexFilter:
+      #       regex: ".*Exception.*"
+      #       onMatch: "NEUTRAL"
+      #       onMismatch: "DENY"
+
+  Loggers:
+    Logger:
+      - name: "egovframework"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: jdbc
+      - name: "org.egovframe"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: jdbc
+      - name: "org.springframework"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: jdbc
+
+    Root:
+      level: INFO
+      appenderRef:
+        - ref: jdbc

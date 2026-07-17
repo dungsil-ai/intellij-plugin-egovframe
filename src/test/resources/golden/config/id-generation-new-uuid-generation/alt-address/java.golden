@@ -1,0 +1,23 @@
+package egovframework.example.config;
+
+import java.security.NoSuchAlgorithmException;
+
+import org.egovframe.rte.fdl.cmmn.exception.FdlException;
+import org.egovframe.rte.fdl.idgnr.impl.EgovUUIdGnrServiceImpl;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class EgovIdgnUuidConfig {
+
+    @Bean(name = "idGnrService")
+    public EgovUUIdGnrServiceImpl idGnrService() {
+        EgovUUIdGnrServiceImpl egovUUIdGnrService = new EgovUUIdGnrServiceImpl();
+        try {
+            egovUUIdGnrService.setAddress("12:34:56:78:9A:AB");
+        } catch (FdlException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return egovUUIdGnrService;
+    }
+}

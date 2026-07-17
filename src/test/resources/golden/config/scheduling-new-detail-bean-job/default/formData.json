@@ -1,0 +1,20 @@
+{
+  "generationType": "xml",
+  "txtConfigPackage": "egovframework.example.config",
+  "txtFileName": "context-scheduling-jobDetail",
+  "txtJobName": "jobDetail",
+  "txtServiceClass": "egovframework.example.schedule.JobService",
+  "chkProperty": true,
+  "txtPropertyName": "paramSampleJob",
+  "txtPropertyValue": "SampleJobValue",
+  "txtServiceName": "jobService",
+  "txtServiceMethod": "executeSample",
+  "cboConcurrent": "false",
+  "cboJobDetailType": "JobDetailFactoryBean",
+  "txtTriggerName": "",
+  "txtStartDelay": "2000",
+  "txtRepeatInterval": "10000",
+  "txtCronExpression": "*/10 * * * * ?",
+  "txtSchedulerName": "scheduler",
+  "cboTriggerType": "SimpleTriggerFactoryBean"
+}

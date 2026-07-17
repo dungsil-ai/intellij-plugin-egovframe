@@ -1,0 +1,120 @@
+package {{packageName}}.service.impl;
+
+import java.util.List;
+
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import {{packageName}}.service.{{className}}Service;
+import {{packageName}}.service.{{className}}VO;
+import jakarta.annotation.Resource;
+
+/**
+ * @Class Name : {{className}}ServiceImpl.java
+ * @Description : {{className}} Business Implement Class
+ * @Modification Information
+ * @
+ * @ 수정일 수정자 수정내용
+ * @ --------- --------- -------------------------------
+ * @ {{date}} {{author}} 최초생성
+ *
+ * @author {{author}}
+ * @since {{date}}
+ * @version {{version}}
+ * @see
+ *
+ * Copyright (C) All right reserved.
+ */
+@Service("{{classNameFirstCharLower}}Service")
+public class {{className}}ServiceImpl extends EgovAbstractServiceImpl implements {{className}}Service {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger({{className}}ServiceImpl.class);
+
+	/** {{className}}Mapper */
+	@Resource(name = "{{classNameFirstCharLower}}Mapper")
+	private {{className}}Mapper {{classNameFirstCharLower}}Mapper;
+
+	/** ID Generation */
+	@Resource(name = "egovIdGnrService")
+	private EgovIdGnrService egovIdGnrService;
+
+	/**
+	 * 글을 등록한다.
+	 * @param vo - 등록할 정보가 담긴 {{className}}VO
+	 * @exception Exception
+	 */
+	@Override
+	public void insert{{className}}({{className}}VO vo) throws Exception {
+		LOGGER.debug(vo.toString());
+
+		/** ID Generation Service */
+		String id = egovIdGnrService.getNextStringId();
+{{#if pkAttributes.length}}{{#if (eq pkAttributes.length 1)}}		vo.set{{pkAttributes.[0].pcName}}(id);
+{{else}}		// egovframe-Todo: PK가 복수일 경우 ID Generation 적용 방식 검토 필요
+		vo.set{{pkAttributes.[0].pcName}}(id);
+{{/if}}{{else}}		vo.set{{attributes.[0].pcName}}(id);
+{{/if}}		LOGGER.debug(vo.toString());
+
+		{{classNameFirstCharLower}}Mapper.insert{{className}}(vo);
+	}
+
+	/**
+	 * 글을 수정한다.
+	 * @param vo - 수정할 정보가 담긴 {{className}}VO
+	 * @exception Exception
+	 */
+	@Override
+	public void update{{className}}({{className}}VO vo) throws Exception {
+		{{classNameFirstCharLower}}Mapper.update{{className}}(vo);
+	}
+
+	/**
+	 * 글을 삭제한다.
+	 * @param vo - 삭제할 정보가 담긴 {{className}}VO
+	 * @exception Exception
+	 */
+	@Override
+	public void delete{{className}}({{className}}VO vo) throws Exception {
+		{{classNameFirstCharLower}}Mapper.delete{{className}}(vo);
+	}
+
+	/**
+	 * 글을 조회한다.
+	 * @param vo - 조회할 정보가 담긴 {{className}}VO
+	 * @return 조회한 글
+	 * @exception Exception
+	 */
+	@Override
+	public {{className}}VO select{{className}}({{className}}VO vo) throws Exception {
+		{{className}}VO resultVO = {{classNameFirstCharLower}}Mapper.select{{className}}(vo);
+		// if (resultVO == null)
+		//  	throw processException("info.nodata.msg");
+		return resultVO;
+	}
+
+	/**
+	 * 글 목록을 조회한다.
+	 * @param vo - 조회할 정보가 담긴 VO
+	 * @return 글 목록
+	 * @exception Exception
+	 */
+	@Override
+	public List<?> select{{className}}List({{className}}VO vo) throws Exception {
+		return {{classNameFirstCharLower}}Mapper.select{{className}}List(vo);
+	}
+
+	/**
+	 * 글 총 갯수를 조회한다.
+	 * @param vo - 조회할 정보가 담긴 VO
+	 * @return 글 총 갯수
+	 * @exception
+	 */
+	@Override
+	public int select{{className}}ListTotCnt({{className}}VO vo) {
+		return {{classNameFirstCharLower}}Mapper.select{{className}}ListTotCnt(vo);
+	}
+
+}

@@ -1,0 +1,7 @@
+{
+  "generationType": "xml",
+  "txtConfigPackage": "egovframework.example.config",
+  "txtFileName": "context-jndi-datasource",
+  "txtDatasourceName": "dataSource",
+  "txtJndiName": "java:comp/env/jdbc/myDataSource"
+}

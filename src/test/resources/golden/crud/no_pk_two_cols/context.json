@@ -1,0 +1,30 @@
+{
+  "tableName": "TmpLog",
+  "dbTableName": "tmp_log",
+  "attributes": [
+    {
+      "ccName": "logMessage",
+      "columnName": "log_message",
+      "isPrimaryKey": false,
+      "pcName": "LogMessage",
+      "dataType": "TEXT",
+      "javaType": "java.lang.String"
+    },
+    {
+      "ccName": "loggedAt",
+      "columnName": "logged_at",
+      "isPrimaryKey": false,
+      "pcName": "LoggedAt",
+      "dataType": "DATETIME",
+      "javaType": "java.util.Date"
+    }
+  ],
+  "pkAttributes": [],
+  "packageName": "egovframework.example.sample",
+  "className": "TmpLog",
+  "classNameFirstCharLower": "tmpLog",
+  "author": "author",
+  "date": "2026-07-16",
+  "version": "1.0.0",
+  "packagePath": "egovframework/example/sample"
+}

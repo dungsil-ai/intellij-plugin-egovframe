@@ -1,0 +1,35 @@
+Configuration:
+  Appenders:
+    RollingFile:
+      name: rolling-file
+      fileName: "./logs/rolling/rollingSample.log"
+      filePattern: "./logs/rolling/rollingSample.%i.log"
+      PatternLayout:
+        pattern: "%d %5p [%c] %m%n"
+      Policies:
+        SizeBasedTriggeringPolicy:
+          size: 3000
+      DefaultRolloverStrategy:
+        max: 20
+  Loggers:
+    Logger:
+      - name: "egovframework"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: rolling-file
+      - name: "org.egovframe"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: rolling-file
+      - name: "org.springframework"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: rolling-file
+
+    Root:
+      level: INFO
+      appenderRef:
+        - ref: rolling-file

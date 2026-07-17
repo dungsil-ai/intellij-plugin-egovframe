@@ -1,0 +1,30 @@
+Configuration:
+  Appenders:
+    File:
+      name: file
+      fileName: "./logs/file/sample.log"
+      append: true
+      PatternLayout:
+        pattern: "%d %5p [%c] %m%n"
+  Loggers:
+    Logger:
+      - name: "egovframework"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: file
+      - name: "org.egovframe"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: file
+      - name: "org.springframework"
+        level: DEBUG
+        additivity: false
+        appenderRef:
+          - ref: file
+
+    Root:
+      level: INFO
+      appenderRef:
+        - ref: file

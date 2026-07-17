@@ -1,0 +1,18 @@
+{
+  "generationType": "xml",
+  "txtConfigPackage": "egovframework.example.config",
+  "txtFileName": "context-idgn-sequence",
+  "txtIdServiceName": "idGnrService",
+  "txtDatasourceName": "dataSource",
+  "rdoIdType": "Base",
+  "txtQuery": "SELECT SEQ_SAMPLE.NEXTVAL FROM DUAL",
+  "txtTable": "IDS",
+  "txtTableNameFieldValue": "SAMPLE",
+  "txtBlockSize": "10",
+  "chkStrategy": false,
+  "txtStrategyName": "prefixIdGnrStrategy",
+  "txtPrefix": "egov-",
+  "txtCipers": "10",
+  "txtFillChar": "0",
+  "txtAddress": "12:34:56:78:9A:AB"
+}

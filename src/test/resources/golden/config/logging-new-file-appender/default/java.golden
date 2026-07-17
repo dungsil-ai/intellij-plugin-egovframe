@@ -1,0 +1,46 @@
+package egovframework.example.config;
+
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class EgovLog4j2FileConfig {
+
+    @Bean(name = "file")
+    public FileAppender file() {
+        FileAppender fileAppender = new FileAppender();
+
+        // Set the file path
+        fileAppender.setFile("./logs/file/sample.log");
+
+        // Set whether to append to the file
+        fileAppender.setAppend(true);
+
+        // Set the layout for the appender
+        PatternLayout layout = new PatternLayout();
+        layout.setConversionPattern("%d %5p [%c] %m%n");
+        fileAppender.setLayout(layout);
+
+        return fileAppender;
+    }
+
+    @Bean
+    public Logger springLogger() {
+        Logger logger = Logger.getLogger("org.springframework");
+        logger.setAdditivity(false);
+        logger.setLevel(org.apache.log4j.Level.DEBUG);
+        logger.addAppender(file());
+        return logger;
+    }
+
+    @Bean
+    public Logger rootLogger() {
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(org.apache.log4j.Level.OFF);
+        rootLogger.addAppender(file());
+        return rootLogger;
+    }
+}

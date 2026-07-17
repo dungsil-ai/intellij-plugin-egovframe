@@ -1,0 +1,42 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch sources
+        uses: actions/checkout@v4
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          submodules: recursive
+
+      - name: Fetch bundled upstream ZIPs
+        run: git -C vendor/egovframe-vscode-initializr lfs pull --include="templates/projects/examples/egovframe-boot-web.zip,templates/projects/examples/egovframe-boot-simple-backend.zip"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build, test, and verify plugin
+        run: ./gradlew buildPlugin check verifyPluginProjectConfiguration verifyPluginStructure verifyPlugin
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-distribution
+          path: build/distributions/*.zip

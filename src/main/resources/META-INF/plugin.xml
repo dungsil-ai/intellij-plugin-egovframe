@@ -1,0 +1,42 @@
+<idea-plugin>
+  <id>kr.kyg.intellij.plugin.egovframe</id>
+  <name>eGovFrame Initializr for IDEA</name>
+  <vendor url="https://github.com/eGovFramework/egovframe-vscode-initializr">kyg</vendor>
+
+  <description><![CDATA[
+    Korean eGovernment Standard Framework (eGovFrame) 5.0 support for IntelliJ IDEA.<br/>
+    Native replacement of the official eGovFrame VS Code Initializr (v5.0.6):
+    <ul>
+      <li>New Project wizard with the 22 official eGovFrame project templates (Maven auto-link)</li>
+      <li>DDL-based CRUD code generation (11 artifacts) with preview and ERD summary</li>
+      <li>21 runtime configuration generators (XML / JavaConfig / YAML / Properties)</li>
+    </ul>
+    Bundled templates are redistributed unmodified from the Apache-2.0 licensed
+    <a href="https://github.com/eGovFramework/egovframe-vscode-initializr">eGovFramework/egovframe-vscode-initializr</a> project.
+    ]]></description>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.java</depends>
+  <depends optional="true" config-file="egovframe-maven.xml">org.jetbrains.idea.maven</depends>
+
+  <resource-bundle>messages.EgovBundle</resource-bundle>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <notificationGroup id="eGovFrame" displayType="BALLOON" bundle="messages.EgovBundle" key="notification.group.name"/>
+    <toolWindow id="eGovFrame" anchor="right"
+                factoryClass="kr.kyg.intellij.plugin.egovframe.ui.EgovToolWindowFactory"/>
+    <applicationConfigurable id="kr.kyg.intellij.plugin.egovframe.settings"
+                             displayName="eGovFrame"
+                             instance="kr.kyg.intellij.plugin.egovframe.settings.EgovSettingsConfigurable"/>
+    <newProjectWizard.generator implementation="kr.kyg.intellij.plugin.egovframe.project.EgovProjectWizard"/>
+  </extensions>
+
+  <actions>
+    <action id="kr.kyg.intellij.plugin.egovframe.openConfig"
+            class="kr.kyg.intellij.plugin.egovframe.config.OpenConfigToolWindowAction"
+            text="eGovFrame Configuration Generator"
+            description="Open the eGovFrame configuration generator">
+      <add-to-group group-id="ToolsMenu" anchor="last"/>
+    </action>
+  </actions>
+</idea-plugin>

@@ -1,0 +1,246 @@
+{
+  "bundled": {
+    "egovframe/code/sample-controller-template.hbs": "3ea3de9cc96ca58ed51393eb7a58b0e1552df6b65422bd39b53ae71f532c8408",
+    "egovframe/code/sample-default-vo-template.hbs": "2f49e502417c1d0b169f71e64d0e944e591f78028fdf073fa8f8ffaeca988d36",
+    "egovframe/code/sample-jsp-list.hbs": "604de23f767e79291d6a6456b4635fe06bc14daa951983b249ba36878cb03680",
+    "egovframe/code/sample-jsp-register.hbs": "c60b035dc6cfac00d91061cc596777aab10788abce3be1c44a141891aaca919c",
+    "egovframe/code/sample-mapper-interface-template.hbs": "5305a85cfa829d94270cea99ec678b939d75b066b4eb19b0c6b33c8bab012776",
+    "egovframe/code/sample-mapper-template.hbs": "f79bb4d03bd0917be0ee75dcda2a370fdf918286d3cc26a2111eb4c5f4783b40",
+    "egovframe/code/sample-service-impl-template.hbs": "9dd947408c013afc8be410b77ddf4768dcf7d12fe736c29d5c3b13c6e6ff103d",
+    "egovframe/code/sample-service-template.hbs": "5a79553f4a1759cd9f848a87ba4ffbffc4234cce64a91424f0f8d9274e1b996a",
+    "egovframe/code/sample-thymeleaf-list.hbs": "b8475c69931ee7212a60f50c4bf931eb8b0eef21f119a4c679bef136a0193be9",
+    "egovframe/code/sample-thymeleaf-register.hbs": "79edd9abae075fceec166c408362e46a4d3200a302e9e30366840e0902537130",
+    "egovframe/code/sample-vo-template.hbs": "ed15ee297ba0886c98ad0bd545fee1734473d2e3fe0b760bb7321bf5462eb35f",
+    "egovframe/config/cache/cache-java.hbs": "a75a04443061333a513855e33a248b1960abcb4418e74b1e50b305979ab4860e",
+    "egovframe/config/cache/cache.hbs": "93aea6bc4dc890775dce6cf4d9af7b7ced4684c6a119764a449a14b2f0c52274",
+    "egovframe/config/cache/ehcacheConfigForSpring-java.hbs": "bebe1d2c18fa23cc5d18daa6ec191759b28b1e01989ab51bbdbe1a321ba0d3b2",
+    "egovframe/config/cache/ehcacheConfigForSpring.hbs": "e59e0eb83db35d32711e805be1d6e86f69ff02d68f0cec16d7d55ce434f6b434",
+    "egovframe/config/datasource/datasource-java.hbs": "6dd1655f4102a0209a2a8835c13902b0db37cdf245e3b5ef342f818cad221030",
+    "egovframe/config/datasource/datasource.hbs": "13b5a54e3ac06cb9b735bd841246658d52c8536e1a99ad24375ca7142afedf69",
+    "egovframe/config/datasource/jndiDatasource-java.hbs": "b4cd5af39d40857a92e717b63819b39e00606ca041b20b9e5a05bca11bc264bb",
+    "egovframe/config/datasource/jndiDatasource.hbs": "fcb5fa393de8a3aab00756abd99f8a149de68d2ef5deddc99e96b8247ec60c65",
+    "egovframe/config/idGeneration/xml-id-gnr-sequence-service-java.hbs": "79431454ee0f7cf950e7edd34b1d95286754f1e348f34800503d4c03ec932a91",
+    "egovframe/config/idGeneration/xml-id-gnr-sequence-service.hbs": "66ef4481032bc08878a4eb3c789416eb8f7e22e33c6a4e2c397e23e7dca775f0",
+    "egovframe/config/idGeneration/xml-id-gnr-table-service-java.hbs": "3ecd6b30b707f17ba215ff956b2e239beed30dad35da48a1a0400a1abf87e343",
+    "egovframe/config/idGeneration/xml-id-gnr-table-service.hbs": "b31905358abdf80bad1ddf15264b82cadfe0a8b82081a7e2d6abf351511da89b",
+    "egovframe/config/idGeneration/xml-id-gnr-uuid-service-java.hbs": "43e0561dbc416b838d645b7a9a2efb55bd35dbb8dfc54ce882593421534653fa",
+    "egovframe/config/idGeneration/xml-id-gnr-uuid-service.hbs": "9342a6ba1d1554a95f590d7ee888aabb416968ee97d20c158912ded0ea3f659d",
+    "egovframe/config/logging/console-java.hbs": "221b0a174d5416109123efcfd17d5622b4051b4ae3140f1d411c83db14a874ad",
+    "egovframe/config/logging/console-properties.hbs": "cf2e9d9a89ef012150ff0aef8ee9ff22e413e2c3e389f888feddfdf7fd2d84c2",
+    "egovframe/config/logging/console-yaml.hbs": "de83f7a0f9141e626379c14c8c984f5781b91ed99c9a508f73644f6611443ff4",
+    "egovframe/config/logging/console.hbs": "2f84d56f0d5365d18764019a11a42c380f58db68097a59230982a9144c98a843",
+    "egovframe/config/logging/dailyRollingFile-java.hbs": "d2c09c47627249833d8a6b80b27555dc7c210d0196b9e2f54992a5c149345665",
+    "egovframe/config/logging/file-java.hbs": "bfc70dcc333461a68cf5afdb764a4261259f4adabf9b46c75b3ee44e54177e71",
+    "egovframe/config/logging/file-properties.hbs": "073b766359e66b741f5a0ea079f3201803a1b1417daf11927c777db1aed3903a",
+    "egovframe/config/logging/file-yaml.hbs": "a879e3585783279150e27dfda0d96105e732b3320cb04808fda7622782081ecf",
+    "egovframe/config/logging/file.hbs": "24439fe1fc8a5c178c701d6313f67fea1d326375e458afb259bf0515beca18f6",
+    "egovframe/config/logging/jdbc-java.hbs": "63c593064fdf42203b559fc99a8b6885a2d8ae35448a423e04b804dec3d80312",
+    "egovframe/config/logging/jdbc-properties.hbs": "7439ff71ca8bb7747e107928798bafd5bf49d98e3630b66426bfa616b26e0f5a",
+    "egovframe/config/logging/jdbc-yaml.hbs": "a2e5c21805f32e9a4decd8fdb34d921b5d52e938b2fa95fb02971f8e6fd286fc",
+    "egovframe/config/logging/jdbc.hbs": "1090ef4c8a422826119eb000d91ea9dd659f26d384f06aa75ecde89f9773f704",
+    "egovframe/config/logging/rollingFile-java.hbs": "bf51c072c65d7b1427575f2f9230908e629ecdf26f2f47ce17b2976441fb3117",
+    "egovframe/config/logging/rollingFile-properties.hbs": "4f4aa083c950b04c511e1065ec02f7b032f4dad503fc337664470c4f7f87e927",
+    "egovframe/config/logging/rollingFile-yaml.hbs": "124033a87a96ca7238d6686e80faf42e4772e51b4328a0103a28dc49f82d8dd0",
+    "egovframe/config/logging/rollingFile.hbs": "07f7bc578434d8f33f6332212befc93b7ffc0eeb8844ee7a43ccb996de8430a7",
+    "egovframe/config/logging/timeBasedRollingFile-properties.hbs": "b6fd26e70708e791e25b275de0ac3172c4ddc556c091fb079b401b27dbfe4041",
+    "egovframe/config/logging/timeBasedRollingFile-yaml.hbs": "51d8151008d080bd5971e73ec4e456acc70a3f4560aa4da0c97b275a8105bc7a",
+    "egovframe/config/logging/timeBasedRollingFile.hbs": "f2b002976eacf311a1dfe0661456fdadf8d7f338f5807472a981720119c4aad3",
+    "egovframe/config/property/property-java.hbs": "f1432619cd2ae37684ff5cbf29125636f861b2219c05716ef6a4ef8ad7517d76",
+    "egovframe/config/property/property.hbs": "38b2089716742323f473c168c18d2a1f6c0ee1c581aaba2b77485419066963ce",
+    "egovframe/config/scheduling/beanJob-java.hbs": "9119d1b5e279bc924ed742938fbb0105abc55affd9ef784e2fc8595460efe5f8",
+    "egovframe/config/scheduling/beanJob.hbs": "6ec73dc33a73d646853b5f066b9af221f4441fb1a358ff6c1272cea67cb4917c",
+    "egovframe/config/scheduling/cronTrigger-java.hbs": "d2a226f8f619b272ac34deaa0f4b2d6c0d978395689dfe7e8ab13b521bfb341e",
+    "egovframe/config/scheduling/cronTrigger.hbs": "075fe523423bceee0c46c88ebbe31df613c5b3c72365f6fe5619a36c9af3f6a8",
+    "egovframe/config/scheduling/methodJob-java.hbs": "375cbebbb7fd92e3edba7008cfc3ada44c22809ca0b41366c506c7243d8df1a9",
+    "egovframe/config/scheduling/methodJob.hbs": "84831845aab6c094711bb186cadba205465eeca957ed8c27a3a443c23a927941",
+    "egovframe/config/scheduling/scheduler-java.hbs": "a3a8d66848ae4abc66756f4492967b113391b368a949dd849e0a990433b2a06f",
+    "egovframe/config/scheduling/scheduler.hbs": "f973e1cab635bb07b184e312742617f59e7251a361617dd8de712abd7450595d",
+    "egovframe/config/scheduling/simpleTrigger-java.hbs": "fc41aa12fb11ee9d462cfa6aec737021f18e72d8ad23117488adb3cdf62e1b45",
+    "egovframe/config/scheduling/simpleTrigger.hbs": "018907800abed1dff17e99d5869cefb44d11c84a60136ef2284eb9a20b5be061",
+    "egovframe/config/transaction/datasource-java.hbs": "4412d2d13ffc0e65625e4759d827d362fe6103d131119c49eea2758b6534bc8e",
+    "egovframe/config/transaction/datasource.hbs": "7021543c005e5bcbf323f51718e107837da158d1b5e85f75b28f9c618b4c907b",
+    "egovframe/config/transaction/jpa-java.hbs": "0b5d30595c8e88194d2cc6961cbb7d9568e66ae054d20eaae63e3f6ba1f3983a",
+    "egovframe/config/transaction/jpa.hbs": "090a8b67624a2afcd7fd1fd7e364ed5973c9807e9ae5d994ed8e77944fdfa778",
+    "egovframe/config/transaction/jta-java.hbs": "ec363ca74968485823b1d1c2ed223f101aa11254e901df8de880b5ad94994cd0",
+    "egovframe/config/transaction/jta.hbs": "349c4bbf4ed12e9a52a89875507f4955065acb5a10240cadebf0d5ed0f7a6438",
+    "egovframe/projects/examples/egovframe-boot-simple-backend.zip": "0fcf2be8369bc787164ffe1a5deb90c5d57781a3573812900305b5aecafdbd95",
+    "egovframe/projects/examples/egovframe-boot-web.zip": "1284019f991f0676683dc1b19e9133318e50f18092505e0c1635ef1336bd1f6c",
+    "egovframe/projects/pom/egovframe-ai-rag-langchain4j-pom.xml": "20e82a88bd48c5a3ffb719fd91241b822f5f5f0ed14726a0dd49408f18474026",
+    "egovframe/projects/pom/egovframe-ai-rag-springai-pom.xml": "8ad4193e29bd8045f8a54ff0a212fef9ab3fe85b05568c6d5e8a914cb69eac3d",
+    "egovframe/projects/pom/egovframe-boot-batch-db-commandline-pom.xml": "d820f3f9f8417be93b70030382a9983c8445d9b1ac859c0c57ee7fdbbf60f108",
+    "egovframe/projects/pom/egovframe-boot-batch-db-scheduler-pom.xml": "d820f3f9f8417be93b70030382a9983c8445d9b1ac859c0c57ee7fdbbf60f108",
+    "egovframe/projects/pom/egovframe-boot-batch-db-web-pom.xml": "e983552b34bd870629e3e8fb0f8e71810a9ced7ff4e8e2b89a8d7066b924ab17",
+    "egovframe/projects/pom/egovframe-boot-batch-file-commandline-pom.xml": "d820f3f9f8417be93b70030382a9983c8445d9b1ac859c0c57ee7fdbbf60f108",
+    "egovframe/projects/pom/egovframe-boot-batch-file-scheduler-pom.xml": "d820f3f9f8417be93b70030382a9983c8445d9b1ac859c0c57ee7fdbbf60f108",
+    "egovframe/projects/pom/egovframe-boot-batch-file-web-pom.xml": "33203862f947e2d9103a7ea9c59cdf1c7e7278f138e77c8453231827a4941df5",
+    "egovframe/projects/pom/egovframe-boot-simple-backend-pom.xml": "1008ef270decff318357259d789ccdb745b2ca99f36ad5b4e48001323a7e3842",
+    "egovframe/projects/pom/egovframe-boot-web-pom.xml": "0e7185bf748e2639614022ec1cdfa1fac5b7b2b00b93f73708033d2a8103ef41",
+    "egovframe/projects/pom/egovframe-mobile-common-components-pom.xml": "7869aa6dba3e7719cffb9adc45f7b1bf6d30dbc8a400593dbb8a301d1dea1fcf",
+    "egovframe/projects/pom/egovframe-mobile-deviceapi-pom.xml": "31f9a7ed3f392ead36b37da3905106475f9157dc0568c916d623285e4a1811da",
+    "egovframe/projects/pom/egovframe-mobile-web-pom.xml": "ad7242c46ccb6db02fab615a67077dcce08dfda394deccafefac989f634a630e",
+    "egovframe/projects/pom/egovframe-template-common-components-pom.xml": "b897390b7e08975bf687954c77a22704478674a92f99c4c49a49e2ecf84bc2f9",
+    "egovframe/projects/pom/egovframe-template-enterprise-pom.xml": "7fa2a6dd453eff21269b18bb79a62eb24761328666cad2cdb3e4054039255c69",
+    "egovframe/projects/pom/egovframe-template-portal-pom.xml": "051479c94f49f1c96e0c1939c70cdc9eb0b962454b813c2e654def01be89112d",
+    "egovframe/projects/pom/egovframe-template-simple-pom.xml": "4ad65ea11417a76c740369c19393eabded539d28b695e770a5ebda32effa1d26",
+    "egovframe/projects/pom/egovframe-web-pom.xml": "f5a79a0bc70a22d9d2ff366d624bfb9d5cb1f2126868c783b2da8d37ff8a76f2",
+    "egovframe/templates-context-xml.json": "017f8629af3849c393d45b4563194ecde6f3be674a9a9a725a308008136befc6",
+    "egovframe/templates-projects.json": "50394b91144e8d20f0f5d3fb138ab48cad3c3a28818f2906a2f38b07bfb9edef"
+  },
+  "upstreamTag": "v5.0.6",
+  "zips": {
+    "egovframe-ai-rag-langchain4j.zip": {
+      "bundled": false,
+      "displayName": "AI > RAG Project (Langchain4j)",
+      "sha256": "6c3d129dcdbf0f6a9759443d36bca881ac4b9f30bc689caca9380f457e784614",
+      "size": 97636,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-ai-rag-langchain4j.zip"
+    },
+    "egovframe-ai-rag-springai.zip": {
+      "bundled": false,
+      "displayName": "AI > RAG Project (Spring AI)",
+      "sha256": "f30cbeb0c71c7cf41142efc451aeb57e657b17da4aa50f800f590782dbfa3073",
+      "size": 95943,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-ai-rag-springai.zip"
+    },
+    "egovframe-boot-batch-db-commandline.zip": {
+      "bundled": false,
+      "displayName": "Boot Batch Template > CommandLine (DB)",
+      "sha256": "0de452a317f939f37867f66d293d8e6879fd868aa89c3ad1cc7a07c2b1c0ffd9",
+      "size": 1440218,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-boot-batch-db-commandline.zip"
+    },
+    "egovframe-boot-batch-db-scheduler.zip": {
+      "bundled": false,
+      "displayName": "Boot Batch Template > Scheduler (DB)",
+      "sha256": "b0cb160b252325eb6c29c93d978a5026913d377339e15c5551f615ca0cd2b7e7",
+      "size": 712628,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-boot-batch-db-scheduler.zip"
+    },
+    "egovframe-boot-batch-db-web.zip": {
+      "bundled": false,
+      "displayName": "Boot Batch Template > Web (DB)",
+      "sha256": "e229849102dee90fe7605107d9a4122425b67ddf2aa1bbc41b01af42bbc9e0c9",
+      "size": 1470738,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-boot-batch-db-web.zip"
+    },
+    "egovframe-boot-batch-file-commandline.zip": {
+      "bundled": false,
+      "displayName": "Boot Batch Template > CommandLine (File)",
+      "sha256": "c51352a2b4ce41ed64f0a0f543c5319164dcc16ac32f853bac44f1ee166535cc",
+      "size": 713252,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-boot-batch-file-commandline.zip"
+    },
+    "egovframe-boot-batch-file-scheduler.zip": {
+      "bundled": false,
+      "displayName": "Boot Batch Template > Scheduler (File)",
+      "sha256": "407b09f3c678f8bd96c5da7aa38fe574622a1b507a676d3937c1a8cafafb95d1",
+      "size": 714016,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-boot-batch-file-scheduler.zip"
+    },
+    "egovframe-boot-batch-file-web.zip": {
+      "bundled": false,
+      "displayName": "Boot Batch Template > Web (File)",
+      "sha256": "15b75e445cfd9dd0162dbf23034937acb6cac4cd25af45cc162b55ef91a7a1c8",
+      "size": 1465409,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-boot-batch-file-web.zip"
+    },
+    "egovframe-boot-simple-backend.zip": {
+      "bundled": true,
+      "displayName": "Boot Template > Simple Homepage (Backend)",
+      "sha256": "0fcf2be8369bc787164ffe1a5deb90c5d57781a3573812900305b5aecafdbd95",
+      "size": 389689,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-boot-simple-backend.zip"
+    },
+    "egovframe-boot-simple-frontend.zip": {
+      "bundled": false,
+      "displayName": "Boot Template > Simple Homepage (Frontend)",
+      "sha256": "caaeff023271b53a4f7908ddf79d66b284ab919eedec22f3806dae517da0307e",
+      "size": 3713472,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-boot-simple-frontend.zip"
+    },
+    "egovframe-boot-web.zip": {
+      "bundled": true,
+      "displayName": "Boot Web Project",
+      "sha256": "1284019f991f0676683dc1b19e9133318e50f18092505e0c1635ef1336bd1f6c",
+      "size": 15551650,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-boot-web.zip"
+    },
+    "egovframe-mobile-common-components.zip": {
+      "bundled": false,
+      "displayName": "Mobile Common Components Project",
+      "sha256": "0c0abe6922042e940221ea05f94868dac293ba4d2315d17fdc16d26ef23b42c0",
+      "size": 10696748,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-mobile-common-components.zip"
+    },
+    "egovframe-mobile-deviceapi.zip": {
+      "bundled": false,
+      "displayName": "DeviceAPI Web Project",
+      "sha256": "f66bf9d235e400fb2a6525565db432754e25be9d96f6a5a7592c82d1ce0cc45e",
+      "size": 176604,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-mobile-deviceapi.zip"
+    },
+    "egovframe-mobile-web.zip": {
+      "bundled": false,
+      "displayName": "Mobile Web Project",
+      "sha256": "b1ebcf172a775fada2418509a61b51914709eeb803ca6d03ef1bba766c9bc57b",
+      "size": 359099,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-mobile-web.zip"
+    },
+    "egovframe-msa-common-components.zip": {
+      "bundled": false,
+      "displayName": "MSA Boot Template > Common Components (KRDS)",
+      "sha256": "c3107278677b6a3763e14ea6a8033d621b2023ba7e944718ce5ff0608663c34c",
+      "size": 33803193,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-msa-common-components.zip"
+    },
+    "egovframe-msa-portal-backend.zip": {
+      "bundled": false,
+      "displayName": "MSA Boot Template > Portal (Backend)",
+      "sha256": "dd8e7563c6eb981c4ad6641f68bf9473badccac10164f51c8357b217c64fdd1d",
+      "size": 1101491,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-msa-portal-backend.zip"
+    },
+    "egovframe-msa-portal-frontend.zip": {
+      "bundled": false,
+      "displayName": "MSA Boot Template > Portal (Frontend)",
+      "sha256": "022b3615d7140f05361f09ce54024284b3be072a0f6f355ecd6738c71bb9e8e0",
+      "size": 6562922,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-msa-portal-frontend.zip"
+    },
+    "egovframe-template-common-components.zip": {
+      "bundled": false,
+      "displayName": "Template > Common Components",
+      "sha256": "8ccac2da943aa25cb533ef288709d26fbd76609106d1b6112bd8d881b6900bf0",
+      "size": 23464037,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-template-common-components.zip"
+    },
+    "egovframe-template-enterprise.zip": {
+      "bundled": false,
+      "displayName": "Template > Enterprise Business",
+      "sha256": "34a7895b4fef3c622ffd8e0174e586bb01e209320ac2ebdbc33dcc9c00a6aaf1",
+      "size": 1491778,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-template-enterprise.zip"
+    },
+    "egovframe-template-portal.zip": {
+      "bundled": false,
+      "displayName": "Template > Portal Site",
+      "sha256": "75c0a63062fcd5385c3d3e9c44f739d20d98d824aac65afea9691c3c9f1744ce",
+      "size": 4125985,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-template-portal.zip"
+    },
+    "egovframe-template-simple.zip": {
+      "bundled": false,
+      "displayName": "Template > Simple Homepage",
+      "sha256": "c34a8597260ac22f941cf5d4c6987fdc24dcbe167ea56ad6ac29bc93034dee59",
+      "size": 1595816,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-template-simple.zip"
+    },
+    "egovframe-web.zip": {
+      "bundled": false,
+      "displayName": "Web Project",
+      "sha256": "13674f6f76e74e6d70478b7e9ad0689b0f84b5ffc9828a49f8b511dc2b3d6b69",
+      "size": 15547491,
+      "url": "https://media.githubusercontent.com/media/eGovFramework/egovframe-vscode-initializr/v5.0.6/templates/projects/examples/egovframe-web.zip"
+    }
+  }
+}

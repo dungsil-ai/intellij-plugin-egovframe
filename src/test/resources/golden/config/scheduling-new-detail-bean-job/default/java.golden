@@ -1,0 +1,35 @@
+package egovframework.example.config;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.quartz.JobDetailFactoryBean;
+
+/**
+ * Job Detail Bean Configuration for Quartz Scheduler
+ * Spring Framework 6.x compatible
+ * 
+ * Requirements:
+ * - Spring Framework 6.x
+ * - Quartz Scheduler 2.3.2+
+ * - JDK 17+
+ */
+@Configuration
+public class EgovSchedulingJobDetailConfig {
+
+    /**
+     * Job Detail Bean 설정
+     * org.springframework.scheduling.quartz.QuartzJobBean을 구현한 클래스 필요
+     */
+    @Bean(name = "jobDetail")
+    public JobDetailFactoryBean jobDetail() {
+        JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
+        jobDetailFactory.setJobClass(egovframework.example.schedule.JobService.class); // org.springframework.scheduling.quartz.QuartzJobBean 구현 클래스
+        Map<String, Object> jobDataMap = new HashMap<>();
+        jobDataMap.put("paramSampleJob", "SampleJobValue");
+        jobDetailFactory.setJobDataAsMap(jobDataMap);
+        return jobDetailFactory;
+    }
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<Configuration>
+    <Appenders>
+        <JDBC name="jdbc" tableName="LOG">
+            <!-- ConnectionFactory 설정 -->
+            <ConnectionFactory 
+                class="org.egovframe.rte.fdl.logging.db.EgovConnectionFactory"
+                method="getDatabaseConnection" />
+            <Column name="reg_dt" isEventTimestamp="true" />
+            <Column name="level" pattern="%p" />
+            <Column name="logger" pattern="%c" />
+            <Column name="message" pattern="%m" />
+            <Column name="exception" pattern="%ex{full}" />
+            <!--
+              <Filters>
+                <ThresholdFilter level="INFO" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <RegexFilter regex=".*Exception.*" onMatch="NEUTRAL" onMismatch="DENY"/>
+              </Filters>
+            -->
+        </JDBC>
+    </Appenders>
+    <Loggers>
+        <Logger name="egovframework" level="DEBUG" additivity="false">
+            <AppenderRef ref="jdbc" />
+        </Logger>
+        <Logger name="org.egovframe" level="DEBUG" additivity="false">
+            <AppenderRef ref="jdbc" />
+        </Logger>
+        <Logger name="org.springframework" level="DEBUG" additivity="false">
+            <AppenderRef ref="jdbc" />
+        </Logger>
+        <Root level="INFO">
+            <AppenderRef ref="jdbc" />
+        </Root>
+    </Loggers>
+</Configuration>
