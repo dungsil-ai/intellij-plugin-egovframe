@@ -322,6 +322,7 @@ class SettingsModuleTest {
     @DisplayName("buildAboutText contains version, author, license, repository, homepage, guide, and project boundary")
     fun aboutTextContainsAllMetadata() {
         val text = AboutEgovAction.buildAboutText()
+        assertNotEquals("dev", PluginMetadata.version(), "Packaged version resource must be resolved")
         assertTrue(text.contains(PluginMetadata.version()), "About text should contain version")
         assertTrue(text.contains(PluginMetadata.AUTHOR), "About text should contain author")
         assertTrue(text.contains(PluginMetadata.LICENSE), "About text should contain license")
