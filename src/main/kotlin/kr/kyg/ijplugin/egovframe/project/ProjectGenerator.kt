@@ -7,13 +7,13 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.zip.ZipInputStream
 
-enum class ProjectGenerationStage(val label: String) {
-  RESOLVE_TEMPLATE("Loading template"),
-  EXTRACT("Extracting template"),
-  WRITE_POM("Writing POM"),
-  LINK_MAVEN("Linking Maven project"),
-  CONFIGURE_JDK("Configuring JDK 17"),
-  COMPLETE("Complete"),
+enum class ProjectGenerationStage(val messageKey: String) {
+  RESOLVE_TEMPLATE("wizard.progress.resolveTemplate"),
+  EXTRACT("wizard.progress.extract"),
+  WRITE_POM("wizard.progress.writePom"),
+  LINK_MAVEN("wizard.progress.linkMaven"),
+  CONFIGURE_JDK("wizard.progress.configureJdk"),
+  COMPLETE("wizard.progress.complete"),
 }
 
 fun interface GenerationProgress {

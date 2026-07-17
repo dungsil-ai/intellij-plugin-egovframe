@@ -1,6 +1,7 @@
 package kr.kyg.ijplugin.egovframe.config
 
 import kr.kyg.ijplugin.egovframe.assets.ConfigTemplate
+import kr.kyg.ijplugin.egovframe.settings.EgovBundle
 
 // ── Core types ──────────────────────────────────────────────────────────────
 
@@ -76,34 +77,31 @@ fun ConfigFormSpec.validate(state: FormState): ConfigGenerator.ValidationIssue? 
         if (field.visibleWhen != null && !field.visibleWhen.invoke(state)) continue
 
         val value = state.getString(field.key)
+        val label = EgovBundle.messageOrDefault("config.field.${field.key}", field.label)
         val isRequired = if (field.requiredWhen != null) field.requiredWhen.invoke(state) else field.required
 
         if (isRequired && value.isBlank()) {
-            return ConfigGenerator.ValidationIssue("${field.label} is required", field.key)
+            return ConfigGenerator.ValidationIssue(EgovBundle.message("config.validation.required", label), field.key)
         }
         if (value.isBlank()) continue
 
         if (field.numeric && value.toDoubleOrNull() == null) {
-            return ConfigGenerator.ValidationIssue("${field.label} must be a number", field.key)
+            return ConfigGenerator.ValidationIssue(EgovBundle.message("config.validation.numeric", label), field.key)
         }
         if (field.noSpecialChars && SPECIAL_CHARS.containsMatchIn(value)) {
-            return ConfigGenerator.ValidationIssue("${field.label} contains invalid characters", field.key)
+            return ConfigGenerator.ValidationIssue(EgovBundle.message("config.validation.special", label), field.key)
         }
         if (field.packageField && isJava && !PACKAGE_REGEX.matches(value)) {
-            return ConfigGenerator.ValidationIssue("${field.label} is not a valid Java package name", field.key)
+            return ConfigGenerator.ValidationIssue(EgovBundle.message("config.validation.package", label), field.key)
         }
 
         val baseFileName = stripOptionalExtension(value, generationType)
         if (field.classField && isJava) {
             if (!CLASS_NAME_REGEX.matches(baseFileName)) {
-                return ConfigGenerator.ValidationIssue(
-                    "${field.label} must be a valid Java class name", field.key,
-                )
+                return ConfigGenerator.ValidationIssue(EgovBundle.message("config.validation.class", label), field.key)
             }
         } else if (field.fileNameField && !FILE_NAME_REGEX.matches(baseFileName)) {
-            return ConfigGenerator.ValidationIssue(
-                "${field.label} contains invalid file name characters", field.key,
-            )
+            return ConfigGenerator.ValidationIssue(EgovBundle.message("config.validation.filename", label), field.key)
         }
     }
     return validateExtra?.invoke(state)
@@ -707,7 +705,7 @@ object ConfigFormRegistry {
     private val transactionExtraValidation: (FormState) -> ConfigGenerator.ValidationIssue? = { state ->
         if (!state.getBoolean("chkAopConfigTransaction") && !state.getBoolean("chkAnnotationTransaction")) {
             ConfigGenerator.ValidationIssue(
-                "At least one of AOP Config Transaction or Annotation Transaction must be selected",
+                EgovBundle.message("config.validation.transactionSelection"),
                 "chkAopConfigTransaction",
             )
         } else null

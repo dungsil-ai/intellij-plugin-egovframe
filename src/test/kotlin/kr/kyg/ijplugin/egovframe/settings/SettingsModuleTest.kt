@@ -1,5 +1,6 @@
 package kr.kyg.ijplugin.egovframe.settings
 
+import kr.kyg.ijplugin.egovframe.config.ConfigFormRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
@@ -25,6 +26,42 @@ class SettingsModuleTest {
         val koKeys = koBundle.keySet()
 
         assertEquals(enKeys, koKeys, "en and ko bundles must have identical key sets")
+    }
+
+    @Test
+    @DisplayName("every typed config field has en and ko labels")
+    fun everyConfigFieldHasLocalizedLabel() {
+        ConfigFormRegistry.all()
+            .flatMap { it.fields }
+            .map { "config.field.${it.key}" }
+            .distinct()
+            .forEach { key ->
+                assertTrue(enBundle.containsKey(key), "Missing English config field key: $key")
+                assertTrue(koBundle.containsKey(key), "Missing Korean config field key: $key")
+            }
+    }
+
+    @Test
+    @DisplayName("new wizard and CRUD surfaces have localized keys")
+    fun extendedUiKeysAreComplete() {
+        val keys = listOf(
+            "wizard.progress.title",
+            "wizard.progress.resolveTemplate",
+            "wizard.progress.extract",
+            "wizard.progress.writePom",
+            "wizard.progress.linkMaven",
+            "wizard.progress.configureJdk",
+            "wizard.progress.complete",
+            "crud.label.dialect",
+            "crud.label.sample",
+            "crud.sample.directInput",
+            "crud.notification.renderedMany",
+            "config.validation.transactionSelection",
+        )
+        keys.forEach { key ->
+            assertTrue(enBundle.containsKey(key), "Missing English UI key: $key")
+            assertTrue(koBundle.containsKey(key), "Missing Korean UI key: $key")
+        }
     }
 
     // ── 2. Bundle completeness ──────────────────────────────────────────────────────────────────────
@@ -237,6 +274,10 @@ class SettingsModuleTest {
             "settings.label.language",
             "action.requires.project",
             "wizard.description",
+            "wizard.progress.title",
+            "crud.label.sample",
+            "crud.sample.directInput",
+            "config.field.txtFileName",
             "about.title",
         )
         translatedKeys.forEach { key ->

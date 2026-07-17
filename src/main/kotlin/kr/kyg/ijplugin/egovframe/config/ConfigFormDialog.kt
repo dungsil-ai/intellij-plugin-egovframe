@@ -70,9 +70,9 @@ internal fun createSelectControl(field: FieldDef, defaultValue: Any?, onChange: 
     }
 }
 internal fun validateOutputFolderPath(value: String, component: JComponent): ValidationInfo? = when {
-    value.isBlank() -> ValidationInfo("Select an output folder", component)
+    value.isBlank() -> ValidationInfo(EgovBundle.message("config.validation.outputFolder.empty"), component)
     else -> runCatching { Path.of(value) }.exceptionOrNull()?.let {
-        ValidationInfo("Invalid output path", component)
+        ValidationInfo(EgovBundle.message("config.validation.outputFolder.invalid"), component)
     }
 }
 
@@ -122,8 +122,9 @@ class ConfigFormDialog(
                 val defaultValue = initialData[field.key]
                 val control = createControl(field, defaultValue)
                 controls[field.key] = control
-                val labelComponent = JBLabel(field.label)
-                addRow(form, row, field.label, control)
+                val label = EgovBundle.messageOrDefault("config.field.${field.key}", field.label)
+                val labelComponent = JBLabel(label)
+                addRow(form, row, label, control)
                 fieldRows[field.key] = listOf(labelComponent, control)
                 form.remove(form.componentCount - 2) // remove the auto-added label
                 form.add(labelComponent, GridBagConstraints().apply {
@@ -195,7 +196,7 @@ class ConfigFormDialog(
             }
             val panel = JPanel(BorderLayout(6, 0))
             panel.add(textField, BorderLayout.CENTER)
-            panel.add(JButton("Browse...").apply {
+            panel.add(JButton(EgovBundle.message("config.button.browse")).apply {
                 addActionListener { chooseFile(textField) }
             }, BorderLayout.EAST)
             panel.putClientProperty("textField", textField)
