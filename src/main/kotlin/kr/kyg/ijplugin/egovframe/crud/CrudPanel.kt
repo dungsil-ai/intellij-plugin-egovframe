@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
@@ -20,7 +21,6 @@ import kr.kyg.ijplugin.egovframe.settings.EgovSettings
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.GridLayout
-import java.nio.file.Files
 import java.nio.file.Path
 import javax.swing.DefaultComboBoxModel
 import javax.swing.JButton
@@ -33,12 +33,62 @@ import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
-class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disposable {
+internal interface CrudAuxiliaryPorts {
+  fun chooseHbsFiles(): List<Path>?
+  fun chooseDirectory(title: String, initial: Path?): Path?
+  fun openInEditor(path: Path)
+}
+
+internal class DefaultCrudAuxiliaryPorts(private val project: Project) : CrudAuxiliaryPorts {
+  override fun chooseHbsFiles(): List<Path>? {
+    val chooser = JFileChooser().apply {
+      dialogTitle = "Select Handlebars templates"
+      fileFilter = FileNameExtensionFilter("Handlebars template (*.hbs)", "hbs")
+      isMultiSelectionEnabled = true
+    }
+    if (chooser.showOpenDialog(WindowManager.getInstance().getFrame(project)) != JFileChooser.APPROVE_OPTION) return null
+    return chooser.selectedFiles.map { it.toPath() }
+  }
+
+  override fun chooseDirectory(title: String, initial: Path?): Path? {
+    val descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor()
+    descriptor.title = title
+    val initialVf = initial?.let {
+      runCatching { LocalFileSystem.getInstance().findFileByNioFile(it) }.getOrNull()
+    }
+    val chosen = FileChooser.chooseFile(descriptor, project, initialVf) ?: return null
+    return Path.of(chosen.path)
+  }
+
+
+  override fun openInEditor(path: Path) {
+    LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)?.let { file ->
+      FileEditorManager.getInstance(project).openFile(file, true)
+    }
+  }
+}
+
+class CrudPanel internal constructor(
+  private val project: Project,
+  private val ports: CrudAuxiliaryPorts,
+  providedAuxiliaryWorkflow: CrudAuxiliaryWorkflow?,
+) : JPanel(BorderLayout(8, 8)), Disposable {
+
+  constructor(project: Project) : this(project, DefaultCrudAuxiliaryPorts(project), null)
 
   private val editorModel = CrudEditorModel()
   private val crudGeneration = CrudGeneration()
   private val crudWriteAdapter = CrudWriteAdapter()
   private val editorAdapter = CrudSqlEditorAdapter(editorModel)
+  private val auxiliaryWorkflow = providedAuxiliaryWorkflow ?: CrudAuxiliaryWorkflow(
+    writer = TransactionalCrudAuxiliaryWriter(),
+    runWriteCommand = { action ->
+      var result: CrudAuxiliaryWriteResult? = null
+      WriteCommandAction.runWriteCommandAction(project) { result = action() }
+      requireNotNull(result)
+    },
+    openInEditor = ports::openInEditor,
+  )
   private val packageField = JBTextField(EgovSettings.getInstance().state.defaultPackageName)
   private val outputFolderField = JBTextField(project.basePath.orEmpty())
   private val autoPreview = JBCheckBox("Auto preview", false)
@@ -207,9 +257,17 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
   }
 
   private fun generate() {
+    val rawOutput = outputFolderField.text.trim()
+    try {
+      CrudGeneration.preflightGeneration(packageField.text.trim(), rawOutput)
+    } catch (error: Exception) {
+      notifyError(error, "CRUD generation failed")
+      return
+    }
+
     val plan = try {
       val prepared = requireReady() ?: return
-      prepared.plan(Path.of(outputFolderField.text.trim()))
+      prepared.plan(Path.of(rawOutput))
     } catch (error: Exception) {
       notifyError(error, "CRUD generation failed")
       return
@@ -227,7 +285,7 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
         result = crudWriteAdapter.write(writePlan)
       }
       val generated = requireNotNull(result)
-      generated.written.take(3).forEach { path ->
+      generated.written.forEach { path ->
         LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)?.let { file ->
           FileEditorManager.getInstance(project).openFile(file, true)
         }
@@ -248,39 +306,42 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
   }
 
   private fun renderCustomTemplate() {
-    val chooser = JFileChooser().apply {
-      dialogTitle = "Select Handlebars template"
-      fileFilter = FileNameExtensionFilter("Handlebars template (*.hbs)", "hbs")
-    }
-    if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return
+    val paths = ports.chooseHbsFiles() ?: return
+    if (paths.isEmpty()) return
+    val prepared = requireReady() ?: return
 
-    runCatching {
-      val prepared = requireReady() ?: return@runCatching
-      val content = prepared.renderCustom(Files.readString(chooser.selectedFile.toPath()))
-      val output = chooser.selectedFile.toPath().resolveSibling("${chooser.selectedFile.name}.generated")
-      WriteCommandAction.runWriteCommandAction(project) {
-        Files.writeString(output, content, Charsets.UTF_8)
+    runCatching { auxiliaryWorkflow.renderCustom(prepared, paths) }
+      .onSuccess { result ->
+        EgovNotifications.info(project, "Rendered ${result.written.size} custom template(s).")
+        if (result.cleanupFailures.isNotEmpty()) {
+          EgovNotifications.warning(
+            project,
+            "Rendered templates, but could not remove temporary files: ${result.cleanupFailures.joinToString()}",
+          )
+        }
       }
-      LocalFileSystem.getInstance().refreshAndFindFileByNioFile(output)
-      EgovNotifications.info(project, "Rendered custom template: $output")
-    }.onFailure { notifyError(it, "Template rendering failed") }
+      .onFailure { notifyError(it, "Template rendering failed") }
   }
 
   private fun saveContextJson() {
-    runCatching {
-      val prepared = requireReady() ?: return@runCatching
-      val chooser = JFileChooser().apply {
-        dialogTitle = "Save TemplateContext JSON"
-        selectedFile = java.io.File("${prepared.summary.tableName}-context.json")
+    val prepared = requireReady() ?: return
+    val initial = outputFolderField.text.trim().takeIf { it.isNotBlank() }?.let {
+      runCatching { Path.of(it) }.getOrNull()
+    }
+    val directory = ports.chooseDirectory("Save TemplateContext JSON", initial) ?: return
+
+    runCatching { auxiliaryWorkflow.exportContext(prepared, directory) }
+      .onSuccess { result ->
+        val output = result.written.single()
+        EgovNotifications.info(project, "Saved TemplateContext JSON: $output")
+        if (result.cleanupFailures.isNotEmpty()) {
+          EgovNotifications.warning(
+            project,
+            "Saved context, but could not remove temporary files: ${result.cleanupFailures.joinToString()}",
+          )
+        }
       }
-      if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return@runCatching
-      val output = chooser.selectedFile.toPath()
-      WriteCommandAction.runWriteCommandAction(project) {
-        Files.writeString(output, prepared.contextJson(), Charsets.UTF_8)
-      }
-      LocalFileSystem.getInstance().refreshAndFindFileByNioFile(output)
-      EgovNotifications.info(project, "Saved TemplateContext JSON: ${chooser.selectedFile}")
-    }.onFailure { notifyError(it, "Context export failed") }
+      .onFailure { notifyError(it, "Context export failed") }
   }
 
   private fun preparation(): CrudPreparation =

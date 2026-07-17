@@ -4,7 +4,9 @@ import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotSame
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Clock
@@ -45,11 +47,33 @@ class CrudGenerationTest {
   }
 
   @Test
+  fun `context JSON matches upstream key shape without packagePath`() {
+    val prepared = ready(CrudGeneration(fixedClock).prepare(ddl, packageName))
+    val json = JsonParser.parseString(prepared.contextJson()).asJsonObject
+    val keys = json.keySet().toList()
+
+    assertEquals(
+      listOf(
+        "tableName", "dbTableName", "attributes", "pkAttributes",
+        "packageName", "className", "classNameFirstCharLower",
+        "author", "date", "version",
+      ),
+      keys,
+    )
+    assertNull(json.get("packagePath"))
+  }
+
+  @Test
+  fun `context file name uses tableName underscore TemplateContext`() {
+    val prepared = ready(CrudGeneration(fixedClock).prepare(ddl, packageName))
+    assertEquals("SampleItem_TemplateContext.json", prepared.contextFileName)
+  }
+
+  @Test
   fun `owns the exact eleven artifact mappings`() {
     val tableName = "SampleItem"
-    val packagePath = "egovframework/example/sample"
     val actual = CrudArtifact.entries.map { artifact ->
-      listOf(artifact.name, artifact.templateFile, artifact.relativePath(tableName, packagePath), artifact.language)
+      listOf(artifact.name, artifact.templateFile, artifact.relativePath(tableName, packageName), artifact.language)
     }
 
     assertEquals(
@@ -166,6 +190,42 @@ class CrudGenerationTest {
     assertFalse(rejected.erdText.isEmpty())
     assertTrue(rejected.erdText.contains("[first_table]"))
     assertTrue(rejected.erdText.contains("[second_table]"))
+  }
+
+  @Test
+  fun `preflight rejects uppercase and invalid package names`() {
+    assertThrows(IllegalArgumentException::class.java) {
+      CrudGeneration.preflightGeneration("Egovframework.Example", "/output")
+    }
+    // Upstream v5.0.6 accepts consecutive dots; preserve that exact compatibility quirk.
+    CrudGeneration.preflightGeneration("egovframework..sample", "/output")
+    assertThrows(IllegalArgumentException::class.java) {
+      CrudGeneration.preflightGeneration(".leading.dot", "/output")
+    }
+    assertThrows(IllegalArgumentException::class.java) {
+      CrudGeneration.preflightGeneration("trailing.dot.", "/output")
+    }
+    assertThrows(IllegalArgumentException::class.java) {
+      CrudGeneration.preflightGeneration("", "/output")
+    }
+  }
+
+  @Test
+  fun `preflight rejects blank and invalid output root`() {
+    assertThrows(IllegalArgumentException::class.java) {
+      CrudGeneration.preflightGeneration("egovframework.example.sample", "")
+    }
+    assertThrows(IllegalArgumentException::class.java) {
+      CrudGeneration.preflightGeneration("egovframework.example.sample", "   ")
+    }
+  }
+
+  @Test
+  fun `preflight accepts valid package names and output root`() {
+    CrudGeneration.preflightGeneration("egovframework.example.sample", "/project")
+    CrudGeneration.preflightGeneration("a", "/project")
+    CrudGeneration.preflightGeneration("a1", "/project")
+    CrudGeneration.preflightGeneration("egovframework.example1.sample2", "/project")
   }
 
   private fun ready(preparation: CrudPreparation): PreparedCrud =

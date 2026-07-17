@@ -1,5 +1,9 @@
 package kr.kyg.ijplugin.egovframe.crud
 
+import com.intellij.openapi.fileTypes.FileType
+import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.openapi.fileTypes.PlainTextFileType
+
 internal enum class CrudArtifact(
   internal val templateFile: String,
   val language: String,
@@ -16,7 +20,8 @@ internal enum class CrudArtifact(
   JSP_LIST("sample-jsp-list.hbs", "html"),
   JSP_REGISTER("sample-jsp-register.hbs", "html");
 
-  internal fun relativePath(tableName: String, packagePath: String): String {
+  internal fun relativePath(tableName: String, packageName: String): String {
+    val packagePath = packageName.replace('.', '/')
     val lowerCamel = tableName[0].lowercaseChar() + tableName.substring(1)
     return when (this) {
       VO -> "src/main/java/$packagePath/service/${tableName}VO.java"
@@ -30,6 +35,19 @@ internal enum class CrudArtifact(
       THYMELEAF_REGISTER -> "src/main/resources/templates/thymeleaf/$lowerCamel/${lowerCamel}Register.html"
       JSP_LIST -> "src/main/webapp/WEB-INF/jsp/$packagePath/${lowerCamel}List.jsp"
       JSP_REGISTER -> "src/main/webapp/WEB-INF/jsp/$packagePath/${lowerCamel}Register.jsp"
+    }
+  }
+
+  companion object {
+    private val LANGUAGE_EXTENSIONS = mapOf(
+      "java" to "java",
+      "xml" to "xml",
+      "html" to "html",
+    )
+
+    fun fileTypeForLanguage(language: String): FileType {
+      val extension = LANGUAGE_EXTENSIONS[language] ?: return PlainTextFileType.INSTANCE
+      return FileTypeManager.getInstance().getFileTypeByExtension(extension)
     }
   }
 }
