@@ -33,6 +33,8 @@ object ConfigGenerator {
         /** The form-data key that holds the output file name. */
         val fileNameProperty: String,
         private val allDefaults: Map<String, Any?>,
+        /** Model-based form specification, if available. */
+        val formSpec: ConfigFormSpec? = null,
     ) {
         /**
          * Returns variant-aware initial form data.
@@ -55,14 +57,16 @@ object ConfigGenerator {
     /** Builds a [FormDefinition] for the given template, deriving defaults from [TemplateCatalog.configDefaults]. */
     fun definition(template: ConfigTemplate): FormDefinition {
         val allDefaults = LinkedHashMap(TemplateCatalog.configDefaults[template.displayName].orEmpty())
+        val spec = ConfigFormRegistry.forTemplate(template)
         val visible = allDefaults.entries
             .filter { (key, _) -> key != "generationType" && !key.startsWith("_") }
             .map { (key, value) -> key to value }
         return FormDefinition(
             visibleFields = visible,
-            generationTypes = availableTypes(template),
+            generationTypes = spec?.activeTypes ?: availableTypes(template),
             fileNameProperty = template.fileNameProperty,
             allDefaults = allDefaults,
+            formSpec = spec,
         )
     }
 
