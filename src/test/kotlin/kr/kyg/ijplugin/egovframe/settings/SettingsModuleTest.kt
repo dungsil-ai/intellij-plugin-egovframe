@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -241,6 +242,22 @@ class SettingsModuleTest {
         val reason = ActionAvailabilityPolicy.disabledReason()
         assertNotNull(reason)
         assertTrue(reason.isNotBlank(), "disabledReason() should return a non-blank message")
+    }
+
+    @Test
+    @DisplayName("available action restores its default description")
+    fun policyRestoresDefaultDescription() {
+        val defaultDescription = "Open the eGovFrame tool window"
+
+        assertEquals(defaultDescription, ActionAvailabilityPolicy.descriptionFor(true, defaultDescription))
+        assertNull(ActionAvailabilityPolicy.descriptionFor(true, null))
+        assertEquals(ActionAvailabilityPolicy.disabledReason(), ActionAvailabilityPolicy.descriptionFor(false, defaultDescription))
+    }
+
+    @Test
+    @DisplayName("English bundle spells Ciphers correctly")
+    fun englishCipherLabelIsCorrect() {
+        assertEquals("Ciphers", enBundle.getString("config.field.txtCipers"))
     }
 
     // ── 6. EgovSettings defaults ────────────────────────────────────────────────────────────────────
