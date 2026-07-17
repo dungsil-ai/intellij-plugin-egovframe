@@ -14,8 +14,9 @@ class OpenConfigToolWindowAction : AnAction() {
   override fun update(event: AnActionEvent) {
     val available = ActionAvailabilityPolicy.isConfigCrudAvailable(event.project)
     event.presentation.isEnabled = available
-    if (!available) {
-      event.presentation.description = ActionAvailabilityPolicy.disabledReason()
-    }
+    event.presentation.description = ActionAvailabilityPolicy.descriptionFor(
+      available,
+      templatePresentation.description,
+    )
   }
 }

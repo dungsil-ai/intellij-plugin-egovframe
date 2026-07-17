@@ -20,4 +20,7 @@ object ActionAvailabilityPolicy {
    * resolved from the current bundle language.
    */
   fun disabledReason(): String = EgovBundle.message("action.requires.project")
+
+  fun descriptionFor(available: Boolean, defaultDescription: String?): String? =
+    if (available) defaultDescription else disabledReason()
 }
