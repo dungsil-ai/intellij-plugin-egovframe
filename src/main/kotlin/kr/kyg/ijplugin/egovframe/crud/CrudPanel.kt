@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
@@ -45,7 +46,7 @@ internal class DefaultCrudAuxiliaryPorts(private val project: Project) : CrudAux
       fileFilter = FileNameExtensionFilter("Handlebars template (*.hbs)", "hbs")
       isMultiSelectionEnabled = true
     }
-    if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return null
+    if (chooser.showOpenDialog(WindowManager.getInstance().getFrame(project)) != JFileChooser.APPROVE_OPTION) return null
     return chooser.selectedFiles.map { it.toPath() }
   }
 

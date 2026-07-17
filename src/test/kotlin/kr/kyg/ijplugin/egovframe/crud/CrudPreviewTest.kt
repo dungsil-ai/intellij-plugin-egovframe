@@ -1,7 +1,10 @@
 package kr.kyg.ijplugin.egovframe.crud
 
+import com.intellij.openapi.fileTypes.PlainTextFileType
+
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertTrue
 
@@ -21,7 +24,7 @@ class CrudPreviewTest {
   @Test
   fun `unknown language falls back to plain text`() {
     val fileType = CrudArtifact.fileTypeForLanguage("unknown")
-    assertTrue(fileType.name.contains("PLAIN_TEXT") || fileType.name.contains("Plain"))
+    assertSame(PlainTextFileType.INSTANCE, fileType)
   }
 
   @Test
