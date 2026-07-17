@@ -36,6 +36,3 @@ object DataTypes {
   fun getJavaClassName(dataType: String): String =
     predefinedDataTypes[dataType.uppercase()] ?: "java.lang.Object"
 }
-
-/** Returns the Java class name corresponding to an SQL data type. */
-fun getJavaClassName(dataType: String): String = DataTypes.getJavaClassName(dataType)
