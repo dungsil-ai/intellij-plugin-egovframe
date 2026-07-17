@@ -1,5 +1,6 @@
 package kr.kyg.ijplugin.egovframe.crud
 
+import com.intellij.openapi.editor.markup.HighlighterLayer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
@@ -34,6 +35,12 @@ class CrudSqlEditorAdapterTest {
 
     assertEquals("CREATE TABLE users (id INT);", model.sqlText)
     assertEquals(true, model.isPendingInput)
+  }
+
+  @Test
+  fun `syntax refresh preserves diagnostic marker layers`() {
+    assertEquals(true, isSyntaxHighlighter(HighlighterLayer.SYNTAX))
+    assertFalse(isSyntaxHighlighter(HighlighterLayer.ERROR))
   }
 
   @Test

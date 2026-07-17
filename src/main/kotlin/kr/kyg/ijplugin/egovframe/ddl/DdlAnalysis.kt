@@ -34,6 +34,12 @@ internal data class DdlRelationship(
   val toColumn: String,
 )
 
+/**
+ * Dialect-neutral canonical DDL analysis.
+ *
+ * SQL dialect policy belongs to [DdlSyntaxDiagnostics]; this analyzer accepts the supported
+ * `COMMENT ON` syntax so PostgreSQL input can reach the shared CRUD/ERD domain model after validation.
+ */
 internal object DdlAnalyzer {
 
   private const val INVALID_DDL = "Invalid DDL"

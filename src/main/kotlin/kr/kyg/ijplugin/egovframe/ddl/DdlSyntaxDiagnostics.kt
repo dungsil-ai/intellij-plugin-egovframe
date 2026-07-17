@@ -142,7 +142,7 @@ internal object DdlSyntaxDiagnostics {
           }
 
           // After close paren, find suffix and semicolon
-          cursor = findStatementEnd(text, closeIdx + 1, dialect)
+          cursor = findStatementEnd(text, closeIdx + 1)
           continue
         } else {
           val pos = offsetToLineColumn(text, createOffset)
@@ -175,7 +175,7 @@ internal object DdlSyntaxDiagnostics {
     return matchesKeyword(text, c, "TABLE") || matchesKeyword(text, c, "COLUMN")
   }
 
-  private fun findStatementEnd(text: String, start: Int, dialect: SqlDialect): Int {
+  private fun findStatementEnd(text: String, start: Int): Int {
     // After the closing paren of CREATE TABLE, consume optional suffix (COMMENT=..., ENGINE=...) up to semicolon
     var c = start
     var quote: Char? = null

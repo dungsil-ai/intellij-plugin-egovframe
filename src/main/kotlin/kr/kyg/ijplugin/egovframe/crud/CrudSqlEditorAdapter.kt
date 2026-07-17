@@ -3,7 +3,8 @@ package kr.kyg.ijplugin.egovframe.crud
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.colors.EditorColorsManager
+import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
+import com.intellij.openapi.editor.colors.CodeInsightColors
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.editor.ex.EditorEx
@@ -14,13 +15,11 @@ import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.openapi.util.Disposer
 import kr.kyg.ijplugin.egovframe.ddl.DdlSyntaxDiagnostics
-import java.awt.Color
-import java.awt.Font
 import javax.swing.JComponent
 
 /**
  * Lightweight SQL editor adapter using IDEA Community platform API only.
- * Provides per-dialect syntax highlighting and diagnostic markers.
+ * Provides theme-aware SQL syntax highlighting and diagnostic markers.
  * Does NOT depend on com.intellij.sql, database plugin, or any installable DB plugin.
  */
 internal class CrudSqlEditorAdapter(
@@ -90,22 +89,17 @@ internal class CrudSqlEditorAdapter(
 
   private fun applyHighlighting() {
     val markup = editor.markupModel
-    markup.removeAllHighlighters()
+    markup.allHighlighters.forEach { highlighter ->
+      if (isSyntaxHighlighter(highlighter.layer)) markup.removeHighlighter(highlighter)
+    }
 
     val text = document.text
     if (text.isEmpty()) return
 
-    val keywordAttrs = TextAttributes().apply {
-      foregroundColor = Color(0x00, 0x00, 0xCC)
-      fontType = Font.BOLD
-    }
-    val stringAttrs = TextAttributes().apply {
-      foregroundColor = Color(0x00, 0x80, 0x00)
-    }
-    val commentAttrs = TextAttributes().apply {
-      foregroundColor = Color(0x80, 0x80, 0x80)
-      fontType = Font.ITALIC
-    }
+    val scheme = editor.colorsScheme
+    val keywordAttrs = scheme.getAttributes(DefaultLanguageHighlighterColors.KEYWORD)
+    val stringAttrs = scheme.getAttributes(DefaultLanguageHighlighterColors.STRING)
+    val commentAttrs = scheme.getAttributes(DefaultLanguageHighlighterColors.LINE_COMMENT)
 
     var i = 0
     while (i < text.length) {
@@ -150,10 +144,7 @@ internal class CrudSqlEditorAdapter(
   private fun applyDiagnosticMarkers() {
     val markup = editor.markupModel
     // Remove existing error markers (keep syntax highlighting)
-    val errorAttrs = TextAttributes().apply {
-      effectColor = Color.RED
-      effectType = com.intellij.openapi.editor.markup.EffectType.WAVE_UNDERSCORE
-    }
+    val errorAttrs = editor.colorsScheme.getAttributes(CodeInsightColors.ERRORS_ATTRIBUTES)
 
     // Remove old diagnostic markers
     markup.allHighlighters.forEach { highlighter ->
@@ -172,6 +163,8 @@ internal class CrudSqlEditorAdapter(
     }
   }
 }
+
+internal fun isSyntaxHighlighter(layer: Int): Boolean = layer == HighlighterLayer.SYNTAX
 
 internal fun diagnosticMarkerRange(documentLength: Int, diagnosticOffset: Int): Pair<Int, Int>? {
   if (documentLength == 0) return null
