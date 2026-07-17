@@ -18,6 +18,7 @@ import com.intellij.util.ui.JBUI
 import kr.kyg.ijplugin.egovframe.EgovNotifications
 import kr.kyg.ijplugin.egovframe.ddl.DdlSyntaxDiagnostics
 import kr.kyg.ijplugin.egovframe.settings.EgovSettings
+import kr.kyg.ijplugin.egovframe.settings.EgovBundle
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.GridLayout
@@ -91,8 +92,8 @@ class CrudPanel internal constructor(
   )
   private val packageField = JBTextField(EgovSettings.getInstance().state.defaultPackageName)
   private val outputFolderField = JBTextField(project.basePath.orEmpty())
-  private val autoPreview = JBCheckBox("Auto preview", false)
-  private val statusLabel = JBLabel("Enter a CREATE TABLE statement.")
+  private val autoPreview = JBCheckBox(EgovBundle.message("crud.checkbox.autoPreview"), false)
+  private val statusLabel = JBLabel(EgovBundle.message("crud.status.initial"))
   private val erdSummary = JBTextArea()
   private val validationTimer = Timer(500) { validateAndRefresh(openPreview = autoPreview.isSelected) }
   private val dialectCombo = JComboBox(SqlDialect.entries.toTypedArray())
@@ -175,16 +176,16 @@ class CrudPanel internal constructor(
 
     val inputs = JPanel(GridLayout(0, 1, 0, 6)).apply {
       add(dialectRow)
-      add(labeledField("Package", packageField))
+      add(labeledField(EgovBundle.message("crud.label.package"), packageField))
       add(labeledOutputFolder())
     }
 
     val buttons = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
-      add(JButton("Validate").apply { addActionListener { validateAndRefresh(false) } })
-      add(JButton("Preview").apply { addActionListener { preview() } })
-      add(JButton("Generate").apply { addActionListener { generate() } })
-      add(JButton("Render .hbs...").apply { addActionListener { renderCustomTemplate() } })
-      add(JButton("Save context JSON...").apply { addActionListener { saveContextJson() } })
+      add(JButton(EgovBundle.message("crud.button.validate")).apply { addActionListener { validateAndRefresh(false) } })
+      add(JButton(EgovBundle.message("crud.button.preview")).apply { addActionListener { preview() } })
+      add(JButton(EgovBundle.message("crud.button.generate")).apply { addActionListener { generate() } })
+      add(JButton(EgovBundle.message("crud.button.renderHbs")).apply { addActionListener { renderCustomTemplate() } })
+      add(JButton(EgovBundle.message("crud.button.saveContext")).apply { addActionListener { saveContextJson() } })
       add(autoPreview)
     }
 
@@ -234,26 +235,26 @@ class CrudPanel internal constructor(
         when (preparation) {
           is CrudPreparation.Ready -> {
             val prepared = preparation.prepared
-            statusLabel.text = "Valid: ${prepared.summary.dbTableName} (${prepared.summary.columnCount} columns)"
+            statusLabel.text = EgovBundle.message("crud.status.valid", prepared.summary.dbTableName, prepared.summary.columnCount)
             erdSummary.text = prepared.erdText
             if (openPreview) preview(prepared)
           }
           is CrudPreparation.Rejected -> showRejected(preparation)
         }
       }
-      .onFailure { statusLabel.text = it.message ?: "Invalid DDL" }
+      .onFailure { statusLabel.text = it.message ?: EgovBundle.message("crud.error.invalidDdl") }
   }
 
   private fun preview() {
     runCatching { requireReady() }
       .onSuccess { prepared -> if (prepared != null) preview(prepared) }
-      .onFailure { notifyError(it, "CRUD preview failed") }
+      .onFailure { notifyError(it, EgovBundle.message("crud.error.preview")) }
   }
 
   private fun preview(prepared: PreparedCrud) {
     runCatching { prepared.artifacts }
       .onSuccess { CrudPreviewDialog(project, it).show() }
-      .onFailure { notifyError(it, "CRUD preview failed") }
+      .onFailure { notifyError(it, EgovBundle.message("crud.error.preview")) }
   }
 
   private fun generate() {
@@ -269,7 +270,7 @@ class CrudPanel internal constructor(
       val prepared = requireReady() ?: return
       prepared.plan(Path.of(rawOutput))
     } catch (error: Exception) {
-      notifyError(error, "CRUD generation failed")
+      notifyError(error, EgovBundle.message("crud.error.generation"))
       return
     }
 
@@ -291,17 +292,17 @@ class CrudPanel internal constructor(
         }
       }
       if (generated.overwritten.isNotEmpty()) {
-        EgovNotifications.warning(project, "Overwrote ${generated.overwritten.size} CRUD file(s).")
+        EgovNotifications.warning(project, EgovBundle.message("crud.notification.overwrote", generated.overwritten.size))
       }
-      EgovNotifications.info(project, "Generated ${generated.written.size} CRUD file(s).")
+      EgovNotifications.info(project, EgovBundle.message("crud.notification.generated", generated.written.size))
       if (generated.cleanupFailures.isNotEmpty()) {
         EgovNotifications.warning(
           project,
-          "Generated files, but could not remove temporary files: ${generated.cleanupFailures.joinToString()}",
+          EgovBundle.message("crud.notification.cleanup", generated.cleanupFailures.joinToString()),
         )
       }
     } catch (error: Exception) {
-      notifyError(error, "CRUD generation failed")
+      notifyError(error, EgovBundle.message("crud.error.generation"))
     }
   }
 
@@ -320,7 +321,7 @@ class CrudPanel internal constructor(
           )
         }
       }
-      .onFailure { notifyError(it, "Template rendering failed") }
+      .onFailure { notifyError(it, EgovBundle.message("crud.error.render")) }
   }
 
   private fun saveContextJson() {
@@ -328,12 +329,12 @@ class CrudPanel internal constructor(
     val initial = outputFolderField.text.trim().takeIf { it.isNotBlank() }?.let {
       runCatching { Path.of(it) }.getOrNull()
     }
-    val directory = ports.chooseDirectory("Save TemplateContext JSON", initial) ?: return
+    val directory = ports.chooseDirectory(EgovBundle.message("crud.dialog.saveContext.title"), initial) ?: return
 
     runCatching { auxiliaryWorkflow.exportContext(prepared, directory) }
       .onSuccess { result ->
         val output = result.written.single()
-        EgovNotifications.info(project, "Saved TemplateContext JSON: $output")
+        EgovNotifications.info(project, EgovBundle.message("crud.notification.contextSaved", output))
         if (result.cleanupFailures.isNotEmpty()) {
           EgovNotifications.warning(
             project,
@@ -341,7 +342,7 @@ class CrudPanel internal constructor(
           )
         }
       }
-      .onFailure { notifyError(it, "Context export failed") }
+      .onFailure { notifyError(it, EgovBundle.message("crud.error.context")) }
   }
 
   private fun preparation(): CrudPreparation =
@@ -379,9 +380,9 @@ class CrudPanel internal constructor(
   }
 
   private fun labeledOutputFolder(): JPanel = JPanel(BorderLayout(8, 0)).apply {
-    add(JBLabel("Output folder"), BorderLayout.WEST)
+    add(JBLabel(EgovBundle.message("crud.label.outputFolder")), BorderLayout.WEST)
     add(outputFolderField, BorderLayout.CENTER)
-    add(JButton("Browse...").apply { addActionListener { chooseOutputFolder() } }, BorderLayout.EAST)
+    add(JButton(EgovBundle.message("config.button.browse")).apply { addActionListener { chooseOutputFolder() } }, BorderLayout.EAST)
   }
 
   private fun chooseOutputFolder() {

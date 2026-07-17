@@ -5,6 +5,7 @@ import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.ui.JBUI
+import kr.kyg.ijplugin.egovframe.settings.EgovBundle
 import java.awt.GridLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -15,12 +16,12 @@ internal class CrudFileSelectionDialog(
 ) : DialogWrapper(project) {
 
   private val selections = plan.artifacts.associateWith { entry ->
-    val label = if (entry.collision) "${entry.relativePath} (existing — overwrite)" else entry.relativePath
+    val label = if (entry.collision) EgovBundle.message("crud.dialog.select.overwrite", entry.relativePath) else entry.relativePath
     JBCheckBox(label, !entry.collision)
   }
 
   init {
-    title = "Select CRUD files"
+    title = EgovBundle.message("crud.dialog.select.title")
     init()
   }
 

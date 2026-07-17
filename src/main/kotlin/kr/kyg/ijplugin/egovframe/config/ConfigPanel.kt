@@ -5,6 +5,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import kr.kyg.ijplugin.egovframe.assets.ConfigTemplate
 import kr.kyg.ijplugin.egovframe.assets.TemplateCatalog
+import kr.kyg.ijplugin.egovframe.settings.EgovBundle
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import javax.swing.*
@@ -20,11 +21,11 @@ class ConfigPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
     border = JBUI.Borders.empty(10)
 
     val controls = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
-      add(JBLabel("Category"))
+      add(JBLabel(EgovBundle.message("config.label.category")))
       add(categoryCombo)
-      add(JBLabel("Type"))
+      add(JBLabel(EgovBundle.message("config.label.type")))
       add(typeCombo)
-      add(JButton("Generate...").apply { addActionListener { openSelectedTemplate() } })
+      add(JButton(EgovBundle.message("config.button.generate")).apply { addActionListener { openSelectedTemplate() } })
     }
     add(controls, BorderLayout.NORTH)
 

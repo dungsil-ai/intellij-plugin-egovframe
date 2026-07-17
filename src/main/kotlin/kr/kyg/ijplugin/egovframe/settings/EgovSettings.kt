@@ -12,9 +12,11 @@ import com.intellij.util.xmlb.XmlSerializerUtil
 class EgovSettings : PersistentStateComponent<EgovSettings.SettingsState> {
 
   data class SettingsState(
-    var defaultGroupId: String = "egovframework.com",
-    var defaultArtifactId: String = "egovframe-project",
-    var defaultPackageName: String = "egovframework.example.sample",
+    var defaultGroupId: String = DEFAULT_GROUP_ID,
+    var defaultArtifactId: String = DEFAULT_ARTIFACT_ID,
+    var defaultPackageName: String = DEFAULT_PACKAGE_NAME,
+    /** UI language: `"en"` or `"ko"`. */
+    var language: String = DEFAULT_LANGUAGE,
   )
 
   private var settingsState = SettingsState()
@@ -23,9 +25,30 @@ class EgovSettings : PersistentStateComponent<EgovSettings.SettingsState> {
 
   override fun loadState(state: SettingsState) {
     XmlSerializerUtil.copyBean(state, settingsState)
+    migrateIfNeeded()
+  }
+
+  private fun migrateIfNeeded() {
+    if (settingsState.language != "en" && settingsState.language != "ko") {
+      settingsState.language = DEFAULT_LANGUAGE
+    }
+    if (settingsState.defaultGroupId.isBlank()) {
+      settingsState.defaultGroupId = DEFAULT_GROUP_ID
+    }
+    if (settingsState.defaultArtifactId.isBlank()) {
+      settingsState.defaultArtifactId = DEFAULT_ARTIFACT_ID
+    }
+    if (settingsState.defaultPackageName.isBlank()) {
+      settingsState.defaultPackageName = DEFAULT_PACKAGE_NAME
+    }
   }
 
   companion object {
+    const val DEFAULT_GROUP_ID = "egovframework.com"
+    const val DEFAULT_ARTIFACT_ID = "egovframe-project"
+    const val DEFAULT_PACKAGE_NAME = "egovframework.example.sample"
+    const val DEFAULT_LANGUAGE = "en"
+
     fun getInstance(): EgovSettings = ApplicationManager.getApplication().getService(EgovSettings::class.java)
   }
 }

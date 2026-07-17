@@ -17,6 +17,7 @@ import kr.kyg.ijplugin.egovframe.assets.ProjectTemplate
 import kr.kyg.ijplugin.egovframe.assets.TemplateCatalog
 import kr.kyg.ijplugin.egovframe.assets.TemplateStoreService
 import kr.kyg.ijplugin.egovframe.settings.EgovSettings
+import kr.kyg.ijplugin.egovframe.settings.EgovBundle
 import java.nio.file.Path
 import javax.swing.DefaultComboBoxModel
 import javax.swing.JComboBox
@@ -26,7 +27,7 @@ class EgovProjectWizard : GeneratorNewProjectWizard {
   override val id: String = "kr.kyg.ijplugin.egovframe.wizard"
   override val name: String = "eGovFrame"
   override val icon = AllIcons.Nodes.Module
-  override val description: String = "Create a project from an official eGovFrame 5.0 template"
+  override val description: String get() = EgovBundle.message("wizard.description")
 
   override fun createStep(context: WizardContext): NewProjectWizardStep {
     lateinit var baseStep: NewProjectWizardBaseStep
@@ -81,12 +82,12 @@ private class EgovTemplateStep(
   }
 
   override fun setupUI(builder: Panel) {
-    builder.row("Category") { cell(categoryCombo) }
-    builder.row("Template") { cell(templateCombo) }
-    builder.row("Availability") { cell(availabilityLabel) }
-    builder.row("Description") { cell(descriptionArea) }
-    builder.row("Maven groupId") { cell(groupIdField) }.also { groupIdRow = it }
-    builder.row("Maven artifactId") { cell(artifactIdField) }.also { artifactIdRow = it }
+    builder.row(EgovBundle.message("wizard.label.category")) { cell(categoryCombo) }
+    builder.row(EgovBundle.message("wizard.label.template")) { cell(templateCombo) }
+    builder.row(EgovBundle.message("wizard.label.availability")) { cell(availabilityLabel) }
+    builder.row(EgovBundle.message("wizard.label.description")) { cell(descriptionArea) }
+    builder.row(EgovBundle.message("wizard.label.groupId")) { cell(groupIdField) }.also { groupIdRow = it }
+    builder.row(EgovBundle.message("wizard.label.artifactId")) { cell(artifactIdField) }.also { artifactIdRow = it }
     updateMavenFieldVisibility()
   }
 
@@ -98,7 +99,7 @@ private class EgovTemplateStep(
 
   override fun setupProject(project: Project) {
     val template = templateCombo.selectedItem as? ProjectTemplate
-      ?: throw IllegalStateException("Select an eGovFrame project template")
+      ?: throw IllegalStateException(EgovBundle.message("wizard.error.noTemplate"))
     val config = ProjectGenerator.ProjectConfig(
       projectName = baseData.name,
       groupId = groupIdField.text.trim(),
@@ -186,9 +187,9 @@ private class EgovTemplateStep(
       is GenerationResult.Success -> {
         mavenWarning?.let { EgovNotifications.warning(project, it) }
         if (jdkMissing) {
-          EgovNotifications.warning(project, "JDK 17 was not found. Configure the project SDK manually.")
+          EgovNotifications.warning(project, EgovBundle.message("wizard.jdk17.notFound"))
         }
-        EgovNotifications.info(project, "eGovFrame project created: ${result.projectRoot}")
+        EgovNotifications.info(project, EgovBundle.message("wizard.project.created", result.projectRoot))
       }
       null -> EgovNotifications.error(project, "eGovFrame project generation did not produce a result.")
     }
@@ -214,7 +215,7 @@ private class EgovTemplateStep(
       applyingTemplateDefaults = false
     }
     descriptionArea.text = template.description
-    availabilityLabel.text = "Ready offline (bundled)"
+    availabilityLabel.text = EgovBundle.message("wizard.availability.offline")
     updateMavenFieldVisibility()
   }
 
