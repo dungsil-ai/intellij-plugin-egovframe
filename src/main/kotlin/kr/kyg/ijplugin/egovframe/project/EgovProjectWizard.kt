@@ -66,6 +66,23 @@ private class EgovTemplateStep(
     descriptionArea.lineWrap = true
     descriptionArea.wrapStyleWord = true
     templateCombo.renderer = ProjectTemplateRenderer()
+    categoryCombo.renderer = javax.swing.DefaultListCellRenderer().let { renderer ->
+      object : javax.swing.ListCellRenderer<Any?> {
+        override fun getListCellRendererComponent(
+          list: javax.swing.JList<out Any?>?,
+          value: Any?,
+          index: Int,
+          isSelected: Boolean,
+          cellHasFocus: Boolean,
+        ) = renderer.getListCellRendererComponent(
+          list,
+          if (value == "All") EgovBundle.message("wizard.category.all") else value,
+          index,
+          isSelected,
+          cellHasFocus,
+        )
+      }
+    }
     categoryCombo.addActionListener { updateTemplates() }
     templateCombo.addActionListener { updateTemplateDetails() }
     baseData.nameProperty.afterChange { name ->
@@ -120,7 +137,7 @@ private class EgovTemplateStep(
         val indicator = ProgressManager.getInstance().progressIndicator
         fun report(stage: ProjectGenerationStage) {
           currentStage = stage
-          indicator?.text = stage.label
+          indicator?.text = EgovBundle.message(stage.messageKey)
         }
 
         try {
@@ -140,11 +157,11 @@ private class EgovTemplateStep(
               report(ProjectGenerationStage.LINK_MAVEN)
               val linker = project.getService(MavenProjectLinker::class.java)
               if (linker == null) {
-                mavenWarning = "Maven integration is unavailable. Import pom.xml manually."
+                mavenWarning = EgovBundle.message("wizard.maven.unavailable")
               } else {
                 runCatching { linker.link(project, result.projectRoot.resolve("pom.xml")) }
                   .onFailure {
-                    mavenWarning = "Maven project linking failed: ${it.messageOrTypeName()}. Import pom.xml manually."
+                    mavenWarning = EgovBundle.message("wizard.maven.failed", it.messageOrTypeName())
                   }
               }
             }
@@ -166,23 +183,33 @@ private class EgovTemplateStep(
           workflowFailure = currentStage to error
         }
       },
-      "Creating eGovFrame Project",
+      EgovBundle.message("wizard.progress.title"),
       true,
       project,
     )
 
     if (!completed) {
-      EgovNotifications.warning(project, "eGovFrame project creation was cancelled.")
+      EgovNotifications.warning(project, EgovBundle.message("wizard.project.cancelled"))
       return
     }
     workflowFailure?.let { (stage, error) ->
-      EgovNotifications.error(project, "${stage.label} failed: ${error.messageOrTypeName()}")
+      EgovNotifications.error(
+        project,
+        EgovBundle.message("wizard.stage.failed", EgovBundle.message(stage.messageKey), error.messageOrTypeName()),
+      )
       return
     }
 
     when (val result = generation) {
       is GenerationResult.Failure -> {
-        EgovNotifications.error(project, "${result.stage.label} failed: ${result.error}")
+        EgovNotifications.error(
+          project,
+          EgovBundle.message(
+            "wizard.stage.failed",
+            EgovBundle.message(result.stage.messageKey),
+            result.error,
+          ),
+        )
       }
       is GenerationResult.Success -> {
         mavenWarning?.let { EgovNotifications.warning(project, it) }
@@ -191,7 +218,7 @@ private class EgovTemplateStep(
         }
         EgovNotifications.info(project, EgovBundle.message("wizard.project.created", result.projectRoot))
       }
-      null -> EgovNotifications.error(project, "eGovFrame project generation did not produce a result.")
+      null -> EgovNotifications.error(project, EgovBundle.message("wizard.project.noResult"))
     }
   }
 

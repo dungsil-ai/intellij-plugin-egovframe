@@ -43,8 +43,8 @@ internal interface CrudAuxiliaryPorts {
 internal class DefaultCrudAuxiliaryPorts(private val project: Project) : CrudAuxiliaryPorts {
   override fun chooseHbsFiles(): List<Path>? {
     val chooser = JFileChooser().apply {
-      dialogTitle = "Select Handlebars templates"
-      fileFilter = FileNameExtensionFilter("Handlebars template (*.hbs)", "hbs")
+      dialogTitle = EgovBundle.message("crud.dialog.renderHbs.title")
+      fileFilter = FileNameExtensionFilter(EgovBundle.message("crud.dialog.renderHbs.filter"), "hbs")
       isMultiSelectionEnabled = true
     }
     if (chooser.showOpenDialog(WindowManager.getInstance().getFrame(project)) != JFileChooser.APPROVE_OPTION) return null
@@ -98,7 +98,7 @@ class CrudPanel internal constructor(
   private val validationTimer = Timer(500) { validateAndRefresh(openPreview = autoPreview.isSelected) }
   private val dialectCombo = JComboBox(SqlDialect.entries.toTypedArray())
   private val sampleCombo = JComboBox<CrudSampleCatalog.Sample>()
-  private val directInputItem = "Direct input"
+  private val directInputItem = EgovBundle.message("crud.sample.directInput")
   private var updatingSample = false
 
   init {
@@ -150,7 +150,10 @@ class CrudPanel internal constructor(
         ) = renderer.getListCellRendererComponent(
           list,
           when (value) {
-            is CrudSampleCatalog.Sample -> value.name
+            is CrudSampleCatalog.Sample -> EgovBundle.messageOrDefault(
+              "crud.sample.${value.key.substringBefore('-')}",
+              value.name,
+            )
             else -> directInputItem
           },
           index, isSelected, cellHasFocus,
@@ -168,9 +171,9 @@ class CrudPanel internal constructor(
     }
 
     val dialectRow = JPanel(FlowLayout(FlowLayout.LEFT, 6, 0)).apply {
-      add(JBLabel("Dialect"))
+      add(JBLabel(EgovBundle.message("crud.label.dialect")))
       add(dialectCombo)
-      add(JBLabel("Sample"))
+      add(JBLabel(EgovBundle.message("crud.label.sample")))
       add(sampleCombo)
     }
 
@@ -262,7 +265,7 @@ class CrudPanel internal constructor(
     try {
       CrudGeneration.preflightGeneration(packageField.text.trim(), rawOutput)
     } catch (error: Exception) {
-      notifyError(error, "CRUD generation failed")
+      notifyError(error, EgovBundle.message("crud.error.generation"))
       return
     }
 
@@ -313,11 +316,11 @@ class CrudPanel internal constructor(
 
     runCatching { auxiliaryWorkflow.renderCustom(prepared, paths) }
       .onSuccess { result ->
-        EgovNotifications.info(project, "Rendered ${result.written.size} custom template(s).")
+        EgovNotifications.info(project, EgovBundle.message("crud.notification.renderedMany", result.written.size))
         if (result.cleanupFailures.isNotEmpty()) {
           EgovNotifications.warning(
             project,
-            "Rendered templates, but could not remove temporary files: ${result.cleanupFailures.joinToString()}",
+            EgovBundle.message("crud.notification.auxCleanup", result.cleanupFailures.joinToString()),
           )
         }
       }
@@ -338,7 +341,7 @@ class CrudPanel internal constructor(
         if (result.cleanupFailures.isNotEmpty()) {
           EgovNotifications.warning(
             project,
-            "Saved context, but could not remove temporary files: ${result.cleanupFailures.joinToString()}",
+            EgovBundle.message("crud.notification.contextCleanup", result.cleanupFailures.joinToString()),
           )
         }
       }

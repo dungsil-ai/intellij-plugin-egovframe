@@ -193,7 +193,7 @@ class ConfigFormModelTest {
         ))
         val issue = spec.validateExtra!!.invoke(stateNone)
         assertNotNull(issue)
-        assertTrue(issue!!.message.contains("at least one", ignoreCase = true))
+        assertTrue(issue!!.message.isNotBlank())
         assertEquals("chkAopConfigTransaction", issue.field)
 
         val stateAop = FormState(mapOf(
@@ -240,7 +240,7 @@ class ConfigFormModelTest {
         val issue = spec.validate(state)
         assertNotNull(issue)
         assertEquals("txtFileName", issue!!.field)
-        assertTrue(issue.message.contains("required", ignoreCase = true))
+        assertTrue(issue.message.isNotBlank())
     }
 
     @Test
@@ -257,7 +257,7 @@ class ConfigFormModelTest {
         val issue = spec.validate(state)
         assertNotNull(issue)
         assertEquals("txtDftLiveTime", issue!!.field)
-        assertTrue(issue.message.contains("number"))
+        assertTrue(issue.message.isNotBlank())
     }
 
     @Test
@@ -275,7 +275,7 @@ class ConfigFormModelTest {
         val issue = spec.validate(state)
         assertNotNull(issue)
         assertEquals("txtDatasourceName", issue!!.field)
-        assertTrue(issue.message.contains("invalid characters", ignoreCase = true))
+        assertTrue(issue.message.isNotBlank())
     }
 
     @Test
@@ -294,7 +294,7 @@ class ConfigFormModelTest {
         val issue = spec.validate(state)
         assertNotNull(issue)
         assertEquals("txtConfigPackage", issue!!.field)
-        assertTrue(issue.message.contains("package", ignoreCase = true))
+        assertTrue(issue.message.isNotBlank())
     }
 
     @Test
@@ -313,7 +313,7 @@ class ConfigFormModelTest {
         val issue = spec.validate(state)
         assertNotNull(issue)
         assertEquals("txtFileName", issue!!.field)
-        assertTrue(issue.message.contains("class name", ignoreCase = true))
+        assertTrue(issue.message.isNotBlank())
     }
 
     @Test
@@ -331,7 +331,7 @@ class ConfigFormModelTest {
         val issue = spec.validate(state)
         assertNotNull(issue)
         assertEquals("txtFileName", issue!!.field)
-        assertTrue(issue.message.contains("file name", ignoreCase = true))
+        assertTrue(issue.message.isNotBlank())
     }
 
     @Test

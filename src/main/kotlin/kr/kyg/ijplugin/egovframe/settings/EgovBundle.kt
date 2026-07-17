@@ -17,11 +17,12 @@ object EgovBundle {
   @Volatile
   private var cached: Pair<String, ResourceBundle>? = null
 
-  /**
-   * Resolves the message for [key] using the currently configured language.
-   * Returns the key itself if no mapping exists (fail-safe for development).
-   */
+  /** Resolves [key] using the currently configured language. */
   fun message(key: String): String = bundle().getString(key)
+
+  /** Resolves [key], returning [defaultValue] only while a new key is being developed. */
+  fun messageOrDefault(key: String, defaultValue: String): String =
+    bundle().takeIf { it.containsKey(key) }?.getString(key) ?: defaultValue
 
   /**
    * Resolves with simple positional substitution (`{0}`, `{1}`, …).
