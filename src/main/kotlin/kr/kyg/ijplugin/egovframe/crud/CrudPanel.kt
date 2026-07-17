@@ -51,6 +51,7 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
   private var updatingSample = false
 
   init {
+    Disposer.register(project, this)
     border = JBUI.Borders.empty(10)
     validationTimer.isRepeats = false
 
@@ -283,7 +284,7 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
   }
 
   private fun preparation(): CrudPreparation =
-    crudGeneration.prepare(editorModel.sqlText, packageField.text.trim())
+    prepareCrudInput(editorModel, crudGeneration, packageField.text.trim())
 
   private fun requireReady(): PreparedCrud? = when (val preparation = preparation()) {
     is CrudPreparation.Ready -> preparation.prepared
@@ -333,4 +334,18 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
     validationTimer.stop()
     Disposer.dispose(editorAdapter)
   }
+}
+
+internal fun prepareCrudInput(
+  editorModel: CrudEditorModel,
+  crudGeneration: CrudGeneration,
+  packageName: String,
+): CrudPreparation {
+  editorModel.requestPreview()
+  val diagnostic = editorModel.diagnosticResult
+  if (diagnostic is DdlSyntaxDiagnostics.DiagnosticResult.Error) {
+    val first = diagnostic.diagnostics.first()
+    return CrudPreparation.Rejected("${first.message} (line ${first.line}, column ${first.column})")
+  }
+  return crudGeneration.prepare(editorModel.sqlText, packageName)
 }

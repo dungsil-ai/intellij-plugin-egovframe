@@ -30,6 +30,8 @@ class CrudEditorModelTest {
     model.switchDialect(SqlDialect.POSTGRESQL)
     assertEquals(SqlDialect.POSTGRESQL, model.dialect)
     assertNull(model.selectedSample)
+    assertEquals("", model.sqlText)
+    assertNull(model.diagnosticResult)
   }
 
   @Test
@@ -204,5 +206,18 @@ class CrudEditorModelTest {
 
     model.switchDialect(SqlDialect.POSTGRESQL)
     assertEquals(text, model.sqlText, "Direct input text should be preserved across dialect switch")
+  }
+
+  @Test
+  fun `prepare gate refreshes diagnostics before debounce settles`() {
+    val model = CrudEditorModel()
+    model.setSqlText("CREATE TABLE (id INT PRIMARY KEY);")
+    assertTrue(model.isPendingInput)
+
+    val result = prepareCrudInput(model, CrudGeneration(), "egovframework.example")
+
+    assertTrue(result is CrudPreparation.Rejected)
+    assertTrue((result as CrudPreparation.Rejected).message.contains("line 1"))
+    assertFalse(model.isPendingInput)
   }
 }

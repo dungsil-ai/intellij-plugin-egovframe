@@ -166,6 +166,16 @@ class DdlSyntaxDiagnosticsTest {
   }
 
   @Test
+  fun `missing table name is rejected before the opening parenthesis`() {
+    val sql = "CREATE TABLE (id INT PRIMARY KEY);"
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
+
+    assertEquals("Expected table name after CREATE TABLE", error.diagnostics.first().message)
+    assertEquals(sql.indexOf('('), error.diagnostics.first().offset)
+  }
+
+  @Test
   fun `leading whitespace preserves original offsets`() {
     val sql = "   INVALID"
     val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)

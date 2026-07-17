@@ -35,10 +35,13 @@ internal class CrudEditorModel(
 
   fun switchDialect(newDialect: SqlDialect) {
     if (dialect == newDialect) return
+    val hadSelectedSample = selectedSample != null
     dialect = newDialect
     selectedSample = null
-    // If the user had a sample selected, clear the SQL text since it belongs to the old dialect.
-    // If they were in direct input mode, keep their text.
+    if (hadSelectedSample) {
+      sqlText = ""
+      pendingInput = false
+    }
     updateDiagnostics()
     fireChanged()
   }
