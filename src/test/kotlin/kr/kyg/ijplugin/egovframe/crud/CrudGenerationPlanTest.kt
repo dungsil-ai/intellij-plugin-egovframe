@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import kr.kyg.ijplugin.egovframe.SymlinkTestSupport
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
@@ -90,6 +91,7 @@ class CrudGenerationPlanTest {
   }
 
   @Test
+  @Tag("symlink")
   fun `allows a parent symlink whose real target remains inside the root`() = withTemporaryDirectory { root ->
     val destination = Files.createDirectories(root.resolve("actual-src"))
     createSymbolicLinkOrSkip(root.resolve("src"), destination)
@@ -100,6 +102,7 @@ class CrudGenerationPlanTest {
   }
 
   @Test
+  @Tag("symlink")
   fun `rejects a parent symlink whose real target escapes the root`() = withTemporaryDirectory { root ->
     val project = Files.createDirectory(root.resolve("project"))
     val outside = Files.createDirectory(root.resolve("outside"))
@@ -113,6 +116,7 @@ class CrudGenerationPlanTest {
   }
 
   @Test
+  @Tag("symlink")
   fun `rejects an existing target symbolic link`() = withTemporaryDirectory { root ->
     val source = root.resolve("source.txt")
     Files.writeString(source, "source")

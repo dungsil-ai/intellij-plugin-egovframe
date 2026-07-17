@@ -14,9 +14,9 @@ import java.util.zip.ZipInputStream
 class RemoteZipTest {
 
   @Test
-  fun `every remote ZIP downloads with correct SHA and manifest size and is readable`() {
-    val remoteZips = AssetManifest.instance.zips.filterValues { !it.bundled }
-    assertEquals(20, remoteZips.size, "remote ZIP count")
+  fun `legacy remote media sources retain correct SHA size and ZIP readability`() {
+    val remoteZips = AssetManifest.instance.zips.filterKeys { it !in ORIGINAL_BUNDLED_ZIPS }
+    assertEquals(20, remoteZips.size, "legacy remote ZIP count")
 
     val failures = mutableListOf<String>()
     remoteZips.forEach { (name, zip) ->
@@ -69,6 +69,11 @@ class RemoteZipTest {
     .joinToString("") { "%02x".format(it.toInt() and 0xff) }
 
   private companion object {
+    val ORIGINAL_BUNDLED_ZIPS = setOf(
+      "egovframe-boot-web.zip",
+      "egovframe-boot-simple-backend.zip",
+    )
+
     val cacheDir: Path = Path.of(
       System.getProperty(
         "egovframe.test.remoteZip.cacheDir",

@@ -1,5 +1,7 @@
 package kr.kyg.ijplugin.egovframe.assets
 
+import kr.kyg.ijplugin.egovframe.crud.CrudArtifact
+
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -16,6 +18,18 @@ class AssetClosedSetTest {
     assertEquals(18, assets.count { it.startsWith("${EgovAssets.POM_DIR}/") && it.endsWith(".xml") }, "POM count")
     assertEquals(22, manifest.zips.size, "ZIP count")
     assertEquals(21, TemplateCatalog.configs.size, "config entry count")
+  }
+
+  @Test
+  fun `all code HBS resources are exactly the eleven CRUD artifact templates`() {
+    val manifestCode = AssetManifest.instance.assets.keys
+      .filter { it.startsWith("${EgovAssets.CODE_DIR}/") && it.endsWith(".hbs") }
+      .map { it.removePrefix("${EgovAssets.CODE_DIR}/") }
+      .toSet()
+    val artifactCode = CrudArtifact.entries.map { it.templateFile }.toSet()
+
+    assertEquals(11, artifactCode.size)
+    assertEquals(artifactCode, manifestCode)
   }
 
   // --- ZIP ↔ catalog bidirectional ---

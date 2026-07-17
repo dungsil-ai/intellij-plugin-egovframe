@@ -204,24 +204,10 @@ tasks {
 
   test {
     useJUnitPlatform {
-      excludeTags("remoteZip")
+      excludeTags("remoteZip", "symlink")
     }
   }
 
-  register<Test>("remoteZipTest") {
-    group = "verification"
-    description = "Downloads and verifies all 20 remote upstream template ZIPs."
-    useJUnitPlatform {
-      includeTags("remoteZip")
-    }
-  }
-
-  register<Test>("symlinkTest") {
-    group = "verification"
-    description = "Runs symlink security tests in strict mode (requires OS symlink privileges)."
-    useJUnitPlatform()
-    systemProperty("egovframe.test.symlink.strict", "true")
-  }
 
   processResources {
     from(generatePluginMetadata) {
@@ -252,5 +238,30 @@ tasks {
       "-Djb.consents.confirmation.enabled=false",
       "-Didea.initially.ask.config=false",
     )
+  }
+}
+
+intellijPlatformTesting {
+  testIde {
+    register("remoteZipTest") {
+      task {
+        group = "verification"
+        description = "Downloads and verifies the 20 upstream media sources previously delivered remotely."
+        useJUnitPlatform {
+          includeTags("remoteZip")
+        }
+      }
+    }
+
+    register("symlinkTest") {
+      task {
+        group = "verification"
+        description = "Runs symlink security tests in strict mode (requires OS symlink privileges)."
+        useJUnitPlatform {
+          includeTags("symlink")
+        }
+        systemProperty("egovframe.test.symlink.strict", "true")
+      }
+    }
   }
 }
