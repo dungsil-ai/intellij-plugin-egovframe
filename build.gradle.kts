@@ -1,10 +1,63 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.SetProperty
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
+
 
 plugins {
   id("org.jetbrains.kotlin.jvm")
   id("org.jetbrains.intellij.platform")
 }
+@DisableCachingByDefault(because = "Validates a generated archive without producing outputs")
+abstract class VerifyPluginDistribution : DefaultTask() {
+
+  @get:InputFile
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  abstract val archiveFile: RegularFileProperty
+
+  @get:Input
+  abstract val requiredClasses: SetProperty<String>
+
+  @TaskAction
+  fun verifyBundledRuntimeClasses() {
+    val archive = archiveFile.get().asFile
+    val missing = requiredClasses.get().toMutableSet()
+
+    ZipFile(archive).use { pluginZip ->
+      val handlebarsJar = pluginZip.entries().asSequence().firstOrNull { entry ->
+        !entry.isDirectory &&
+          entry.name.substringAfterLast('/').startsWith("handlebars-") &&
+          entry.name.endsWith(".jar")
+      } ?: throw GradleException(
+        "Marketplace ZIP does not bundle Handlebars.java. Upload the build/distributions ZIP, never build/libs JARs.",
+      )
+
+      ZipInputStream(pluginZip.getInputStream(handlebarsJar)).use { nestedJar ->
+        while (missing.isNotEmpty()) {
+          val entry = nestedJar.nextEntry ?: break
+          missing.remove(entry.name)
+        }
+      }
+    }
+
+    if (missing.isNotEmpty()) {
+      throw GradleException("Marketplace ZIP is missing Handlebars runtime classes: ${missing.sorted().joinToString()}")
+    }
+
+    logger.lifecycle("Verified Marketplace upload artifact: ${archive.absolutePath}")
+  }
+}
+
 
 group = providers.gradleProperty("pluginGroup").get()
 version = providers.gradleProperty("pluginVersion").get()
@@ -82,6 +135,47 @@ intellijPlatform {
 }
 
 tasks {
+  buildPlugin {
+    archiveFileName.set("${project.name}-${project.version}-marketplace.zip")
+  }
+
+  val verifyMarketplaceArtifact = register<VerifyPluginDistribution>("verifyMarketplaceArtifact") {
+    group = "verification"
+    description = "Checks that the Marketplace ZIP contains the Handlebars runtime classes."
+    archiveFile.set(buildPlugin.flatMap { it.archiveFile })
+    requiredClasses.set(
+      setOf(
+        "com/github/jknack/handlebars/Context.class",
+        "com/github/jknack/handlebars/Context\$Builder.class",
+        "com/github/jknack/handlebars/EscapingStrategy.class",
+        "com/github/jknack/handlebars/Handlebars.class",
+        "com/github/jknack/handlebars/Handlebars\$SafeString.class",
+        "com/github/jknack/handlebars/Helper.class",
+        "com/github/jknack/handlebars/Options.class",
+        "com/github/jknack/handlebars/ValueResolver.class",
+        "com/github/jknack/handlebars/context/JavaBeanValueResolver.class",
+        "com/github/jknack/handlebars/context/MapValueResolver.class",
+        "com/github/jknack/handlebars/context/MethodValueResolver.class",
+      ),
+    )
+  }
+
+  buildPlugin {
+    finalizedBy(verifyMarketplaceArtifact)
+  }
+
+  check {
+    dependsOn(verifyMarketplaceArtifact)
+  }
+
+  signPlugin {
+    dependsOn(verifyMarketplaceArtifact)
+  }
+
+  publishPlugin {
+    dependsOn(verifyMarketplaceArtifact)
+  }
+
   test {
     useJUnitPlatform()
   }

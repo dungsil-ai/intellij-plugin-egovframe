@@ -75,4 +75,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: plugin-distribution
-          path: build/distributions/*.zip
+          path: build/distributions/*-marketplace.zip

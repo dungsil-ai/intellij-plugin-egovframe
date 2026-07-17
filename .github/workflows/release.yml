@@ -48,5 +48,5 @@ jobs:
       - name: Attach signed ZIP to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/distributions/*-signed.zip
+          files: build/distributions/*-marketplace-signed.zip
           generate_release_notes: true

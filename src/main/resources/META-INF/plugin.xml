@@ -4,19 +4,6 @@
   <vendor url="https://github.com/dungsil-ai/intellij-plugin-egovframe">kyg</vendor>
 
   <description><![CDATA[
-    <strong>비공식 커뮤니티 플러그인입니다.</strong> 이 플러그인은 독립적으로 개발·유지보수되며,
-    전자정부프레임워크 공식 제품이 아닙니다. eGovFramework의 공식 지원, 보증 또는 승인을 의미하지 않습니다.<br/><br/>
-    IntelliJ IDEA에서 전자정부프레임워크(eGovFrame) 5.0 기반 애플리케이션 개발을 지원합니다.<br/>
-    공식 eGovFrame VS Code Initializr(v5.0.6)를 기반으로 다음 기능을 제공합니다:
-    <ul>
-      <li>공식 프로젝트 템플릿 22종을 사용하는 새 프로젝트 마법사 및 Maven 자동 연결</li>
-      <li>미리보기와 ERD 요약을 제공하는 DDL 기반 CRUD 산출물 11종 생성</li>
-      <li>XML, JavaConfig, YAML, Properties 형식의 런타임 설정 21종 생성</li>
-    </ul>
-    번들 템플릿은 Apache-2.0 라이선스의
-    <a href="https://github.com/eGovFramework/egovframe-vscode-initializr">eGovFramework/egovframe-vscode-initializr</a> 프로젝트에서 수정 없이 재배포합니다.
-    <br/><br/>
-    <strong>English</strong><br/>
     <strong>Unofficial community plugin.</strong> This plugin is independently developed and maintained. It is not an
     official eGovFrame product and is not endorsed, supported, or distributed by the eGovFramework project.<br/><br/>
     Korean eGovernment Standard Framework (eGovFrame) 5.0 support for IntelliJ IDEA.<br/>
@@ -28,6 +15,19 @@
     </ul>
     Bundled templates are redistributed unmodified from the Apache-2.0 licensed
     <a href="https://github.com/eGovFramework/egovframe-vscode-initializr">eGovFramework/egovframe-vscode-initializr</a> project.
+    <br/><br/>
+    <strong>한국어</strong><br/>
+    <strong>비공식 커뮤니티 플러그인입니다.</strong> 이 플러그인은 독립적으로 개발·유지보수되며,
+    전자정부프레임워크 공식 제품이 아닙니다. eGovFramework의 공식 지원, 보증 또는 승인을 의미하지 않습니다.<br/><br/>
+    IntelliJ IDEA에서 전자정부프레임워크(eGovFrame) 5.0 기반 애플리케이션 개발을 지원합니다.<br/>
+    공식 eGovFrame VS Code Initializr(v5.0.6)를 기반으로 다음 기능을 제공합니다:
+    <ul>
+      <li>공식 프로젝트 템플릿 22종을 사용하는 새 프로젝트 마법사 및 Maven 자동 연결</li>
+      <li>미리보기와 ERD 요약을 제공하는 DDL 기반 CRUD 산출물 11종 생성</li>
+      <li>XML, JavaConfig, YAML, Properties 형식의 런타임 설정 21종 생성</li>
+    </ul>
+    번들 템플릿은 Apache-2.0 라이선스의
+    <a href="https://github.com/eGovFramework/egovframe-vscode-initializr">eGovFramework/egovframe-vscode-initializr</a> 프로젝트에서 수정 없이 재배포합니다.
     ]]></description>
 
   <depends>com.intellij.modules.platform</depends>
