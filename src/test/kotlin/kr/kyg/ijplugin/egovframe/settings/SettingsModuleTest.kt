@@ -291,6 +291,43 @@ class SettingsModuleTest {
         assertEquals(EgovSettings.DEFAULT_LANGUAGE, state.language)
     }
 
+    @Test
+    @DisplayName("settings normalization matches values persisted by apply")
+    fun settingsNormalizationTrimsFieldsAndLanguage() {
+        val normalized = EgovSettings.normalizedState(
+            defaultGroupId = "  com.example  ",
+            defaultArtifactId = "  sample-app  ",
+            defaultPackageName = "  com.example.sample  ",
+            language = " ko ",
+        )
+
+        assertEquals("com.example", normalized.defaultGroupId)
+        assertEquals("sample-app", normalized.defaultArtifactId)
+        assertEquals("com.example.sample", normalized.defaultPackageName)
+        assertEquals("ko", normalized.language)
+    }
+
+    @Test
+    @DisplayName("loadState trims valid legacy values and resets invalid values")
+    fun settingsMigrationRestoresCurrentInvariants() {
+        val settings = EgovSettings()
+
+        settings.loadState(
+            EgovSettings.SettingsState(
+                defaultGroupId = " COM.Example ",
+                defaultArtifactId = " valid-app ",
+                defaultPackageName = " Com.Example.App ",
+                language = " ko ",
+            ),
+        )
+
+        assertEquals(EgovSettings.DEFAULT_GROUP_ID, settings.state.defaultGroupId)
+        assertEquals("valid-app", settings.state.defaultArtifactId)
+        assertEquals(EgovSettings.DEFAULT_PACKAGE_NAME, settings.state.defaultPackageName)
+        assertEquals("ko", settings.state.language)
+        assertTrue(SettingsValidator.validate(settings.state).isValid)
+    }
+
     // ── 7. Bundle resolver ──────────────────────────────────────────────────────────────────────────
 
     @Test
@@ -325,21 +362,20 @@ class SettingsModuleTest {
     @Test
     @DisplayName("message() with args substitutes correctly")
     fun bundleMessageWithArgsSubstitution() {
-        val pattern = enBundle.getString("wizard.project.created")
-        assertTrue(pattern.contains("{0}"), "Pattern should contain {0} placeholder")
+        val result = EgovBundle.message("wizard.project.created", "my-project")
 
-        val result = pattern.replace("{0}", "my-project")
-        assertEquals("eGovFrame project created: my-project", result)
+        assertTrue(
+            result == "eGovFrame project created: my-project" ||
+                result == "eGovFrame 프로젝트 생성 완료: my-project",
+        )
     }
 
     @Test
     @DisplayName("message() with multiple args substitutes all placeholders")
     fun bundleMessageWithMultipleArgs() {
-        val pattern = enBundle.getString("crud.status.valid")
-        assertTrue(pattern.contains("{0}") && pattern.contains("{1}"), "Pattern should contain {0} and {1}")
+        val result = EgovBundle.message("crud.status.valid", "USERS", 5)
 
-        val result = listOf("USERS", "5").foldIndexed(pattern) { i, acc, arg -> acc.replace("{$i}", arg) }
-        assertEquals("Valid: USERS (5 columns)", result)
+        assertTrue(result == "Valid: USERS (5 columns)" || result == "유효: USERS (5개 칼럼)")
     }
 
     // ── 8. About action content ────────────────────────────────────────────────────────────────────
