@@ -16,6 +16,7 @@ import com.intellij.util.ui.JBUI
 import kr.kyg.ijplugin.egovframe.EgovNotifications
 import kr.kyg.ijplugin.egovframe.assets.ConfigTemplate
 import kr.kyg.ijplugin.egovframe.settings.EgovSettings
+import java.awt.Component
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -23,9 +24,11 @@ import java.awt.Insets
 import java.nio.file.Path
 import javax.swing.ButtonGroup
 import javax.swing.JButton
+import javax.swing.DefaultListCellRenderer
 import javax.swing.JComboBox
 import javax.swing.JComponent
 import javax.swing.JPanel
+import javax.swing.JList
 import javax.swing.JRadioButton
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -40,6 +43,29 @@ internal object ConfigFormControlListener {
                 override fun changedUpdate(event: DocumentEvent) = onChange()
             })
         }
+    }
+}
+
+internal fun createSelectControl(field: FieldDef, defaultValue: Any?, onChange: () -> Unit): JComboBox<String> {
+    val labelsByValue = field.options.associate { it.value to it.label }
+    return JComboBox(field.options.map { it.value }.toTypedArray()).apply {
+        renderer = object : DefaultListCellRenderer() {
+            override fun getListCellRendererComponent(
+                list: JList<*>?,
+                value: Any?,
+                index: Int,
+                isSelected: Boolean,
+                cellHasFocus: Boolean,
+            ): Component = super.getListCellRendererComponent(
+                list,
+                labelsByValue[value?.toString()] ?: value,
+                index,
+                isSelected,
+                cellHasFocus,
+            )
+        }
+        selectedItem = defaultValue?.toString() ?: field.options.firstOrNull()?.value
+        ConfigFormControlListener.install(this, onChange)
     }
 }
 internal fun validateOutputFolderPath(value: String, component: JComponent): ValidationInfo? = when {
@@ -142,10 +168,7 @@ class ConfigFormDialog(
         ControlType.TEXT -> JBTextField(displayValue(defaultValue)).apply {
             ConfigFormControlListener.install(this) { handleControlChange(field.key) }
         }
-        ControlType.SELECT -> JComboBox(field.options.map { it.value }.toTypedArray()).apply {
-            selectedItem = defaultValue?.toString() ?: field.options.firstOrNull()?.value
-            ConfigFormControlListener.install(this) { handleControlChange(field.key) }
-        }
+        ControlType.SELECT -> createSelectControl(field, defaultValue) { handleControlChange(field.key) }
         ControlType.RADIO -> {
             val panel = JPanel(java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 4, 0))
             val group = ButtonGroup()
@@ -251,19 +274,8 @@ class ConfigFormDialog(
         if (spec == null) return
         val state = buildFormState()
         for (field in spec.fields) {
-            val control = controls[field.key] ?: continue
+            if (field.key !in controls) continue
             val visible = field.visibleWhen?.invoke(state) ?: true
-            control.isVisible = visible
-            // Also hide the label
-            val parent = control.parent
-            if (parent is JPanel) {
-                for (comp in parent.parent?.components.orEmpty()) {
-                    if (comp is JBLabel && comp.text == field.label) {
-                        comp.isVisible = visible
-                    }
-                }
-            }
-            // For top-level field rows
             fieldRows[field.key]?.forEach { it.isVisible = visible }
         }
     }

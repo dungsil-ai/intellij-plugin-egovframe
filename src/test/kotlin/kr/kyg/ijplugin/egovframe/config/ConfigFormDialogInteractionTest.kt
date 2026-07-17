@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.awt.EventQueue
 import javax.swing.JComboBox
+import javax.swing.JLabel
+import javax.swing.JList
 
 class ConfigFormDialogInteractionTest {
 
@@ -25,6 +27,28 @@ class ConfigFormDialogInteractionTest {
         control.selectedItem = "true"
 
         assertFalse(ttlVisible)
+    }
+
+    @Test
+    fun selectControlDisplaysOptionLabelWhileKeepingStoredValue() {
+        val field = FieldDef(
+            key = "cmbDialectName",
+            label = "Dialect Name",
+            control = ControlType.SELECT,
+            options = listOf(SelectOption("org.hibernate.dialect.H2Dialect", "H2")),
+        )
+
+        val control = createSelectControl(field, null) { }
+        val rendered = control.renderer.getListCellRendererComponent(
+            JList(),
+            control.getItemAt(0),
+            0,
+            false,
+            false,
+        ) as JLabel
+
+        assertEquals("org.hibernate.dialect.H2Dialect", control.selectedItem)
+        assertEquals("H2", rendered.text)
     }
 
     @Test
