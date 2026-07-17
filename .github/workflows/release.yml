@@ -19,7 +19,7 @@ jobs:
           submodules: recursive
 
       - name: Fetch bundled upstream ZIPs
-        run: git -C vendor/egovframe-vscode-initializr lfs pull --include="templates/projects/examples/egovframe-boot-web.zip,templates/projects/examples/egovframe-boot-simple-backend.zip"
+        run: git -C vendor/egovframe-vscode-initializr lfs pull --include="templates/projects/examples/*.zip"
 
       - name: Setup Java
         uses: actions/setup-java@v4

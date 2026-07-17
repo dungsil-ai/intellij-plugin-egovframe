@@ -71,8 +71,28 @@ kotlin {
 
 val upstreamDir = layout.projectDirectory.dir("vendor/egovframe-vscode-initializr")
 val bundledUpstreamZips = listOf(
+  "egovframe-ai-rag-langchain4j.zip",
+  "egovframe-ai-rag-springai.zip",
+  "egovframe-boot-batch-db-commandline.zip",
+  "egovframe-boot-batch-db-scheduler.zip",
+  "egovframe-boot-batch-db-web.zip",
+  "egovframe-boot-batch-file-commandline.zip",
+  "egovframe-boot-batch-file-scheduler.zip",
+  "egovframe-boot-batch-file-web.zip",
   "egovframe-boot-simple-backend.zip",
+  "egovframe-boot-simple-frontend.zip",
   "egovframe-boot-web.zip",
+  "egovframe-mobile-common-components.zip",
+  "egovframe-mobile-deviceapi.zip",
+  "egovframe-mobile-web.zip",
+  "egovframe-msa-common-components.zip",
+  "egovframe-msa-portal-backend.zip",
+  "egovframe-msa-portal-frontend.zip",
+  "egovframe-template-common-components.zip",
+  "egovframe-template-enterprise.zip",
+  "egovframe-template-portal.zip",
+  "egovframe-template-simple.zip",
+  "egovframe-web.zip",
 )
 
 

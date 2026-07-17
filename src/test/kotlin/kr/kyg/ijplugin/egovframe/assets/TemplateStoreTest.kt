@@ -75,6 +75,16 @@ class TemplateStoreTest {
     }
   }
 
+  @Test
+  fun `all 22 manifest zips are available offline when bundled`() = withTemporaryDirectory { root ->
+    val manifest = AssetManifest.instance
+    val store = TemplateStore(root, { error("fetch must not run") }, manifest, EgovAssets::resourceBytes)
+    manifest.zips.forEach { (zipName, zip) ->
+      assertTrue(zip.bundled, "$zipName should be bundled")
+      assertTrue(store.isAvailableOffline(zipName), "$zipName should be available offline")
+    }
+  }
+
   private fun store(
     root: Path,
     zipName: String,
