@@ -131,6 +131,25 @@ class ConfigFormModelTest {
         assertTrue(externalFields.all { it.visibleWhen!!.invoke(stateExternal) })
     }
 
+    @Test
+    fun propertyInternalValueAcceptsArbitraryStrings() {
+        val spec = ConfigFormRegistry.forTemplate("Property > New Property")!!
+        val valueField = spec.fields.single { it.key == "txtValue" }
+        val state = FormState(
+            mapOf(
+                "generationType" to "xml",
+                "txtFileName" to "context-properties",
+                "txtPropertyServiceName" to "propertiesService",
+                "rdoType" to "Internal Properties",
+                "txtKey" to "greeting",
+                "txtValue" to "hello world",
+            ),
+        )
+
+        assertFalse(valueField.numeric)
+        assertNull(spec.validate(state))
+    }
+
     // ── Scheduling: linked job/trigger updates ──────────────────────────
 
     @Test

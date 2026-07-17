@@ -497,7 +497,7 @@ object ConfigFormRegistry {
                 ),
                 FieldDef(
                     key = "txtValue", label = "Value",
-                    numeric = true, visibleWhen = whenInternal,
+                    visibleWhen = whenInternal,
                 ),
                 FieldDef(
                     key = "cboEncoding", label = "Encoding",
