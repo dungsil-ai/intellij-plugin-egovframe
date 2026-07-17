@@ -197,9 +197,8 @@ class CrudGenerationTest {
     assertThrows(IllegalArgumentException::class.java) {
       CrudGeneration.preflightGeneration("Egovframework.Example", "/output")
     }
-    assertThrows(IllegalArgumentException::class.java) {
-      CrudGeneration.preflightGeneration("egovframework..sample", "/output")
-    }
+    // Upstream v5.0.6 accepts consecutive dots; preserve that exact compatibility quirk.
+    CrudGeneration.preflightGeneration("egovframework..sample", "/output")
     assertThrows(IllegalArgumentException::class.java) {
       CrudGeneration.preflightGeneration(".leading.dot", "/output")
     }

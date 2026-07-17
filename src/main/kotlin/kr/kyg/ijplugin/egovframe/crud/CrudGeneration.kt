@@ -121,16 +121,17 @@ internal class CrudGeneration(
   }
 
   companion object {
-    private val PACKAGE_PATTERN = Regex("^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)*\$")
+    private val PACKAGE_PATTERN = Regex("^[a-z]([a-z0-9.]*[a-z0-9])?$")
 
     fun preflightGeneration(packageName: String, rawOutputRoot: String) {
+      require(packageName.isNotBlank()) { "Package name is required" }
       require(PACKAGE_PATTERN.matches(packageName)) {
-        "Package name must match upstream convention: lowercase letters, digits, and dots " +
-          "(e.g. egovframework.example.sample)"
+        "Package name must start with a lowercase letter, contain only lowercase letters, numbers, or dots, " +
+          "and cannot end with a dot"
       }
-      require(rawOutputRoot.isNotBlank()) { "Output root must not be blank" }
+      require(rawOutputRoot.isNotBlank()) { "Output path is required" }
       require(runCatching { Path.of(rawOutputRoot) }.isSuccess) {
-        "Output root is not a valid path: $rawOutputRoot"
+        "Output path is not valid: $rawOutputRoot"
       }
     }
   }

@@ -20,7 +20,6 @@ import kr.kyg.ijplugin.egovframe.settings.EgovSettings
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.GridLayout
-import java.nio.file.Files
 import java.nio.file.Path
 import javax.swing.DefaultComboBoxModel
 import javax.swing.JButton
@@ -36,7 +35,6 @@ import javax.swing.filechooser.FileNameExtensionFilter
 internal interface CrudAuxiliaryPorts {
   fun chooseHbsFiles(): List<Path>?
   fun chooseDirectory(title: String, initial: Path?): Path?
-  fun writeFile(path: Path, content: String)
   fun openInEditor(path: Path)
 }
 
@@ -61,12 +59,6 @@ internal class DefaultCrudAuxiliaryPorts(private val project: Project) : CrudAux
     return Path.of(chosen.path)
   }
 
-  override fun writeFile(path: Path, content: String) {
-    WriteCommandAction.runWriteCommandAction(project) {
-      Files.createDirectories(path.parent)
-      Files.writeString(path, content, Charsets.UTF_8)
-    }
-  }
 
   override fun openInEditor(path: Path) {
     LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)?.let { file ->
@@ -75,13 +67,27 @@ internal class DefaultCrudAuxiliaryPorts(private val project: Project) : CrudAux
   }
 }
 
-class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disposable {
+class CrudPanel internal constructor(
+  private val project: Project,
+  private val ports: CrudAuxiliaryPorts,
+  providedAuxiliaryWorkflow: CrudAuxiliaryWorkflow?,
+) : JPanel(BorderLayout(8, 8)), Disposable {
+
+  constructor(project: Project) : this(project, DefaultCrudAuxiliaryPorts(project), null)
 
   private val editorModel = CrudEditorModel()
   private val crudGeneration = CrudGeneration()
   private val crudWriteAdapter = CrudWriteAdapter()
   private val editorAdapter = CrudSqlEditorAdapter(editorModel)
-  private val ports: CrudAuxiliaryPorts = DefaultCrudAuxiliaryPorts(project)
+  private val auxiliaryWorkflow = providedAuxiliaryWorkflow ?: CrudAuxiliaryWorkflow(
+    writer = TransactionalCrudAuxiliaryWriter(),
+    runWriteCommand = { action ->
+      var result: CrudAuxiliaryWriteResult? = null
+      WriteCommandAction.runWriteCommandAction(project) { result = action() }
+      requireNotNull(result)
+    },
+    openInEditor = ports::openInEditor,
+  )
   private val packageField = JBTextField(EgovSettings.getInstance().state.defaultPackageName)
   private val outputFolderField = JBTextField(project.basePath.orEmpty())
   private val autoPreview = JBCheckBox("Auto preview", false)
@@ -301,41 +307,40 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
   private fun renderCustomTemplate() {
     val paths = ports.chooseHbsFiles() ?: return
     if (paths.isEmpty()) return
+    val prepared = requireReady() ?: return
 
-    val parents = paths.map { it.parent }.toSet()
-    if (parents.size > 1) {
-      EgovNotifications.error(project, "All selected .hbs files must be in the same folder.")
-      return
-    }
-
-    runCatching {
-      val prepared = requireReady() ?: return@runCatching
-      val outputs = mutableListOf<Path>()
-      for (hbsPath in paths) {
-        val templateText = Files.readString(hbsPath)
-        val content = prepared.renderCustom(templateText)
-        val baseName = hbsPath.fileName.toString().removeSuffix(".hbs")
-        val output = hbsPath.resolveSibling("$baseName.generated")
-        ports.writeFile(output, content)
-        outputs.add(output)
+    runCatching { auxiliaryWorkflow.renderCustom(prepared, paths) }
+      .onSuccess { result ->
+        EgovNotifications.info(project, "Rendered ${result.written.size} custom template(s).")
+        if (result.cleanupFailures.isNotEmpty()) {
+          EgovNotifications.warning(
+            project,
+            "Rendered templates, but could not remove temporary files: ${result.cleanupFailures.joinToString()}",
+          )
+        }
       }
-      outputs.forEach { ports.openInEditor(it) }
-      EgovNotifications.info(project, "Rendered ${outputs.size} custom template(s).")
-    }.onFailure { notifyError(it, "Template rendering failed") }
+      .onFailure { notifyError(it, "Template rendering failed") }
   }
 
   private fun saveContextJson() {
-    runCatching {
-      val prepared = requireReady() ?: return@runCatching
-      val initial = outputFolderField.text.trim().takeIf { it.isNotBlank() }?.let {
-        runCatching { Path.of(it) }.getOrNull()
+    val prepared = requireReady() ?: return
+    val initial = outputFolderField.text.trim().takeIf { it.isNotBlank() }?.let {
+      runCatching { Path.of(it) }.getOrNull()
+    }
+    val directory = ports.chooseDirectory("Save TemplateContext JSON", initial) ?: return
+
+    runCatching { auxiliaryWorkflow.exportContext(prepared, directory) }
+      .onSuccess { result ->
+        val output = result.written.single()
+        EgovNotifications.info(project, "Saved TemplateContext JSON: $output")
+        if (result.cleanupFailures.isNotEmpty()) {
+          EgovNotifications.warning(
+            project,
+            "Saved context, but could not remove temporary files: ${result.cleanupFailures.joinToString()}",
+          )
+        }
       }
-      val directory = ports.chooseDirectory("Save TemplateContext JSON", initial) ?: return@runCatching
-      val output = directory.resolve(prepared.contextFileName)
-      ports.writeFile(output, prepared.contextJson())
-      ports.openInEditor(output)
-      EgovNotifications.info(project, "Saved TemplateContext JSON: $output")
-    }.onFailure { notifyError(it, "Context export failed") }
+      .onFailure { notifyError(it, "Context export failed") }
   }
 
   private fun preparation(): CrudPreparation =

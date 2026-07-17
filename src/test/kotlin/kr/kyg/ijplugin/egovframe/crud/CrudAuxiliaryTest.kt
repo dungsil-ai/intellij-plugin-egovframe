@@ -1,8 +1,12 @@
 package kr.kyg.ijplugin.egovframe.crud
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Clock
@@ -17,87 +21,122 @@ class CrudAuxiliaryTest {
       item_name VARCHAR(100) NOT NULL
     );
   """.trimIndent()
-  private val packageName = "egovframework.example.sample"
   private val fixedClock = Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC)
 
   @Test
-  fun `context file name uses tableName_TemplateContext pattern`() {
-    val prepared = prepared()
-    assertEquals("SampleItem_TemplateContext.json", prepared.contextFileName)
-  }
-
-  @Test
-  fun `custom render produces baseName dot generated alongside each HBS`() = withTemporaryDirectory { dir ->
-    val template1 = dir.resolve("greeting.hbs")
-    Files.writeString(template1, "Hello {{tableName}}")
-    val template2 = dir.resolve("package.hbs")
-    Files.writeString(template2, "Package: {{packageName}}")
-
-    val prepared = prepared()
-    val written = mutableListOf<Path>()
-    val opened = mutableListOf<Path>()
-    val ports = recordingPorts(written, opened)
-
-    for (hbs in listOf(template1, template2)) {
-      val templateText = Files.readString(hbs)
-      val content = prepared.renderCustom(templateText)
-      val baseName = hbs.fileName.toString().removeSuffix(".hbs")
-      val output = hbs.resolveSibling("$baseName.generated")
-      ports.writeFile(output, content)
-      ports.openInEditor(output)
+  fun `custom workflow writes once then opens every generated file`() = withTemporaryDirectory { dir ->
+    val first = dir.resolve("greeting.hbs")
+    val second = dir.resolve("nested.name.hbs")
+    Files.writeString(first, "Hello {{tableName}}")
+    Files.writeString(second, "Package {{packageName}}")
+    val events = mutableListOf<String>()
+    val writer = CrudAuxiliaryWriter { files ->
+      events += "write:${files.joinToString { it.target.fileName.toString() }}"
+      CrudAuxiliaryWriteResult(files.map { it.target }, emptyList(), emptyList())
     }
+    val workflow = CrudAuxiliaryWorkflow(
+      writer = writer,
+      runWriteCommand = { action ->
+        events += "command:start"
+        action().also { events += "command:end" }
+      },
+      openInEditor = { events += "open:${it.fileName}" },
+    )
 
-    assertEquals(2, written.size)
-    assertTrue(written[0].fileName.toString() == "greeting.generated")
-    assertTrue(written[1].fileName.toString() == "package.generated")
-    assertEquals(2, opened.size)
+    val result = workflow.renderCustom(prepared(), listOf(first, second))
+
+    assertEquals(listOf("greeting.generated", "nested.name.generated"), result.written.map { it.fileName.toString() })
+    assertEquals(
+      listOf(
+        "command:start",
+        "write:greeting.generated, nested.name.generated",
+        "command:end",
+        "open:greeting.generated",
+        "open:nested.name.generated",
+      ),
+      events,
+    )
   }
 
   @Test
-  fun `mixed parent folders are detected`() {
-    val paths = listOf(Path.of("/a/one.hbs"), Path.of("/b/two.hbs"))
-    val parents = paths.map { it.parent }.toSet()
-    assertTrue(parents.size > 1)
-  }
+  fun `custom workflow rejects mixed parents and non hbs inputs before writing`() = withTemporaryDirectory { dir ->
+    val other = Files.createDirectory(dir.resolve("other"))
+    val writer = CrudAuxiliaryWriter { throw AssertionError("writer must not be called") }
+    val workflow = CrudAuxiliaryWorkflow(writer, { it() }, {}) { "" }
 
-  @Test
-  fun `same parent folder is accepted`() {
-    val paths = listOf(Path.of("/a/one.hbs"), Path.of("/a/two.hbs"))
-    val parents = paths.map { it.parent }.toSet()
-    assertEquals(1, parents.size)
-  }
-
-  @Test
-  fun `context export writes to directory with fixed filename`() = withTemporaryDirectory { dir ->
-    val prepared = prepared()
-    val output = dir.resolve(prepared.contextFileName)
-    Files.writeString(output, prepared.contextJson())
-
-    assertTrue(Files.isRegularFile(output))
-    assertEquals("SampleItem_TemplateContext.json", output.fileName.toString())
-    assertTrue(Files.readString(output).contains("\"tableName\": \"SampleItem\""))
-  }
-
-  private fun prepared(): PreparedCrud {
-    val generation = CrudGeneration(fixedClock)
-    return (generation.prepare(ddl, packageName) as CrudPreparation.Ready).prepared
-  }
-
-  private fun recordingPorts(
-    writtenFiles: MutableList<Path>,
-    openedFiles: MutableList<Path>,
-  ): CrudAuxiliaryPorts = object : CrudAuxiliaryPorts {
-    override fun chooseHbsFiles(): List<Path>? = null
-    override fun chooseDirectory(title: String, initial: Path?): Path? = null
-    override fun writeFile(path: Path, content: String) {
-      Files.createDirectories(path.parent)
-      Files.writeString(path, content, Charsets.UTF_8)
-      writtenFiles.add(path)
+    assertThrows(IllegalArgumentException::class.java) {
+      workflow.renderCustom(prepared(), listOf(dir.resolve("one.hbs"), other.resolve("two.hbs")))
     }
-    override fun openInEditor(path: Path) {
-      openedFiles.add(path)
+    assertThrows(IllegalArgumentException::class.java) {
+      workflow.renderCustom(prepared(), listOf(dir.resolve("one.txt")))
     }
   }
+
+  @Test
+  fun `context export uses fixed upstream filename and opens after success`() = withTemporaryDirectory { dir ->
+    val events = mutableListOf<String>()
+    val writer = CrudAuxiliaryWriter { files ->
+      events += "write"
+      CrudAuxiliaryWriteResult(files.map { it.target }, emptyList(), emptyList())
+    }
+    val workflow = CrudAuxiliaryWorkflow(writer, { it() }, { events += "open:${it.fileName}" })
+
+    val result = workflow.exportContext(prepared(), dir)
+
+    assertEquals("SampleItem_TemplateContext.json", result.written.single().fileName.toString())
+    assertEquals(listOf("write", "open:SampleItem_TemplateContext.json"), events)
+  }
+
+  @Test
+  fun `transactional writer restores overwritten file and removes new file on failure`() = withTemporaryDirectory { dir ->
+    val first = dir.resolve("first.generated")
+    val second = dir.resolve("second.generated")
+    Files.writeString(first, "old")
+    val writer = TransactionalCrudAuxiliaryWriter(FailSecondStageMoveOps())
+
+    assertThrows(IOException::class.java) {
+      writer.write(
+        listOf(
+          CrudAuxiliaryFile(first, "new-first"),
+          CrudAuxiliaryFile(second, "new-second"),
+        ),
+      )
+    }
+
+    assertEquals("old", Files.readString(first))
+    assertFalse(Files.exists(second))
+  }
+
+  @Test
+  fun `transactional writer rejects symlink and non regular targets`() = withTemporaryDirectory { dir ->
+    val writer = TransactionalCrudAuxiliaryWriter()
+    val directoryTarget = Files.createDirectory(dir.resolve("directory.generated"))
+    assertThrows(IllegalArgumentException::class.java) {
+      writer.write(listOf(CrudAuxiliaryFile(directoryTarget, "content")))
+    }
+
+    val real = dir.resolve("real.generated")
+    Files.writeString(real, "old")
+    val link = dir.resolve("link.generated")
+    val linked = runCatching { Files.createSymbolicLink(link, real.fileName) }.isSuccess
+    assumeTrue(linked, "Symbolic links are unavailable in this Windows environment")
+    assertThrows(IllegalArgumentException::class.java) {
+      writer.write(listOf(CrudAuxiliaryFile(link, "content")))
+    }
+  }
+
+  @Test
+  fun `generation preflight follows upstream package and output rules`() {
+    CrudGeneration.preflightGeneration("egovframework..sample", "C:/output")
+    assertThrows(IllegalArgumentException::class.java) { CrudGeneration.preflightGeneration("", "C:/output") }
+    assertThrows(IllegalArgumentException::class.java) { CrudGeneration.preflightGeneration("Egov.sample", "C:/output") }
+    assertThrows(IllegalArgumentException::class.java) { CrudGeneration.preflightGeneration("egov.sample.", "C:/output") }
+    assertThrows(IllegalArgumentException::class.java) { CrudGeneration.preflightGeneration("egov.sample", "") }
+  }
+
+  private fun prepared(): PreparedCrud = (
+    CrudGeneration(fixedClock).prepare(ddl, "egovframework.example.sample") as CrudPreparation.Ready
+  ).prepared
 
   private fun withTemporaryDirectory(block: (Path) -> Unit) {
     val root = Files.createTempDirectory("egovframe-crud-auxiliary-")
@@ -105,6 +144,18 @@ class CrudAuxiliaryTest {
       block(root)
     } finally {
       Files.walk(root).use { paths -> paths.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) }
+    }
+  }
+
+  private class FailSecondStageMoveOps : CrudFileOps by NioCrudFileOps {
+    private var stageMoves = 0
+
+    override fun moveReplacing(source: Path, target: Path) {
+      if (source.fileName.toString().endsWith(".stage")) {
+        stageMoves += 1
+        if (stageMoves == 2) throw IOException("simulated second commit failure")
+      }
+      NioCrudFileOps.moveReplacing(source, target)
     }
   }
 }
