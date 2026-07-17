@@ -1,6 +1,5 @@
 package kr.kyg.ijplugin.egovframe.crud
 
-import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -8,13 +7,11 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.time.Clock
 import java.time.LocalDate
+import java.time.ZoneOffset
 
-/**
- * For each CRUD entry in `golden/index.json`, calls [CrudGenerator.prepare]
- * with the golden date, serializes `PreparedCrud.context` to a Gson [JsonElement],
- * and deep-compares against the golden `context.json` (key-order independent).
- */
+/** Compares the production CRUD context JSON with every committed golden context. */
 class CrudContextEquivalenceTest {
 
   companion object {
@@ -60,10 +57,9 @@ class CrudContextEquivalenceTest {
     val date = expectedObj["date"].asString
     val packageName = expectedObj["packageName"].asString
 
-    val prepared = CrudGenerator.prepare(ddl, packageName, LocalDate.parse(date))
-
-    val gson = Gson()
-    val actualElement: JsonElement = gson.toJsonTree(prepared.context)
+    val clock = Clock.fixed(LocalDate.parse(date).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+    val prepared = (CrudGeneration(clock).prepare(ddl, packageName) as CrudPreparation.Ready).prepared
+    val actualElement: JsonElement = JsonParser.parseString(prepared.contextJson())
 
     assertEquals(
       expectedElement,

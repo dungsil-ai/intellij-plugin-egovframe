@@ -1,30 +1,37 @@
 package kr.kyg.ijplugin.egovframe.crud
 
-import com.google.gson.GsonBuilder
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.ui.components.*
+import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.JBTextField
 import com.intellij.util.ui.JBUI
 import kr.kyg.ijplugin.egovframe.EgovNotifications
-import kr.kyg.ijplugin.egovframe.ddl.DdlParser
-import kr.kyg.ijplugin.egovframe.ddl.ErdParser
 import kr.kyg.ijplugin.egovframe.settings.EgovSettings
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.GridLayout
 import java.nio.file.Files
 import java.nio.file.Path
-import javax.swing.*
+import javax.swing.JButton
+import javax.swing.JFileChooser
+import javax.swing.JPanel
+import javax.swing.JSplitPane
+import javax.swing.Timer
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.filechooser.FileNameExtensionFilter
 
 class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
 
+  private val crudGeneration = CrudGeneration()
+  private val crudWriteAdapter = CrudWriteAdapter()
   private val ddlEditor = JBTextArea(18, 80)
   private val packageField = JBTextField(EgovSettings.getInstance().state.defaultPackageName)
   private val outputFolderField = JBTextField(project.basePath.orEmpty())
@@ -36,11 +43,13 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
   init {
     border = JBUI.Borders.empty(10)
     validationTimer.isRepeats = false
-    ddlEditor.document.addDocumentListener(object : DocumentListener {
+    val inputListener = object : DocumentListener {
       override fun insertUpdate(event: DocumentEvent) = restartValidation()
       override fun removeUpdate(event: DocumentEvent) = restartValidation()
       override fun changedUpdate(event: DocumentEvent) = restartValidation()
-    })
+    }
+    ddlEditor.document.addDocumentListener(inputListener)
+    packageField.document.addDocumentListener(inputListener)
 
     val inputs = JPanel(GridLayout(0, 1, 0, 6)).apply {
       add(labeledField("Package", packageField))
@@ -75,58 +84,72 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
   }
 
   private fun validateAndRefresh(openPreview: Boolean) {
-    val ddl = ddlEditor.text
-    if (!DdlParser.validateDDL(ddl)) {
-      statusLabel.text = "Invalid DDL"
-      erdSummary.text = ""
-      return
-    }
-    runCatching {
-      val parsed = DdlParser.parseDDL(ddl)
-      statusLabel.text = "Valid: ${parsed.dbTableName} (${parsed.attributes.size} columns)"
-      erdSummary.text = erdText(ddl)
-      if (openPreview) preview()
-    }.onFailure { statusLabel.text = it.message ?: "Invalid DDL" }
+    runCatching { preparation() }
+      .onSuccess { preparation ->
+        when (preparation) {
+          is CrudPreparation.Ready -> {
+            val prepared = preparation.prepared
+            statusLabel.text = "Valid: ${prepared.summary.dbTableName} (${prepared.summary.columnCount} columns)"
+            erdSummary.text = prepared.erdText
+            if (openPreview) preview(prepared)
+          }
+          is CrudPreparation.Rejected -> showRejected(preparation)
+        }
+      }
+      .onFailure { statusLabel.text = it.message ?: "Invalid DDL" }
   }
 
   private fun preview() {
-    runCatching {
-      val prepared = prepare()
-      prepared.renderFiles()
-    }
+    runCatching { requireReady() }
+      .onSuccess { prepared -> if (prepared != null) preview(prepared) }
+      .onFailure { notifyError(it, "CRUD preview failed") }
+  }
+
+  private fun preview(prepared: PreparedCrud) {
+    runCatching { prepared.artifacts }
       .onSuccess { CrudPreviewDialog(project, it).show() }
-      .onFailure { EgovNotifications.error(project, it.message ?: "CRUD preview failed") }
+      .onFailure { notifyError(it, "CRUD preview failed") }
   }
 
   private fun generate() {
-    runCatching {
-      val prepared = prepare()
-      prepared.renderFiles()
-    }.onSuccess { files ->
-      val selection = CrudFileSelectionDialog(project, files)
-      if (!selection.showAndGet()) return@onSuccess
-      val selected = selection.selectedFiles()
-      if (selected.isEmpty()) return@onSuccess
+    val plan = try {
+      val prepared = requireReady() ?: return
+      prepared.plan(Path.of(outputFolderField.text.trim()))
+    } catch (error: Exception) {
+      notifyError(error, "CRUD generation failed")
+      return
+    }
 
-      try {
-        var result: CrudGenerator.GenerationResult? = null
-        WriteCommandAction.runWriteCommandAction(project) {
-          result = CrudGenerator.generate(Path.of(outputFolderField.text.trim()), selected)
-        }
-        val generated = requireNotNull(result)
-        generated.written.take(3).forEach { path ->
-          LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)?.let {
-            FileEditorManager.getInstance(project).openFile(it, true)
-          }
-        }
-        if (generated.overwritten.isNotEmpty()) {
-          EgovNotifications.warning(project, "Overwrote ${generated.overwritten.size} CRUD file(s).")
-        }
-        EgovNotifications.info(project, "Generated ${generated.written.size} CRUD file(s).")
-      } catch (error: Exception) {
-        EgovNotifications.error(project, error.message ?: "CRUD generation failed")
+    val selection = CrudFileSelectionDialog(project, plan)
+    if (!selection.showAndGet()) return
+    val selected = selection.selectedArtifacts()
+    if (selected.isEmpty()) return
+
+    try {
+      val writePlan = plan.select(selected)
+      var result: CrudWriteResult? = null
+      WriteCommandAction.runWriteCommandAction(project) {
+        result = crudWriteAdapter.write(writePlan)
       }
-    }.onFailure { EgovNotifications.error(project, it.message ?: "CRUD generation failed") }
+      val generated = requireNotNull(result)
+      generated.written.take(3).forEach { path ->
+        LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)?.let { file ->
+          FileEditorManager.getInstance(project).openFile(file, true)
+        }
+      }
+      if (generated.overwritten.isNotEmpty()) {
+        EgovNotifications.warning(project, "Overwrote ${generated.overwritten.size} CRUD file(s).")
+      }
+      EgovNotifications.info(project, "Generated ${generated.written.size} CRUD file(s).")
+      if (generated.cleanupFailures.isNotEmpty()) {
+        EgovNotifications.warning(
+          project,
+          "Generated files, but could not remove temporary files: ${generated.cleanupFailures.joinToString()}",
+        )
+      }
+    } catch (error: Exception) {
+      notifyError(error, "CRUD generation failed")
+    }
   }
 
   private fun renderCustomTemplate() {
@@ -135,62 +158,63 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)) {
       fileFilter = FileNameExtensionFilter("Handlebars template (*.hbs)", "hbs")
     }
     if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return
+
     runCatching {
-      val prepared = prepare()
-      val content = prepared.renderTemplate(Files.readString(chooser.selectedFile.toPath()))
+      val prepared = requireReady() ?: return@runCatching
+      val content = prepared.renderCustom(Files.readString(chooser.selectedFile.toPath()))
       val output = chooser.selectedFile.toPath().resolveSibling("${chooser.selectedFile.name}.generated")
-      Files.writeString(output, content, Charsets.UTF_8)
+      WriteCommandAction.runWriteCommandAction(project) {
+        Files.writeString(output, content, Charsets.UTF_8)
+      }
+      LocalFileSystem.getInstance().refreshAndFindFileByNioFile(output)
       EgovNotifications.info(project, "Rendered custom template: $output")
-    }.onFailure { EgovNotifications.error(project, it.message ?: "Template rendering failed") }
+    }.onFailure { notifyError(it, "Template rendering failed") }
   }
 
   private fun saveContextJson() {
     runCatching {
-      val prepared = prepare()
+      val prepared = requireReady() ?: return@runCatching
       val chooser = JFileChooser().apply {
         dialogTitle = "Save TemplateContext JSON"
-        selectedFile = java.io.File("${prepared.parsed.tableName}-context.json")
+        selectedFile = java.io.File("${prepared.summary.tableName}-context.json")
       }
-      if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return
-      Files.writeString(
-        chooser.selectedFile.toPath(),
-        GsonBuilder().setPrettyPrinting().create().toJson(prepared.context) + "\n",
-        Charsets.UTF_8,
-      )
+      if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return@runCatching
+      val output = chooser.selectedFile.toPath()
+      WriteCommandAction.runWriteCommandAction(project) {
+        Files.writeString(output, prepared.contextJson(), Charsets.UTF_8)
+      }
+      LocalFileSystem.getInstance().refreshAndFindFileByNioFile(output)
       EgovNotifications.info(project, "Saved TemplateContext JSON: ${chooser.selectedFile}")
-    }.onFailure { EgovNotifications.error(project, it.message ?: "Context export failed") }
+    }.onFailure { notifyError(it, "Context export failed") }
   }
 
-  private fun prepare() = CrudGenerator.prepare(ddlEditor.text, packageField.text.trim())
+  private fun preparation(): CrudPreparation =
+    crudGeneration.prepare(ddlEditor.text, packageField.text.trim())
 
+  private fun requireReady(): PreparedCrud? = when (val preparation = preparation()) {
+    is CrudPreparation.Ready -> preparation.prepared
+    is CrudPreparation.Rejected -> {
+      showRejected(preparation)
+      EgovNotifications.error(project, preparation.message)
+      null
+    }
+  }
+
+  private fun showRejected(rejected: CrudPreparation.Rejected) {
+    statusLabel.text = rejected.message
+    erdSummary.text = rejected.erdText
+  }
+
+  private fun notifyError(error: Throwable, fallback: String) {
+    val messages = buildList {
+      add(error.message ?: fallback)
+      addAll(error.suppressed.mapNotNull { it.message })
+    }
+    EgovNotifications.error(project, messages.joinToString("; "))
+  }
 
   private fun restartValidation() {
     validationTimer.restart()
-  }
-
-  private fun erdText(ddl: String): String {
-    val model = ErdParser.parseErdModel(ddl)
-    return buildString {
-      model.tables.forEach { table ->
-        appendLine("[${table.name}]")
-        table.columns.forEach { column ->
-          val badges = buildList {
-            if (column.isPrimaryKey) add("PK")
-            if (column.isForeignKey) add("FK")
-          }.joinToString(",")
-          append("  ${column.name}: ${column.dataType}")
-          if (badges.isNotEmpty()) append(" [$badges]")
-          appendLine()
-        }
-        appendLine()
-      }
-      if (model.relationships.isNotEmpty()) {
-        appendLine("Relationships")
-        model.relationships.forEach { relation ->
-          appendLine("  ${relation.fromTable}.${relation.fromColumn} -> ${relation.toTable}.${relation.toColumn}")
-        }
-      }
-    }
   }
 
   private fun labeledField(label: String, field: JBTextField): JPanel = JPanel(BorderLayout(8, 0)).apply {

@@ -10,12 +10,12 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
-class CrudPreviewDialog(
+internal class CrudPreviewDialog(
   project: Project,
-  private val files: List<CrudGenerator.RenderedFile>,
+  private val files: List<RenderedCrudArtifact>,
 ) : DialogWrapper(project) {
 
-  private val fileCombo = JComboBox(files.map { it.info.fileName }.toTypedArray())
+  private val fileCombo = JComboBox(files.map(RenderedCrudArtifact::fileName).toTypedArray())
   private val preview = JTextArea()
 
   init {

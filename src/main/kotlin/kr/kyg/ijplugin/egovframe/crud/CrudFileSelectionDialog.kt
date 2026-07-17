@@ -9,12 +9,15 @@ import java.awt.GridLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
 
-class CrudFileSelectionDialog(
+internal class CrudFileSelectionDialog(
   project: Project,
-  private val files: List<CrudGenerator.RenderedFile>,
+  private val plan: GenerationPlan,
 ) : DialogWrapper(project) {
 
-  private val selections = files.associateWith { JBCheckBox(it.info.outputPath, true) }
+  private val selections = plan.artifacts.associateWith { entry ->
+    val label = if (entry.collision) "${entry.relativePath} (existing — overwrite)" else entry.relativePath
+    JBCheckBox(label, !entry.collision)
+  }
 
   init {
     title = "Select CRUD files"
@@ -29,6 +32,6 @@ class CrudFileSelectionDialog(
     return JBScrollPane(panel).apply { preferredSize = JBUI.size(720, 420) }
   }
 
-  fun selectedFiles(): List<CrudGenerator.RenderedFile> =
-    files.filter { selections.getValue(it).isSelected }
+  fun selectedArtifacts(): Set<CrudArtifact> =
+    plan.artifacts.filter { selections.getValue(it).isSelected }.mapTo(linkedSetOf(), PlannedCrudArtifact::artifact)
 }
