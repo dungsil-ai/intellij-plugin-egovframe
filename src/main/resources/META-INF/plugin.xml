@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>kr.kyg.ijplugin.egovframe</id>
   <name>eGovFrame Initializr (Community)</name>
-  <vendor url="https://github.com/dungsil-ai/intellij-plugin-egovframe">kyg</vendor>
+  <vendor url="https://github.com/dungsil-ai/intellij-plugin-egovframe">dungsil</vendor>
 
   <description><![CDATA[
     <strong>Unofficial community plugin.</strong> This plugin is independently developed and maintained. It is not an
