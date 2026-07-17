@@ -105,11 +105,11 @@ object ProjectGenerator {
       }
 
       GenerationResult.Success(projectRoot)
-    } catch (e: Exception) {
+    } catch (error: Exception) {
       if (!preExisting) {
-        cleanupDirectory(projectRoot)
+        cleanupAfterFailure(projectRoot, error)
       }
-      GenerationResult.Failure(stage, e.message ?: "Project generation failed", e)
+      GenerationResult.Failure(stage, error.message ?: "Project generation failed", error)
     }
   }
 
@@ -146,6 +146,18 @@ object ProjectGenerator {
         }
         zip.closeEntry()
       }
+    }
+  }
+
+  internal fun cleanupAfterFailure(
+    directory: Path,
+    originalFailure: Throwable,
+    cleanup: (Path) -> Unit = ::cleanupDirectory,
+  ) {
+    try {
+      cleanup(directory)
+    } catch (cleanupFailure: Exception) {
+      originalFailure.addSuppressed(cleanupFailure)
     }
   }
 

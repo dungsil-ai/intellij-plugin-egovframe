@@ -3,7 +3,9 @@ package kr.kyg.ijplugin.egovframe.project
 import kr.kyg.ijplugin.egovframe.assets.ProjectTemplate
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.io.IOException
 import java.nio.file.Files
+import java.nio.file.Path
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -149,4 +151,23 @@ class ProjectGeneratorTest {
     assertTrue(result is GenerationResult.Failure, "Should fail due to missing POM template")
     assertTrue(Files.exists(projectDir), "Pre-existing directory should be preserved")
   }
+
+  @Test
+  fun `cleanup failure is suppressed without masking the generation failure`() {
+    val original = IllegalStateException("generation failed")
+    val cleanup = IOException("cleanup failed")
+
+    ProjectGenerator.cleanupAfterFailure(Path.of("unused"), original) { throw cleanup }
+
+    assertSame(cleanup, original.suppressed.single())
+    assertEquals("generation failed", original.message)
+  }
+
+  @Test
+  fun `error messages fall back to the exception type`() {
+    assertEquals("IllegalStateException", IllegalStateException().messageOrTypeName())
+    assertEquals("IllegalStateException", IllegalStateException("   ").messageOrTypeName())
+    assertEquals("specific", IllegalStateException("specific").messageOrTypeName())
+  }
+
 }

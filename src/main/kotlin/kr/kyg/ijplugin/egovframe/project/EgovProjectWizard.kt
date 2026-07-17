@@ -143,7 +143,7 @@ private class EgovTemplateStep(
               } else {
                 runCatching { linker.link(project, result.projectRoot.resolve("pom.xml")) }
                   .onFailure {
-                    mavenWarning = "Maven project linking failed: ${it.message}. Import pom.xml manually."
+                    mavenWarning = "Maven project linking failed: ${it.messageOrTypeName()}. Import pom.xml manually."
                   }
               }
             }
@@ -175,7 +175,7 @@ private class EgovTemplateStep(
       return
     }
     workflowFailure?.let { (stage, error) ->
-      EgovNotifications.error(project, "${stage.label} failed: ${error.message}")
+      EgovNotifications.error(project, "${stage.label} failed: ${error.messageOrTypeName()}")
       return
     }
 
@@ -230,3 +230,6 @@ private class EgovTemplateStep(
     }
   }
 }
+
+internal fun Throwable.messageOrTypeName(): String =
+  message?.takeIf(String::isNotBlank) ?: javaClass.simpleName.takeIf(String::isNotBlank) ?: javaClass.name

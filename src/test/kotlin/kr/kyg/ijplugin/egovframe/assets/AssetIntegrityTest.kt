@@ -33,20 +33,13 @@ class AssetIntegrityTest {
   }
 
   @Test
-  fun `all 22 bundled zip resources retain their recorded sha256`() {
+  fun `all 22 bundled zip resources retain their recorded size and sha256`() {
     AssetManifest.instance.zips.forEach { (zipName, zip) ->
       assertTrue(zip.bundled, "ZIP $zipName should be bundled")
       val bytes = EgovAssets.resourceBytes("${EgovAssets.EXAMPLES_DIR}/$zipName")
       assertTrue(bytes.isNotEmpty(), "Bundled ZIP $zipName should not be empty")
-      assertEquals(zip.sha256, TemplateStore.sha256(bytes), "SHA-256 mismatch for bundled ZIP $zipName")
-    }
-  }
-
-  @Test
-  fun `all 22 bundled zip resources have expected size`() {
-    AssetManifest.instance.zips.forEach { (zipName, zip) ->
-      val bytes = EgovAssets.resourceBytes("${EgovAssets.EXAMPLES_DIR}/$zipName")
       assertEquals(zip.size, bytes.size.toLong(), "Size mismatch for bundled ZIP $zipName")
+      assertEquals(zip.sha256, TemplateStore.sha256(bytes), "SHA-256 mismatch for bundled ZIP $zipName")
     }
   }
 }
