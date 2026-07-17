@@ -16,6 +16,7 @@ import com.intellij.util.ui.JBUI
 import kr.kyg.ijplugin.egovframe.EgovNotifications
 import kr.kyg.ijplugin.egovframe.assets.ConfigTemplate
 import kr.kyg.ijplugin.egovframe.settings.EgovSettings
+import kr.kyg.ijplugin.egovframe.settings.EgovBundle
 import java.awt.Component
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
@@ -108,12 +109,12 @@ class ConfigFormDialog(
         form.border = JBUI.Borders.empty(8)
         var row = 0
 
-        addRow(form, row++, "Format", generationTypeCombo)
+        addRow(form, row++, EgovBundle.message("config.form.label.format"), generationTypeCombo)
 
         val outputPanel = JPanel(BorderLayout(6, 0))
         outputPanel.add(outputFolderField, BorderLayout.CENTER)
-        outputPanel.add(JButton("Browse...").apply { addActionListener { chooseOutputFolder() } }, BorderLayout.EAST)
-        addRow(form, row++, "Output folder", outputPanel)
+        outputPanel.add(JButton(EgovBundle.message("config.button.browse")).apply { addActionListener { chooseOutputFolder() } }, BorderLayout.EAST)
+        addRow(form, row++, EgovBundle.message("config.form.label.outputFolder"), outputPanel)
 
         if (spec != null) {
             val initialData = definition.initialFormData(selectedGenerationType())
@@ -282,6 +283,9 @@ class ConfigFormDialog(
 
     override fun doValidate(): ValidationInfo? {
         val outputFolder = outputFolderField.text.trim()
+        if (outputFolder.isEmpty()) {
+            return ValidationInfo(EgovBundle.message("config.validation.outputFolder.empty"), outputFolderField)
+        }
         validateOutputFolderPath(outputFolder, outputFolderField)?.let { return it }
 
         if (spec != null) {
@@ -321,11 +325,11 @@ class ConfigFormDialog(
             LocalFileSystem.getInstance().refreshAndFindFileByNioFile(result.path)?.let {
                 FileEditorManager.getInstance(project).openFile(it, true)
             }
-            EgovNotifications.info(project, "Configuration file created: ${result.path}")
+            EgovNotifications.info(project, EgovBundle.message("config.notification.generated", result.path))
             super.doOKAction()
         } catch (error: Exception) {
-            setErrorText(error.message ?: "Configuration generation failed")
-            EgovNotifications.error(project, error.message ?: "Configuration generation failed")
+            setErrorText(error.message ?: EgovBundle.message("config.error.generation"))
+            EgovNotifications.error(project, error.message ?: EgovBundle.message("config.error.generation"))
         }
     }
 
