@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.util.Locale
+import java.util.Properties
 import java.util.ResourceBundle
 
 class SettingsModuleTest {
@@ -23,10 +24,18 @@ class SettingsModuleTest {
     @Test
     @DisplayName("en and ko bundles have the same set of keys")
     fun bundleParityKeys() {
-        val enKeys = enBundle.keySet()
-        val koKeys = koBundle.keySet()
+        val enKeys = directBundleKeys("messages/EgovBundle.properties")
+        val koKeys = directBundleKeys("messages/EgovBundle_ko.properties")
 
         assertEquals(enKeys, koKeys, "en and ko bundles must have identical key sets")
+    }
+
+    private fun directBundleKeys(resourceName: String): Set<String> {
+        val properties = Properties()
+        requireNotNull(javaClass.classLoader.getResourceAsStream(resourceName)) {
+            "Missing bundle resource: $resourceName"
+        }.bufferedReader(Charsets.UTF_8).use(properties::load)
+        return properties.stringPropertyNames()
     }
 
     @Test
