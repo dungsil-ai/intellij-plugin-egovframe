@@ -33,20 +33,12 @@ class EgovSettingsConfigurable : Configurable {
 
   override fun isModified(): Boolean {
     val state = EgovSettings.getInstance().state
-    return groupIdField.text != state.defaultGroupId ||
-      artifactIdField.text != state.defaultArtifactId ||
-      packageNameField.text != state.defaultPackageName ||
-      languageCombo.selectedItem != state.language
+    return normalizedCandidate() != state
   }
 
   @Throws(ConfigurationException::class)
   override fun apply() {
-    val candidate = EgovSettings.SettingsState(
-      defaultGroupId = groupIdField.text.trim(),
-      defaultArtifactId = artifactIdField.text.trim(),
-      defaultPackageName = packageNameField.text.trim(),
-      language = languageCombo.selectedItem as? String ?: EgovSettings.DEFAULT_LANGUAGE,
-    )
+    val candidate = normalizedCandidate()
     val result = SettingsValidator.validate(candidate)
     if (!result.isValid) {
       val message = result.errors.joinToString("\n") { EgovBundle.message(it.messageKey) }
@@ -59,6 +51,10 @@ class EgovSettingsConfigurable : Configurable {
     state.defaultArtifactId = candidate.defaultArtifactId
     state.defaultPackageName = candidate.defaultPackageName
     state.language = candidate.language
+    groupIdField.text = candidate.defaultGroupId
+    artifactIdField.text = candidate.defaultArtifactId
+    packageNameField.text = candidate.defaultPackageName
+    languageCombo.selectedItem = candidate.language
 
     if (languageChanged) {
       EgovBundle.invalidateCache()
@@ -73,6 +69,13 @@ class EgovSettingsConfigurable : Configurable {
     packageNameField.text = state.defaultPackageName
     languageCombo.selectedItem = state.language
   }
+
+  private fun normalizedCandidate(): EgovSettings.SettingsState = EgovSettings.normalizedState(
+    defaultGroupId = groupIdField.text,
+    defaultArtifactId = artifactIdField.text,
+    defaultPackageName = packageNameField.text,
+    language = languageCombo.selectedItem as? String,
+  )
 
   override fun disposeUIResources() {
     panel = null

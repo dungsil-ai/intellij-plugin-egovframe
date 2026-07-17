@@ -29,18 +29,16 @@ class EgovSettings : PersistentStateComponent<EgovSettings.SettingsState> {
   }
 
   private fun migrateIfNeeded() {
-    if (settingsState.language != "en" && settingsState.language != "ko") {
-      settingsState.language = DEFAULT_LANGUAGE
-    }
-    if (settingsState.defaultGroupId.isBlank()) {
-      settingsState.defaultGroupId = DEFAULT_GROUP_ID
-    }
-    if (settingsState.defaultArtifactId.isBlank()) {
-      settingsState.defaultArtifactId = DEFAULT_ARTIFACT_ID
-    }
-    if (settingsState.defaultPackageName.isBlank()) {
-      settingsState.defaultPackageName = DEFAULT_PACKAGE_NAME
-    }
+    settingsState = normalizedState(
+      defaultGroupId = settingsState.defaultGroupId,
+      defaultArtifactId = settingsState.defaultArtifactId,
+      defaultPackageName = settingsState.defaultPackageName,
+      language = settingsState.language,
+    )
+    val invalidFields = SettingsValidator.validate(settingsState).errors.mapTo(mutableSetOf()) { it.field }
+    if ("defaultGroupId" in invalidFields) settingsState.defaultGroupId = DEFAULT_GROUP_ID
+    if ("defaultArtifactId" in invalidFields) settingsState.defaultArtifactId = DEFAULT_ARTIFACT_ID
+    if ("defaultPackageName" in invalidFields) settingsState.defaultPackageName = DEFAULT_PACKAGE_NAME
   }
 
   companion object {
@@ -48,6 +46,18 @@ class EgovSettings : PersistentStateComponent<EgovSettings.SettingsState> {
     const val DEFAULT_ARTIFACT_ID = "egovframe-project"
     const val DEFAULT_PACKAGE_NAME = "egovframework.example.sample"
     const val DEFAULT_LANGUAGE = "en"
+
+    internal fun normalizedState(
+      defaultGroupId: String,
+      defaultArtifactId: String,
+      defaultPackageName: String,
+      language: String?,
+    ): SettingsState = SettingsState(
+      defaultGroupId = defaultGroupId.trim(),
+      defaultArtifactId = defaultArtifactId.trim(),
+      defaultPackageName = defaultPackageName.trim(),
+      language = language?.trim()?.takeIf { it == "en" || it == "ko" } ?: DEFAULT_LANGUAGE,
+    )
 
     fun getInstance(): EgovSettings = ApplicationManager.getApplication().getService(EgovSettings::class.java)
   }
