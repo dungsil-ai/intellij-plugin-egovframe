@@ -1,3 +1,5 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
   id("org.jetbrains.kotlin.jvm")
@@ -9,6 +11,9 @@ version = providers.gradleProperty("pluginVersion").get()
 
 kotlin {
   jvmToolchain(21)
+  compilerOptions {
+    jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
+  }
 }
 
 val upstreamDir = layout.projectDirectory.dir("vendor/egovframe-vscode-initializr")
@@ -32,7 +37,11 @@ dependencies {
   testRuntimeOnly("junit:junit:4.13.2")
 
   intellijPlatform {
-    intellijIdeaCommunity(providers.gradleProperty("platformVersion").get())
+    when (providers.gradleProperty("platformType").get()) {
+      "IC" -> intellijIdeaCommunity(providers.gradleProperty("platformVersion").get())
+      "IU" -> intellijIdea(providers.gradleProperty("platformVersion").get())
+      else -> error("platformType must be IC or IU")
+    }
 
     bundledPlugin("com.intellij.java")
     bundledPlugin("org.jetbrains.idea.maven")
@@ -56,6 +65,8 @@ intellijPlatform {
   pluginVerification {
     ides {
       recommended()
+      create(IntelliJPlatformType.IntellijIdea, "2026.1.4")
+      create(IntelliJPlatformType.IntellijIdea, "2026.2")
     }
     freeArgs = listOf("-mute", "TemplateWordInPluginId,TemplateWordInPluginName")
   }

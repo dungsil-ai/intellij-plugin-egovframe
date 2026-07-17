@@ -10,8 +10,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platformVersion: "2025.1.6"
+            platformType: "IC"
+          - platformVersion: "2026.1.4"
+            platformType: "IU"
+          - platformVersion: "2026.2"
+            platformType: "IU"
+    steps:
+      - name: Fetch sources
+        uses: actions/checkout@v4
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1"
+        with:
+          submodules: recursive
+
+      - name: Fetch bundled upstream ZIPs
+        run: git -C vendor/egovframe-vscode-initializr lfs pull --include="templates/projects/examples/egovframe-boot-web.zip,templates/projects/examples/egovframe-boot-simple-backend.zip"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Test on IntelliJ IDEA ${{ matrix.platformVersion }}
+        run: ./gradlew check -PplatformVersion=${{ matrix.platformVersion }} -PplatformType=${{ matrix.platformType }}
+
   build:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Fetch sources
         uses: actions/checkout@v4
