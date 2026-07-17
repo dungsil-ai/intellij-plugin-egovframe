@@ -210,9 +210,9 @@ async function generateCrud() {
     const { tableName, dbTableName, attributes, pkAttributes } = parsed
     const ctx: any = {
       ...getTemplateContext(tableName, attributes, pkAttributes, 'egovframework.example.sample', dbTableName),
-      packagePath: 'egovframework/example/sample',
     }
     ctx.date = '2026-07-16'
+
 
     const caseDir = path.join(GOLDEN_DIR, 'crud', caseName)
     const outDir = path.join(caseDir, 'rendered')

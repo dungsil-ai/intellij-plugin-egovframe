@@ -55,6 +55,7 @@ internal class CrudGeneration(
         ),
         erdText = erdText,
         context = buildContext(table.className, table.dbName, table.columns, packageName, date),
+        packageName = packageName,
       )
     )
   }
@@ -77,7 +78,6 @@ internal class CrudGeneration(
       "author" to "author",
       "date" to date.toString(),
       "version" to "1.0.0",
-      "packagePath" to packageName.replace(".", "/"),
     )
   )
 
@@ -119,6 +119,21 @@ internal class CrudGeneration(
       }
     }
   }
+
+  companion object {
+    private val PACKAGE_PATTERN = Regex("^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)*\$")
+
+    fun preflightGeneration(packageName: String, rawOutputRoot: String) {
+      require(PACKAGE_PATTERN.matches(packageName)) {
+        "Package name must match upstream convention: lowercase letters, digits, and dots " +
+          "(e.g. egovframework.example.sample)"
+      }
+      require(rawOutputRoot.isNotBlank()) { "Output root must not be blank" }
+      require(runCatching { Path.of(rawOutputRoot) }.isSuccess) {
+        "Output root is not a valid path: $rawOutputRoot"
+      }
+    }
+  }
 }
 
 internal sealed interface CrudPreparation {
@@ -148,12 +163,14 @@ internal class PreparedCrud internal constructor(
   val summary: CrudTableSummary,
   val erdText: String,
   private val context: Map<String, Any?>,
+  private val packageName: String,
 ) {
+  val contextFileName: String get() = "${summary.tableName}_TemplateContext.json"
+
   val artifacts: List<RenderedCrudArtifact> by lazy(LazyThreadSafetyMode.NONE) {
     val tableName = context.getValue("tableName") as String
-    val packagePath = context.getValue("packagePath") as String
     CrudArtifact.entries.map { artifact ->
-      val relativePath = artifact.relativePath(tableName, packagePath)
+      val relativePath = artifact.relativePath(tableName, packageName)
       RenderedCrudArtifact(
         artifact = artifact,
         relativePath = relativePath,
