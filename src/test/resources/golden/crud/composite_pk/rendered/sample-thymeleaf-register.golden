@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="registerFlag=${#strings.isEmpty(orderItemVO.orderId)} ? 'create' : 'modify'">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title th:if="registerFlag == 'modify'">OrderItem Update</title>
+    <title th:if="registerFlag == 'create'">OrderItem Regist</title>
+
+    <!-- KRDS CSS -->
+	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}">
+	<link rel="stylesheet" type="text/css" th:href="@{/css/egovframe.css}">
+	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
+	<script th:inline="javascript" th:src="@{/js/component/ui-script.js}" defer></script>
+	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
+
+	<!--For Custom Validation-->
+	<!-- egovframe-Todo: Validator 적용시 아래 주석 코드 참고 -->
+    <!-- <script th:inline="javascript" th:src="@{/js/egovframework/EgovValidation.js}" defer></script> -->
+
+    <script th:inline="javascript" defer>
+	    function fn_egov_list() {
+            $('#detailForm').attr('method', 'get').attr('action', contextPath + '/orderItem/orderItemList.do').submit();
+        }
+
+        function fn_egov_add() {
+            if (confirm('Are you sure you want to register?')) {
+                let frm = document.detailForm;
+                // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
+                // EgovValidation.js 파일에 validateOrderItemVO 함수 추가 필요
+                // if (!validateOrderItemVO(frm)) {
+				//	  return;
+				// }
+				$('#detailForm').attr('method', 'post').attr('action', contextPath + '/orderItem/addOrderItem.do').submit();
+            }
+        }
+
+        function fn_egov_update() {
+            if (confirm('Are you sure you want to modify?')) {
+            	let frm = document.detailForm;
+                // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
+                // EgovValidation.js 파일에 validateOrderItemVO 함수 추가 필요
+                // if (!validateOrderItemVO(frm)) {
+				//	  return;
+				// }
+            	$('#detailForm').attr('method', 'post').attr('action', contextPath + '/orderItem/updateOrderItem.do').submit();
+			}
+        }
+
+        function fn_egov_delete() {
+            if (confirm('Are you sure you want to delete?')) {
+                $('#detailForm').attr('method', 'post').attr('action', contextPath + '/orderItem/deleteOrderItem.do').submit();
+            }
+        }
+
+        function fn_egov_reset() {
+            $('form').each(function() {
+                this.reset();
+            });
+        }
+    </script>
+</head>
+
+<body>
+<div id="container" class="inner">
+
+	<!-- Page Title -->
+	<h2 class="heading-large">
+	    <span th:if="${registerFlag == 'modify'}">Update</span>
+	    <span th:if="${registerFlag == 'create'}">Regist</span>
+	</h2>
+
+	<form id="detailForm" name="detailForm" th:object="${orderItemVO}">
+    <input type="hidden" th:id="searchCondition" th:name="searchCondition" th:value="${orderItemVO.searchCondition}" />
+    <input type="hidden" th:id="searchKeyword" th:name="searchKeyword" th:value="${orderItemVO.searchKeyword}" />
+    <input type="hidden" th:id="pageIndex" th:name="pageIndex" th:value="${orderItemVO.pageIndex}" />
+
+		<div class="conts-wrap">
+	        <div class="fieldset input-form">
+                <div class="form-group" th:if="${orderItemVO.orderId !&#x3D; null}">
+                <div class="form-group" th:if="${not #strings.isEmpty(orderItemVO.orderId)}">
+                    <div class="form-tit">
+                        <label for="orderId">OrderId</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="orderId" name="orderId" class="krds-input" th:value="${orderItemVO.orderId}" th:readonly="readonly">
+                    </div>
+                </div>
+                <div class="form-group" th:if="${orderItemVO.itemSeq !&#x3D; null}">
+                <div class="form-group" th:if="${not #strings.isEmpty(orderItemVO.itemSeq)}">
+                    <div class="form-tit">
+                        <label for="itemSeq">ItemSeq</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="itemSeq" name="itemSeq" class="krds-input" th:value="${orderItemVO.itemSeq}" th:readonly="readonly">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="productName">ProductName</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="productName" name="productName" class="krds-input" th:value="${orderItemVO.productName}">
+                        <span class="error-message" th:if="${#fields.hasErrors('productName')}" th:errors="*productName"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="quantity">Quantity</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="quantity" name="quantity" class="krds-input" th:value="${orderItemVO.quantity}">
+                        <span class="error-message" th:if="${#fields.hasErrors('quantity')}" th:errors="*quantity"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="unitPrice">UnitPrice</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="unitPrice" name="unitPrice" class="krds-input" th:value="${orderItemVO.unitPrice}">
+                        <span class="error-message" th:if="${#fields.hasErrors('unitPrice')}" th:errors="*unitPrice"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="addr1">Addr1</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="addr1" name="addr1" class="krds-input" th:value="${orderItemVO.addr1}">
+                        <span class="error-message" th:if="${#fields.hasErrors('addr1')}" th:errors="*addr1"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="addr2">Addr2</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="addr2" name="addr2" class="krds-input" th:value="${orderItemVO.addr2}">
+                        <span class="error-message" th:if="${#fields.hasErrors('addr2')}" th:errors="*addr2"></span>
+                    </div>
+                </div>
+
+            </div>
+
+	        <!-- Action Buttons -->
+	        <div class="page-btn-wrap">
+                <div class="btn-wrap">
+	                <button type="button" class="krds-btn medium secondary" th:onclick="fn_egov_list()">List</button>
+	                <button type="button" class="krds-btn medium tertiary" th:onclick="fn_egov_reset()">Reset</button>
+                </div>
+	            <div class="btn-wrap">
+					<button type="button"
+	                        class="krds-btn medium"
+	                        th:onclick="fn_egov_update()"
+	                        th:if="${registerFlag == 'modify'}">Update</button>
+	                <button type="button"
+	                        class="krds-btn medium danger"
+	                        th:onclick="fn_egov_delete()"
+	                        th:if="${registerFlag == 'modify'}">Delete</button>
+	                <button type="button"
+	                        class="krds-btn medium"
+	                        th:onclick="fn_egov_add()"
+	                        th:if="${registerFlag == 'create'}">Regist</button>
+	            </div>
+	        </div>
+		</div>
+
+	</form>
+
+</div>
+
+</body>
+</html>

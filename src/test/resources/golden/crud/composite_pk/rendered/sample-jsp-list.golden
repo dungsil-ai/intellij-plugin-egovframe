@@ -1,0 +1,168 @@
+<%@ page contentType="text/html; charset=utf-8" pageEncoding="utf-8" %>
+<%@ taglib prefix="c"       uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="form"    uri="http://www.springframework.org/tags/form" %>
+<%@ taglib prefix="ui"      uri="http://egovframework.gov/ctl/ui" %>
+<%@ taglib prefix="spring"  uri="http://www.springframework.org/tags" %><!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>List</title>
+
+	<!-- KRDS CSS -->
+	<link type="text/css" rel="stylesheet" href="<c:url value='/css/component/output.css'/>" />
+	<link type="text/css" rel="stylesheet" href="<c:url value='/css/egovframe.css'/>" />
+	<script type="text/javaScript" language="javascript" src="<c:url value='/js/jquery.min.js'/>" defer="defer"></script>
+	<script type="text/javaScript" language="javascript" src="<c:url value='/js/egovframework/common.js'/>" defer="defer"></script>
+
+	<script type="text/javaScript" language="javascript" defer="defer">
+	<!--
+		/* 글 수정 화면 function */
+		function fn_egov_select(orderId, itemSeq) {
+			document.getElementById("listForm").orderId.value = orderId;
+			document.getElementById("listForm").itemSeq.value = itemSeq;
+			document.getElementById("listForm").action = "<c:url value='/orderItem/updateOrderItemView.do'/>";
+			document.getElementById("listForm").submit();
+		}
+
+		/* 글 등록 화면 function */
+		function fn_egov_addView() {
+			document.getElementById("listForm").action = "<c:url value='/orderItem/addOrderItemView.do'/>";
+			document.getElementById("listForm").submit();
+		}
+
+		/* 글 목록 화면 function */
+		function fn_egov_selectList() {
+			if(document.getElementById("listForm").searchKeyword.value == '') {
+				alert("Please enter search keyword");
+				return false;
+			}
+			document.getElementById("listForm").action = "<c:url value='/orderItem/orderItemList.do'/>";
+			document.getElementById("listForm").method = "get";
+			document.getElementById("listForm").submit();
+		}
+
+		/* pagination 페이지 링크 function */
+		function fn_egov_link_page(pageNo) {
+			document.getElementById("listForm").pageIndex.value = pageNo;
+			document.getElementById("listForm").action = "<c:url value='/orderItem/orderItemList.do'/>";
+			document.getElementById("listForm").method = "get";
+			document.getElementById("listForm").submit();
+		}
+	//-->
+	</script>
+</head>
+
+<body>
+<div id="container" class="inner">
+
+	<!-- Title -->
+	<h2 class="heading-large">List</h2>
+	<!-- // Title -->
+
+	<div id="content_pop">
+		<form:form modelAttribute="orderItemVO" id="listForm" name="listForm" method="post">
+			
+			<!-- Select Condition (Hidden Fields) - 게시물 조회 조건 -->
+			<input type="hidden" id="orderId" name="orderId" />
+			<input type="hidden" id="itemSeq" name="itemSeq" />
+			<input type="hidden" id="pageIndex" name="pageIndex" value="1" />
+
+			<!-- Search Form -->
+			<div class="form-group">
+				<div class="search-wrap">
+					<div class="search-body">
+						<div class="form-conts searchOption">
+							<select id="searchCondition" name="searchCondition" class="krds-form-select medium" title="Choose search condition">
+								<option value="1" <c:if test ="${not empty orderItemVO.searchCondition and orderItemVO.searchCondition eq 1}">selected="selected"</c:if>>ItemSeq</option>
+								<option value="0" <c:if test ="${not empty orderItemVO.searchCondition and orderItemVO.searchCondition eq 0}">selected="selected"</c:if>>OrderId</option>
+							</select>
+						</div>
+						<div class="form-conts btn-ico-wrap searchKeyword">
+							<input type="text" id="searchKeyword" name="searchKeyword" value="${orderItemVO.searchKeyword}" class="krds-input medium" placeholder="Search keyword">
+							<button type="button" class="krds-btn medium icon" onclick="fn_egov_selectList()">
+								<span class="sr-only">search" />Search</span>
+								<i class="svg-icon ico-sch"></i>
+							</button>
+						</div>
+					</div>
+					<div class="page-btn-wrap">
+						<button type="button" class="krds-btn medium" onclick="fn_egov_addView()">Regist</button>
+					</div>
+				</div>
+			</div>
+		</form:form>
+
+		<!-- List -->
+		<div class="krds-table-wrap">
+			<table class="tbl col data">
+				<colgroup>
+					<col style="width: 10%;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+				</colgroup>
+
+				<thead>
+					<tr>
+						<th scope="col" class="text-center">No</th>
+						<th scope="col" class="text-center">OrderId</th>
+						<th scope="col" class="text-center">ItemSeq</th>
+						<th scope="col" class="text-center">ProductName</th>
+						<th scope="col" class="text-center">Quantity</th>
+						<th scope="col" class="text-center">UnitPrice</th>
+						<th scope="col" class="text-center">Addr1</th>
+						<th scope="col" class="text-center">Addr2</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<c:choose>
+						<c:when test="${not empty resultList}">
+							<c:forEach var="result" items="${resultList}" varStatus="status">
+								<tr>
+									<!-- 순번 계산 -->
+									<td class="text-center"><c:out value="${paginationInfo.totalRecordCount+1 - ((orderItemVO.pageIndex-1) * orderItemVO.pageSize + status.count)}"/></td>
+									<!-- PK 컬럼: 클릭 가능한 링크 / 이 result 객체의 모든 PK 컬럼들이 SQL 문의 WHERE 조건에 사용됨 -->
+									<td class="text-center"><a href="javascript:fn_egov_select('<c:out value="${result.orderId}"/>', '<c:out value="${result.itemSeq}"/>')"><c:out value="${result.orderId}" /></a></td>
+									<!-- PK 컬럼: 클릭 가능한 링크 / 이 result 객체의 모든 PK 컬럼들이 SQL 문의 WHERE 조건에 사용됨 -->
+									<td class="text-center"><a href="javascript:fn_egov_select('<c:out value="${result.orderId}"/>', '<c:out value="${result.itemSeq}"/>')"><c:out value="${result.itemSeq}" /></a></td>
+									<!-- 일반 컬럼: 단순 출력 -->
+									<td class="text-center"><c:out value="${result.productName}" /></td>
+									<!-- 일반 컬럼: 단순 출력 -->
+									<td class="text-center"><c:out value="${result.quantity}" /></td>
+									<!-- 일반 컬럼: 단순 출력 -->
+									<td class="text-center"><c:out value="${result.unitPrice}" /></td>
+									<!-- 일반 컬럼: 단순 출력 -->
+									<td class="text-center"><c:out value="${result.addr1}" /></td>
+									<!-- 일반 컬럼: 단순 출력 -->
+									<td class="text-center"><c:out value="${result.addr2}" /></td>
+								</tr>
+							</c:forEach>
+						</c:when>
+						<c:otherwise>
+							<tr>
+								<td class="text-center" colspan="8">No data found</td>
+							</tr>
+						</c:otherwise>
+					</c:choose>
+				</tbody>
+			</table>
+		</div>
+		<!-- // List -->
+
+		<!-- Pagination -->
+		<div id="paging" class="krds-pagination w-page">
+			<ui:pagination paginationInfo="${paginationInfo}" type="krds" jsFunction="fn_egov_link_page" />
+		</div>
+
+	</div>
+
+</div>
+
+</body>
+</html>

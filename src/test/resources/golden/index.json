@@ -5,17 +5,17 @@
       "ddl": "golden/crud/single_pk/ddl.sql",
       "context": "golden/crud/single_pk/context.json",
       "outputs": {
-        "sample-vo-template.hbs": "golden/crud/single_pk/out/sample-vo-template.golden",
-        "sample-default-vo-template.hbs": "golden/crud/single_pk/out/sample-default-vo-template.golden",
-        "sample-controller-template.hbs": "golden/crud/single_pk/out/sample-controller-template.golden",
-        "sample-service-template.hbs": "golden/crud/single_pk/out/sample-service-template.golden",
-        "sample-service-impl-template.hbs": "golden/crud/single_pk/out/sample-service-impl-template.golden",
-        "sample-mapper-interface-template.hbs": "golden/crud/single_pk/out/sample-mapper-interface-template.golden",
-        "sample-mapper-template.hbs": "golden/crud/single_pk/out/sample-mapper-template.golden",
-        "sample-thymeleaf-list.hbs": "golden/crud/single_pk/out/sample-thymeleaf-list.golden",
-        "sample-thymeleaf-register.hbs": "golden/crud/single_pk/out/sample-thymeleaf-register.golden",
-        "sample-jsp-list.hbs": "golden/crud/single_pk/out/sample-jsp-list.golden",
-        "sample-jsp-register.hbs": "golden/crud/single_pk/out/sample-jsp-register.golden"
+        "sample-vo-template.hbs": "golden/crud/single_pk/rendered/sample-vo-template.golden",
+        "sample-default-vo-template.hbs": "golden/crud/single_pk/rendered/sample-default-vo-template.golden",
+        "sample-controller-template.hbs": "golden/crud/single_pk/rendered/sample-controller-template.golden",
+        "sample-service-template.hbs": "golden/crud/single_pk/rendered/sample-service-template.golden",
+        "sample-service-impl-template.hbs": "golden/crud/single_pk/rendered/sample-service-impl-template.golden",
+        "sample-mapper-interface-template.hbs": "golden/crud/single_pk/rendered/sample-mapper-interface-template.golden",
+        "sample-mapper-template.hbs": "golden/crud/single_pk/rendered/sample-mapper-template.golden",
+        "sample-thymeleaf-list.hbs": "golden/crud/single_pk/rendered/sample-thymeleaf-list.golden",
+        "sample-thymeleaf-register.hbs": "golden/crud/single_pk/rendered/sample-thymeleaf-register.golden",
+        "sample-jsp-list.hbs": "golden/crud/single_pk/rendered/sample-jsp-list.golden",
+        "sample-jsp-register.hbs": "golden/crud/single_pk/rendered/sample-jsp-register.golden"
       }
     },
     {
@@ -23,17 +23,17 @@
       "ddl": "golden/crud/composite_pk/ddl.sql",
       "context": "golden/crud/composite_pk/context.json",
       "outputs": {
-        "sample-vo-template.hbs": "golden/crud/composite_pk/out/sample-vo-template.golden",
-        "sample-default-vo-template.hbs": "golden/crud/composite_pk/out/sample-default-vo-template.golden",
-        "sample-controller-template.hbs": "golden/crud/composite_pk/out/sample-controller-template.golden",
-        "sample-service-template.hbs": "golden/crud/composite_pk/out/sample-service-template.golden",
-        "sample-service-impl-template.hbs": "golden/crud/composite_pk/out/sample-service-impl-template.golden",
-        "sample-mapper-interface-template.hbs": "golden/crud/composite_pk/out/sample-mapper-interface-template.golden",
-        "sample-mapper-template.hbs": "golden/crud/composite_pk/out/sample-mapper-template.golden",
-        "sample-thymeleaf-list.hbs": "golden/crud/composite_pk/out/sample-thymeleaf-list.golden",
-        "sample-thymeleaf-register.hbs": "golden/crud/composite_pk/out/sample-thymeleaf-register.golden",
-        "sample-jsp-list.hbs": "golden/crud/composite_pk/out/sample-jsp-list.golden",
-        "sample-jsp-register.hbs": "golden/crud/composite_pk/out/sample-jsp-register.golden"
+        "sample-vo-template.hbs": "golden/crud/composite_pk/rendered/sample-vo-template.golden",
+        "sample-default-vo-template.hbs": "golden/crud/composite_pk/rendered/sample-default-vo-template.golden",
+        "sample-controller-template.hbs": "golden/crud/composite_pk/rendered/sample-controller-template.golden",
+        "sample-service-template.hbs": "golden/crud/composite_pk/rendered/sample-service-template.golden",
+        "sample-service-impl-template.hbs": "golden/crud/composite_pk/rendered/sample-service-impl-template.golden",
+        "sample-mapper-interface-template.hbs": "golden/crud/composite_pk/rendered/sample-mapper-interface-template.golden",
+        "sample-mapper-template.hbs": "golden/crud/composite_pk/rendered/sample-mapper-template.golden",
+        "sample-thymeleaf-list.hbs": "golden/crud/composite_pk/rendered/sample-thymeleaf-list.golden",
+        "sample-thymeleaf-register.hbs": "golden/crud/composite_pk/rendered/sample-thymeleaf-register.golden",
+        "sample-jsp-list.hbs": "golden/crud/composite_pk/rendered/sample-jsp-list.golden",
+        "sample-jsp-register.hbs": "golden/crud/composite_pk/rendered/sample-jsp-register.golden"
       }
     },
     {
@@ -41,17 +41,17 @@
       "ddl": "golden/crud/no_pk_two_cols/ddl.sql",
       "context": "golden/crud/no_pk_two_cols/context.json",
       "outputs": {
-        "sample-vo-template.hbs": "golden/crud/no_pk_two_cols/out/sample-vo-template.golden",
-        "sample-default-vo-template.hbs": "golden/crud/no_pk_two_cols/out/sample-default-vo-template.golden",
-        "sample-controller-template.hbs": "golden/crud/no_pk_two_cols/out/sample-controller-template.golden",
-        "sample-service-template.hbs": "golden/crud/no_pk_two_cols/out/sample-service-template.golden",
-        "sample-service-impl-template.hbs": "golden/crud/no_pk_two_cols/out/sample-service-impl-template.golden",
-        "sample-mapper-interface-template.hbs": "golden/crud/no_pk_two_cols/out/sample-mapper-interface-template.golden",
-        "sample-mapper-template.hbs": "golden/crud/no_pk_two_cols/out/sample-mapper-template.golden",
-        "sample-thymeleaf-list.hbs": "golden/crud/no_pk_two_cols/out/sample-thymeleaf-list.golden",
-        "sample-thymeleaf-register.hbs": "golden/crud/no_pk_two_cols/out/sample-thymeleaf-register.golden",
-        "sample-jsp-list.hbs": "golden/crud/no_pk_two_cols/out/sample-jsp-list.golden",
-        "sample-jsp-register.hbs": "golden/crud/no_pk_two_cols/out/sample-jsp-register.golden"
+        "sample-vo-template.hbs": "golden/crud/no_pk_two_cols/rendered/sample-vo-template.golden",
+        "sample-default-vo-template.hbs": "golden/crud/no_pk_two_cols/rendered/sample-default-vo-template.golden",
+        "sample-controller-template.hbs": "golden/crud/no_pk_two_cols/rendered/sample-controller-template.golden",
+        "sample-service-template.hbs": "golden/crud/no_pk_two_cols/rendered/sample-service-template.golden",
+        "sample-service-impl-template.hbs": "golden/crud/no_pk_two_cols/rendered/sample-service-impl-template.golden",
+        "sample-mapper-interface-template.hbs": "golden/crud/no_pk_two_cols/rendered/sample-mapper-interface-template.golden",
+        "sample-mapper-template.hbs": "golden/crud/no_pk_two_cols/rendered/sample-mapper-template.golden",
+        "sample-thymeleaf-list.hbs": "golden/crud/no_pk_two_cols/rendered/sample-thymeleaf-list.golden",
+        "sample-thymeleaf-register.hbs": "golden/crud/no_pk_two_cols/rendered/sample-thymeleaf-register.golden",
+        "sample-jsp-list.hbs": "golden/crud/no_pk_two_cols/rendered/sample-jsp-list.golden",
+        "sample-jsp-register.hbs": "golden/crud/no_pk_two_cols/rendered/sample-jsp-register.golden"
       }
     },
     {
@@ -59,17 +59,17 @@
       "ddl": "golden/crud/special_chars/ddl.sql",
       "context": "golden/crud/special_chars/context.json",
       "outputs": {
-        "sample-vo-template.hbs": "golden/crud/special_chars/out/sample-vo-template.golden",
-        "sample-default-vo-template.hbs": "golden/crud/special_chars/out/sample-default-vo-template.golden",
-        "sample-controller-template.hbs": "golden/crud/special_chars/out/sample-controller-template.golden",
-        "sample-service-template.hbs": "golden/crud/special_chars/out/sample-service-template.golden",
-        "sample-service-impl-template.hbs": "golden/crud/special_chars/out/sample-service-impl-template.golden",
-        "sample-mapper-interface-template.hbs": "golden/crud/special_chars/out/sample-mapper-interface-template.golden",
-        "sample-mapper-template.hbs": "golden/crud/special_chars/out/sample-mapper-template.golden",
-        "sample-thymeleaf-list.hbs": "golden/crud/special_chars/out/sample-thymeleaf-list.golden",
-        "sample-thymeleaf-register.hbs": "golden/crud/special_chars/out/sample-thymeleaf-register.golden",
-        "sample-jsp-list.hbs": "golden/crud/special_chars/out/sample-jsp-list.golden",
-        "sample-jsp-register.hbs": "golden/crud/special_chars/out/sample-jsp-register.golden"
+        "sample-vo-template.hbs": "golden/crud/special_chars/rendered/sample-vo-template.golden",
+        "sample-default-vo-template.hbs": "golden/crud/special_chars/rendered/sample-default-vo-template.golden",
+        "sample-controller-template.hbs": "golden/crud/special_chars/rendered/sample-controller-template.golden",
+        "sample-service-template.hbs": "golden/crud/special_chars/rendered/sample-service-template.golden",
+        "sample-service-impl-template.hbs": "golden/crud/special_chars/rendered/sample-service-impl-template.golden",
+        "sample-mapper-interface-template.hbs": "golden/crud/special_chars/rendered/sample-mapper-interface-template.golden",
+        "sample-mapper-template.hbs": "golden/crud/special_chars/rendered/sample-mapper-template.golden",
+        "sample-thymeleaf-list.hbs": "golden/crud/special_chars/rendered/sample-thymeleaf-list.golden",
+        "sample-thymeleaf-register.hbs": "golden/crud/special_chars/rendered/sample-thymeleaf-register.golden",
+        "sample-jsp-list.hbs": "golden/crud/special_chars/rendered/sample-jsp-list.golden",
+        "sample-jsp-register.hbs": "golden/crud/special_chars/rendered/sample-jsp-register.golden"
       }
     }
   ],

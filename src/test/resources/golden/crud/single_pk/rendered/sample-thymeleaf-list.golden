@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>List</title>
+
+	<!-- KRDS CSS -->
+	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}"/>
+	<link rel="stylesheet" type="text/css" th:href="@{/css/egovframe.css}"/>
+	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
+	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
+	<script th:inline="javascript" defer>
+		const contextPath = $('#contextPathHolder').attr('data-contextPath') ? $('#contextPathHolder').attr('data-contextPath') : '';
+
+		function notNullCheck(value) {
+		    return !(value === '' || value == null || (typeof value == 'object' && !Object.keys(value).length));
+		}
+
+		function fn_egov_selectList() {
+            if (notNullCheck($('#searchKeyword').val())) {
+				$('#listForm').attr('method', 'get').attr('action', contextPath + '/boardArticle/boardArticleList.do').submit();
+            } else {
+            	alert('Please enter search keyword');
+            }
+		}
+
+		function fn_egov_link_page(pageIndex) {
+        	$('#pageIndex').val(pageIndex);
+        	$('#listForm').attr('method', 'get').attr('action', contextPath + '/boardArticle/boardArticleList.do').submit();
+        }
+
+        function fn_egov_addView() {
+        	$('#listForm').attr('method', `post`).attr('action', contextPath + '/boardArticle/addBoardArticleView.do').submit();
+        }
+
+        function fn_egov_select(articleId) {
+            $('#articleId').val(articleId);
+            $('#listForm').attr('method', 'post').attr('action', contextPath + '/boardArticle/updateBoardArticleView.do').submit();
+        }
+    </script>
+</head>
+
+<body>
+<div id="container" class="inner">
+
+	<!-- Page Title -->
+	<h2 class="heading-large">List</h2>
+
+	<div id="content_pop">
+		<form id="listForm" th:object="${boardArticleVO}">
+			<input type="hidden" th:id="articleId" th:name="articleId" />
+			<input type="hidden" th:id="pageIndex" th:name="pageIndex" th:value="1" />
+
+			<!-- Search Form -->
+			<div class="form-group">
+				<div class="search-wrap">
+					<div class="search-body">
+						<div class="form-conts searchOption">
+							<select id="searchCondition" name="searchCondition" class="krds-form-select medium" title="Choose search condition">
+								      
+								      
+								<option value="1" th:selected="${boardArticleVO.searchCondition} &#x3D;&#x3D; 1">Title</option>
+								      
+								      
+								      
+								      
+								      
+								      
+								<option value="0" th:selected="${boardArticleVO.searchCondition} &#x3D;&#x3D; 0">ArticleId</option>
+							</select>
+						</div>
+						<div class="form-conts btn-ico-wrap searchKeyword">
+							<input type="text" id="searchKeyword" name="searchKeyword" th:value="${boardArticleVO.searchKeyword}" class="krds-input medium" placeholder="Search keyword">
+							<button type="button" class="krds-btn medium icon" th:onclick="fn_egov_selectList()">
+								<span class="sr-only">Search</span>
+								<i class="svg-icon ico-sch"></i>
+							</button>
+						</div>
+					</div>
+					<div class="page-btn-wrap">
+						<button type="button" class="krds-btn medium" th:onclick="fn_egov_addView()">Regist</button>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		<!-- List -->
+		<div class="krds-table-wrap">
+			<table class="tbl col data">
+				<colgroup>
+					<col style="width: 10%;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+					<col style="width: auto;">
+				</colgroup>
+
+				<thead>
+					<tr>
+						<th scope="col" class="text-center">No</th>
+						<th scope="col" class="text-center">ArticleId</th>
+						<th scope="col" class="text-center">Title</th>
+						<th scope="col" class="text-center">Content</th>
+						<th scope="col" class="text-center">ViewCount</th>
+						<th scope="col" class="text-center">CreatedAt</th>
+						<th scope="col" class="text-center">Price</th>
+						<th scope="col" class="text-center">UseYn</th>
+						<th scope="col" class="text-center">WriterName</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<tr th:each="result, iterStat : ${resultList}">
+					  <!-- 순번 계산 -->
+						<td class="text-center" th:text="${paginationInfo.totalRecordCount + 1 - ((boardArticleVO.pageIndex - 1) * boardArticleVO.pageSize + iterStat.count)}"></td>
+						<!-- PK 컬럼: 클릭 가능한 링크 / 이 result 객체의 모든 PK 컬럼들이 SQL 문의 WHERE 조건에 사용됨 -->
+						<td class="text-center">
+							<a href="#" th:onclick="fn_egov_select([[${result.articleId}]])" th:text="${result.articleId}"></a>
+						</td>
+						<!-- 일반 컬럼: 단순 출력 -->
+						<td class="text-center" th:text="${result.title}"></td>
+						<!-- 일반 컬럼: 단순 출력 -->
+						<td class="text-center" th:text="${result.content}"></td>
+						<!-- 일반 컬럼: 단순 출력 -->
+						<td class="text-center" th:text="${result.viewCount}"></td>
+						<!-- 일반 컬럼: 단순 출력 -->
+						<td class="text-center" th:text="${result.createdAt}"></td>
+						<!-- 일반 컬럼: 단순 출력 -->
+						<td class="text-center" th:text="${result.price}"></td>
+						<!-- 일반 컬럼: 단순 출력 -->
+						<td class="text-center" th:text="${result.useYn}"></td>
+						<!-- 일반 컬럼: 단순 출력 -->
+						<td class="text-center" th:text="${result.writerName}"></td>
+					</tr>
+					<tr th:if="${resultList == null or resultList.isEmpty()}">
+						<td class="text-center" colspan="9">No data found</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Pagination -->
+		<div id="paging" class="krds-pagination w-page" th:utext="${#egovKrdsPaginationRenderer.renderPagination(paginationInfo, 'fn_egov_link_page')}"></div>
+
+	</div>
+
+</div>
+
+</body>
+</html>

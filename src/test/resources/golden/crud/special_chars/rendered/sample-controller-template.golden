@@ -1,0 +1,196 @@
+package egovframework.example.sample.web;
+
+import java.util.List;
+
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import egovframework.example.sample.service.EventInfoService;
+import egovframework.example.sample.service.EventInfoVO;
+
+import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+
+/**
+ * @Class Name : EventInfoController.java
+ * @Description : EventInfo Controller Class
+ * @Modification Information
+ * @
+ * @ 수정일 수정자 수정내용
+ * @ --------- --------- -------------------------------
+ * @ 2026-07-16 author 최초생성
+ *
+ * @author author
+ * @since 2026-07-16
+ * @version 1.0.0
+ * @see
+ *
+ * Copyright (C) All right reserved.
+ */
+@Controller
+public class EventInfoController {
+
+	/** EventInfoService */
+	@Resource(name = "eventInfoService")
+	private EventInfoService eventInfoService;
+
+	/** EgovPropertyService */
+	@Resource(name = "propertiesService")
+	private EgovPropertyService propertiesService;
+
+	/**
+	 * EventInfo 목록을 조회한다. (pageing)
+	 * @param eventInfoVO - 조회할 정보가 담긴 EventInfoDefaultVO
+	 * @param model
+	 * @return "eventInfoList"
+	 * @exception Exception
+	 */
+	@GetMapping("/eventInfo/eventInfoList.do")
+	public String selectEventInfoList(@ModelAttribute("eventInfoVO") EventInfoVO eventInfoVO, ModelMap model) throws Exception {
+
+		/** EgovPropertyService.sample */
+		eventInfoVO.setPageUnit(propertiesService.getInt("pageUnit"));
+		eventInfoVO.setPageSize(propertiesService.getInt("pageSize"));
+
+		/** pageing setting */
+		PaginationInfo paginationInfo = new PaginationInfo();
+		paginationInfo.setCurrentPageNo(eventInfoVO.getPageIndex());
+		paginationInfo.setRecordCountPerPage(eventInfoVO.getPageUnit());
+		paginationInfo.setPageSize(eventInfoVO.getPageSize());
+
+		eventInfoVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
+		eventInfoVO.setLastIndex(paginationInfo.getLastRecordIndex());
+		eventInfoVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+
+		/** List */
+		List<?> eventInfoList = eventInfoService.selectEventInfoList(eventInfoVO);
+		model.addAttribute("resultList", eventInfoList);
+
+		/** Count */
+		int totCnt = eventInfoService.selectEventInfoListTotCnt(eventInfoVO);
+		paginationInfo.setTotalRecordCount(totCnt);
+
+		/** Pagination */
+		model.addAttribute("paginationInfo", paginationInfo);
+
+		return "eventInfo/eventInfoList";
+	}
+
+	/**
+	 * 글 등록 화면을 조회한다.
+	 * @param eventInfoVO - 목록 조회조건 정보가 담긴 VO
+	 * @param model
+	 * @return "eventInfoRegister"
+	 * @exception Exception
+	 */
+	@PostMapping("/eventInfo/addEventInfoView.do")
+	public String addEventInfoView(@ModelAttribute("eventInfoVO") EventInfoVO eventInfoVO, Model model) throws Exception {
+
+		model.addAttribute("eventInfoVO", eventInfoVO);
+
+		return "eventInfo/eventInfoRegister";
+	}
+
+	/**
+	 * 글을 등록한다.
+	 * @param eventInfoVO - 등록할 정보가 담긴 VO
+	 * @param bindingResult - @ModelAttrubute에 대한 바인딩 검증 결과
+	 * @param model
+	 * @param status
+	 * @return "redirect:/eventInfo/eventInfoList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/eventInfo/addEventInfo.do")
+	public String addEventInfo(@Valid @ModelAttribute("eventInfoVO") EventInfoVO eventInfoVO, BindingResult bindingResult, Model model, SessionStatus status) throws Exception {
+
+		// Server-Side Validation
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("eventInfoVO", eventInfoVO);
+			return "eventInfo/eventInfoRegister";
+		}
+
+		eventInfoService.insertEventInfo(eventInfoVO);
+		status.setComplete();
+
+		return "redirect:/eventInfo/eventInfoList.do";
+	}
+
+	/**
+	 * 글 수정화면을 조회한다.
+	 * @param eventId - 수정할 글의 eventId
+	 * @param model
+	 * @return "eventInfoRegister"
+	 * @exception Exception
+	 */
+	@PostMapping("/eventInfo/updateEventInfoView.do")
+	public String updateEventInfoView(@ModelAttribute("eventInfoVO") EventInfoVO eventInfoVO ,Model model) throws Exception {
+
+		EventInfoVO detail = eventInfoService.selectEventInfo(eventInfoVO);
+		detail.setSearchCondition(eventInfoVO.getSearchCondition());
+		detail.setSearchKeyword(eventInfoVO.getSearchKeyword());
+		detail.setPageIndex(eventInfoVO.getPageIndex());
+
+		model.addAttribute("eventInfoVO", detail);
+		
+		return "eventInfo/eventInfoRegister";
+	}
+
+	/**
+	 * 글을 수정한다.
+	 * @param eventInfoVO - 수정할 정보가 담긴 VO
+	 * @param bindingResult - @ModelAttrubute에 대한 바인딩 검증 결과
+	 * @param model
+	 * @param status
+	 * @return "redirect:/eventInfo/eventInfoList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/eventInfo/updateEventInfo.do")
+	public String updateEventInfo(@Valid @ModelAttribute("eventInfoVO") EventInfoVO eventInfoVO, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes, SessionStatus status) throws Exception {
+
+		// Server-Side Validation
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("eventInfoVO", eventInfoVO);
+			return "eventInfo/eventInfoRegister";
+		}
+
+		eventInfoService.updateEventInfo(eventInfoVO);
+		status.setComplete();
+
+		redirectAttributes.addAttribute("searchCondition", eventInfoVO.getSearchCondition());
+		redirectAttributes.addAttribute("searchKeyword", eventInfoVO.getSearchKeyword());
+		redirectAttributes.addAttribute("pageIndex", eventInfoVO.getPageIndex());
+
+		return "redirect:/eventInfo/eventInfoList.do";
+	}
+
+	/**
+	 * 글을 삭제한다.
+	 * @param eventInfoVO - 삭제할 정보가 담긴 VO
+	 * @param model
+	 * @param status
+	 * @return "redirect:/eventInfo/eventInfoList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/eventInfo/deleteEventInfo.do")
+	public String deleteEventInfo(@ModelAttribute("eventInfoVO") EventInfoVO eventInfoVO, RedirectAttributes redirectAttributes, SessionStatus status) throws Exception {
+		eventInfoService.deleteEventInfo(eventInfoVO);
+		status.setComplete();
+
+		redirectAttributes.addAttribute("searchCondition", eventInfoVO.getSearchCondition());
+		redirectAttributes.addAttribute("searchKeyword", eventInfoVO.getSearchKeyword());
+		redirectAttributes.addAttribute("pageIndex", eventInfoVO.getPageIndex());
+
+		return "redirect:/eventInfo/eventInfoList.do";
+	}
+
+}

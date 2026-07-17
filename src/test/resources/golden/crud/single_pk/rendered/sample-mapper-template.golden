@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.sample.service.impl.BoardArticleMapper">
+
+	<resultMap id="boardArticle" type="egovframework.example.sample.service.BoardArticleVO">
+		<result property="articleId" column="article_id"/>
+		<result property="title" column="title"/>
+		<result property="content" column="content"/>
+		<result property="viewCount" column="view_count"/>
+		<result property="createdAt" column="created_at"/>
+		<result property="price" column="price"/>
+		<result property="useYn" column="use_yn"/>
+		<result property="writerName" column="writer_name"/>
+	</resultMap>
+
+	<insert id="insertBoardArticle">
+
+			INSERT INTO board_article (
+				article_id
+							, title
+							, content
+							, view_count
+							, created_at
+							, price
+							, use_yn
+							, writer_name
+			 )
+			VALUES (
+				#{articleId}
+							, #{title}
+							, #{content}
+							, #{viewCount}
+							, #{createdAt}
+							, #{price}
+							, #{useYn}
+							, #{writerName}
+			 )
+
+	</insert>
+
+	<update id="updateBoardArticle">
+
+			UPDATE board_article
+			SET				title=#{title}				, content=#{content}
+				, view_count=#{viewCount}
+				, created_at=#{createdAt}
+				, price=#{price}
+				, use_yn=#{useYn}
+				, writer_name=#{writerName}
+			WHERE
+				article_id=#{articleId}
+
+	</update>
+
+	<delete id="deleteBoardArticle">
+
+			DELETE FROM board_article
+			WHERE
+				article_id=#{articleId}
+
+	</delete>
+
+	<select id="selectBoardArticle" resultMap="boardArticle">
+
+			SELECT
+				article_id
+				, title
+				, content
+				, view_count
+				, created_at
+				, price
+				, use_yn
+				, writer_name
+			FROM board_article
+			WHERE
+				article_id = #{articleId}
+
+	</select>
+
+	<select id="selectBoardArticleList" resultMap="boardArticle">
+
+			SELECT
+				article_id
+				, title
+				, content
+				, view_count
+				, created_at
+				, price
+				, use_yn
+				, writer_name
+			FROM board_article
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND	article_id LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+								
+								AND title LIKE '%' || #{searchKeyword} || '%'
+								
+								
+								
+								
+								
+								
+					</when>
+				</choose>
+			</if>
+			ORDER BY article_id DESC
+			LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+
+	</select>
+
+	<select id="selectBoardArticleListTotCnt" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM board_article
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND article_id LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+								
+								
+						AND title LIKE '%' || #{searchKeyword} || '%'
+								
+								
+								
+								
+								
+								
+					</when>
+				</choose>
+			</if>
+	</select>
+
+</mapper>

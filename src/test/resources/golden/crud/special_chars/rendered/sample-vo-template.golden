@@ -1,0 +1,60 @@
+package egovframework.example.sample.service;
+
+import org.egovframe.rte.ptl.reactive.validation.EgovNullCheck;
+
+/**
+ * @Class Name : EventInfoVO.java
+ * @Description : EventInfoVO Class
+ * @Modification Information
+ * @
+ * @  수정일      수정자              수정내용
+ * @ ---------   ---------   -------------------------------
+ * @ 2026-07-16   author   최초생성
+ *
+ * @author author
+ * @since 2026-07-16
+ * @version 1.0.0
+ * @see
+ *
+ *  Copyright (C) All right reserved.
+ */
+public class EventInfoVO extends EventInfoDefaultVO {
+
+	private static final long serialVersionUID = 1L;
+
+	/** event_id */
+	private java.lang.Integer eventId;
+
+	/** event_name */
+	// @EgovNullCheck(message="eventName is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
+	private java.lang.String eventName;
+
+	/** description */
+	// @EgovNullCheck(message="description is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
+	private java.lang.String description;
+
+	public java.lang.Integer getEventId() {
+		return eventId;
+	}
+
+	public void setEventId(java.lang.Integer eventId) {
+		this.eventId = eventId;
+	}
+
+	public java.lang.String getEventName() {
+		return eventName;
+	}
+
+	public void setEventName(java.lang.String eventName) {
+		this.eventName = eventName;
+	}
+
+	public java.lang.String getDescription() {
+		return description;
+	}
+
+	public void setDescription(java.lang.String description) {
+		this.description = description;
+	}
+
+}

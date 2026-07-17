@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.sample.service.impl.TmpLogMapper">
+
+	<resultMap id="tmpLog" type="egovframework.example.sample.service.TmpLogVO">
+		<result property="logMessage" column="log_message"/>
+		<result property="loggedAt" column="logged_at"/>
+	</resultMap>
+
+	<insert id="insertTmpLog">
+
+			INSERT INTO tmp_log (
+				log_message
+							, logged_at
+			 )
+			VALUES (
+				#{logMessage}
+							, #{loggedAt}
+			 )
+
+	</insert>
+
+	<update id="updateTmpLog">
+
+			UPDATE tmp_log
+			SET				log_message=#{logMessage}				, logged_at=#{loggedAt}
+			WHERE
+				log_message=#{logMessage}
+
+	</update>
+
+	<delete id="deleteTmpLog">
+
+			DELETE FROM tmp_log
+			WHERE
+				log_message=#{logMessage}
+
+	</delete>
+
+	<select id="selectTmpLog" resultMap="tmpLog">
+
+			SELECT
+				log_message
+				, logged_at
+			FROM tmp_log
+			WHERE
+				log_message = #{logMessage}
+
+	</select>
+
+	<select id="selectTmpLogList" resultMap="tmpLog">
+
+			SELECT
+				log_message
+				, logged_at
+			FROM tmp_log
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND	log_message LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+						AND	logged_at LIKE '%' || #{searchKeyword} || '%'
+					</when>
+				</choose>
+			</if>
+			ORDER BY log_message DESC
+			LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+
+	</select>
+
+	<select id="selectTmpLogListTotCnt" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM tmp_log
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND log_message LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+						AND logged_at LIKE '%' || #{searchKeyword} || '%'
+					</when>
+				</choose>
+			</if>
+	</select>
+
+</mapper>

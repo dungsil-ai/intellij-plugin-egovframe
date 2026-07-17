@@ -1,0 +1,197 @@
+package egovframework.example.sample.web;
+
+import java.util.List;
+
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import egovframework.example.sample.service.OrderItemService;
+import egovframework.example.sample.service.OrderItemVO;
+
+import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+
+/**
+ * @Class Name : OrderItemController.java
+ * @Description : OrderItem Controller Class
+ * @Modification Information
+ * @
+ * @ 수정일 수정자 수정내용
+ * @ --------- --------- -------------------------------
+ * @ 2026-07-16 author 최초생성
+ *
+ * @author author
+ * @since 2026-07-16
+ * @version 1.0.0
+ * @see
+ *
+ * Copyright (C) All right reserved.
+ */
+@Controller
+public class OrderItemController {
+
+	/** OrderItemService */
+	@Resource(name = "orderItemService")
+	private OrderItemService orderItemService;
+
+	/** EgovPropertyService */
+	@Resource(name = "propertiesService")
+	private EgovPropertyService propertiesService;
+
+	/**
+	 * OrderItem 목록을 조회한다. (pageing)
+	 * @param orderItemVO - 조회할 정보가 담긴 OrderItemDefaultVO
+	 * @param model
+	 * @return "orderItemList"
+	 * @exception Exception
+	 */
+	@GetMapping("/orderItem/orderItemList.do")
+	public String selectOrderItemList(@ModelAttribute("orderItemVO") OrderItemVO orderItemVO, ModelMap model) throws Exception {
+
+		/** EgovPropertyService.sample */
+		orderItemVO.setPageUnit(propertiesService.getInt("pageUnit"));
+		orderItemVO.setPageSize(propertiesService.getInt("pageSize"));
+
+		/** pageing setting */
+		PaginationInfo paginationInfo = new PaginationInfo();
+		paginationInfo.setCurrentPageNo(orderItemVO.getPageIndex());
+		paginationInfo.setRecordCountPerPage(orderItemVO.getPageUnit());
+		paginationInfo.setPageSize(orderItemVO.getPageSize());
+
+		orderItemVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
+		orderItemVO.setLastIndex(paginationInfo.getLastRecordIndex());
+		orderItemVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+
+		/** List */
+		List<?> orderItemList = orderItemService.selectOrderItemList(orderItemVO);
+		model.addAttribute("resultList", orderItemList);
+
+		/** Count */
+		int totCnt = orderItemService.selectOrderItemListTotCnt(orderItemVO);
+		paginationInfo.setTotalRecordCount(totCnt);
+
+		/** Pagination */
+		model.addAttribute("paginationInfo", paginationInfo);
+
+		return "orderItem/orderItemList";
+	}
+
+	/**
+	 * 글 등록 화면을 조회한다.
+	 * @param orderItemVO - 목록 조회조건 정보가 담긴 VO
+	 * @param model
+	 * @return "orderItemRegister"
+	 * @exception Exception
+	 */
+	@PostMapping("/orderItem/addOrderItemView.do")
+	public String addOrderItemView(@ModelAttribute("orderItemVO") OrderItemVO orderItemVO, Model model) throws Exception {
+
+		model.addAttribute("orderItemVO", orderItemVO);
+
+		return "orderItem/orderItemRegister";
+	}
+
+	/**
+	 * 글을 등록한다.
+	 * @param orderItemVO - 등록할 정보가 담긴 VO
+	 * @param bindingResult - @ModelAttrubute에 대한 바인딩 검증 결과
+	 * @param model
+	 * @param status
+	 * @return "redirect:/orderItem/orderItemList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/orderItem/addOrderItem.do")
+	public String addOrderItem(@Valid @ModelAttribute("orderItemVO") OrderItemVO orderItemVO, BindingResult bindingResult, Model model, SessionStatus status) throws Exception {
+
+		// Server-Side Validation
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("orderItemVO", orderItemVO);
+			return "orderItem/orderItemRegister";
+		}
+
+		orderItemService.insertOrderItem(orderItemVO);
+		status.setComplete();
+
+		return "redirect:/orderItem/orderItemList.do";
+	}
+
+	/**
+	 * 글 수정화면을 조회한다.
+	 * @param orderId - 수정할 글의 orderId
+	 * @param itemSeq - 수정할 글의 itemSeq
+	 * @param model
+	 * @return "orderItemRegister"
+	 * @exception Exception
+	 */
+	@PostMapping("/orderItem/updateOrderItemView.do")
+	public String updateOrderItemView(@ModelAttribute("orderItemVO") OrderItemVO orderItemVO ,Model model) throws Exception {
+
+		OrderItemVO detail = orderItemService.selectOrderItem(orderItemVO);
+		detail.setSearchCondition(orderItemVO.getSearchCondition());
+		detail.setSearchKeyword(orderItemVO.getSearchKeyword());
+		detail.setPageIndex(orderItemVO.getPageIndex());
+
+		model.addAttribute("orderItemVO", detail);
+		
+		return "orderItem/orderItemRegister";
+	}
+
+	/**
+	 * 글을 수정한다.
+	 * @param orderItemVO - 수정할 정보가 담긴 VO
+	 * @param bindingResult - @ModelAttrubute에 대한 바인딩 검증 결과
+	 * @param model
+	 * @param status
+	 * @return "redirect:/orderItem/orderItemList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/orderItem/updateOrderItem.do")
+	public String updateOrderItem(@Valid @ModelAttribute("orderItemVO") OrderItemVO orderItemVO, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes, SessionStatus status) throws Exception {
+
+		// Server-Side Validation
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("orderItemVO", orderItemVO);
+			return "orderItem/orderItemRegister";
+		}
+
+		orderItemService.updateOrderItem(orderItemVO);
+		status.setComplete();
+
+		redirectAttributes.addAttribute("searchCondition", orderItemVO.getSearchCondition());
+		redirectAttributes.addAttribute("searchKeyword", orderItemVO.getSearchKeyword());
+		redirectAttributes.addAttribute("pageIndex", orderItemVO.getPageIndex());
+
+		return "redirect:/orderItem/orderItemList.do";
+	}
+
+	/**
+	 * 글을 삭제한다.
+	 * @param orderItemVO - 삭제할 정보가 담긴 VO
+	 * @param model
+	 * @param status
+	 * @return "redirect:/orderItem/orderItemList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/orderItem/deleteOrderItem.do")
+	public String deleteOrderItem(@ModelAttribute("orderItemVO") OrderItemVO orderItemVO, RedirectAttributes redirectAttributes, SessionStatus status) throws Exception {
+		orderItemService.deleteOrderItem(orderItemVO);
+		status.setComplete();
+
+		redirectAttributes.addAttribute("searchCondition", orderItemVO.getSearchCondition());
+		redirectAttributes.addAttribute("searchKeyword", orderItemVO.getSearchKeyword());
+		redirectAttributes.addAttribute("pageIndex", orderItemVO.getPageIndex());
+
+		return "redirect:/orderItem/orderItemList.do";
+	}
+
+}

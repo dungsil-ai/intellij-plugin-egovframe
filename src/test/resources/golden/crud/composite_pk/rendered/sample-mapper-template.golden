@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.sample.service.impl.OrderItemMapper">
+
+	<resultMap id="orderItem" type="egovframework.example.sample.service.OrderItemVO">
+		<result property="orderId" column="order_id"/>
+		<result property="itemSeq" column="item_seq"/>
+		<result property="productName" column="product_name"/>
+		<result property="quantity" column="quantity"/>
+		<result property="unitPrice" column="unit_price"/>
+		<result property="addr1" column="addr_1"/>
+		<result property="addr2" column="addr_2"/>
+	</resultMap>
+
+	<insert id="insertOrderItem">
+
+			INSERT INTO order_item (
+				order_id
+							, item_seq
+							, product_name
+							, quantity
+							, unit_price
+							, addr_1
+							, addr_2
+			 )
+			VALUES (
+				#{orderId}
+							, #{itemSeq}
+							, #{productName}
+							, #{quantity}
+							, #{unitPrice}
+							, #{addr1}
+							, #{addr2}
+			 )
+
+	</insert>
+
+	<update id="updateOrderItem">
+
+			UPDATE order_item
+			SET				product_name=#{productName}				, quantity=#{quantity}
+				, unit_price=#{unitPrice}
+				, addr_1=#{addr1}
+				, addr_2=#{addr2}
+			WHERE
+				order_id=#{orderId}
+				AND item_seq=#{itemSeq}
+
+	</update>
+
+	<delete id="deleteOrderItem">
+
+			DELETE FROM order_item
+			WHERE
+				order_id=#{orderId}
+				AND item_seq=#{itemSeq}
+
+	</delete>
+
+	<select id="selectOrderItem" resultMap="orderItem">
+
+			SELECT
+				order_id
+				, item_seq
+				, product_name
+				, quantity
+				, unit_price
+				, addr_1
+				, addr_2
+			FROM order_item
+			WHERE
+				order_id = #{orderId}
+				AND item_seq = #{itemSeq}
+
+	</select>
+
+	<select id="selectOrderItemList" resultMap="orderItem">
+
+			SELECT
+				order_id
+				, item_seq
+				, product_name
+				, quantity
+				, unit_price
+				, addr_1
+				, addr_2
+			FROM order_item
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND	order_id LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+						AND	item_seq LIKE '%' || #{searchKeyword} || '%'
+					</when>
+				</choose>
+			</if>
+			ORDER BY order_id DESC
+			LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+
+	</select>
+
+	<select id="selectOrderItemListTotCnt" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM order_item
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND order_id LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+						AND item_seq LIKE '%' || #{searchKeyword} || '%'
+					</when>
+				</choose>
+			</if>
+	</select>
+
+</mapper>

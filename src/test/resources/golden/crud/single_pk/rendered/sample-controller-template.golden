@@ -1,0 +1,196 @@
+package egovframework.example.sample.web;
+
+import java.util.List;
+
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import egovframework.example.sample.service.BoardArticleService;
+import egovframework.example.sample.service.BoardArticleVO;
+
+import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+
+/**
+ * @Class Name : BoardArticleController.java
+ * @Description : BoardArticle Controller Class
+ * @Modification Information
+ * @
+ * @ 수정일 수정자 수정내용
+ * @ --------- --------- -------------------------------
+ * @ 2026-07-16 author 최초생성
+ *
+ * @author author
+ * @since 2026-07-16
+ * @version 1.0.0
+ * @see
+ *
+ * Copyright (C) All right reserved.
+ */
+@Controller
+public class BoardArticleController {
+
+	/** BoardArticleService */
+	@Resource(name = "boardArticleService")
+	private BoardArticleService boardArticleService;
+
+	/** EgovPropertyService */
+	@Resource(name = "propertiesService")
+	private EgovPropertyService propertiesService;
+
+	/**
+	 * BoardArticle 목록을 조회한다. (pageing)
+	 * @param boardArticleVO - 조회할 정보가 담긴 BoardArticleDefaultVO
+	 * @param model
+	 * @return "boardArticleList"
+	 * @exception Exception
+	 */
+	@GetMapping("/boardArticle/boardArticleList.do")
+	public String selectBoardArticleList(@ModelAttribute("boardArticleVO") BoardArticleVO boardArticleVO, ModelMap model) throws Exception {
+
+		/** EgovPropertyService.sample */
+		boardArticleVO.setPageUnit(propertiesService.getInt("pageUnit"));
+		boardArticleVO.setPageSize(propertiesService.getInt("pageSize"));
+
+		/** pageing setting */
+		PaginationInfo paginationInfo = new PaginationInfo();
+		paginationInfo.setCurrentPageNo(boardArticleVO.getPageIndex());
+		paginationInfo.setRecordCountPerPage(boardArticleVO.getPageUnit());
+		paginationInfo.setPageSize(boardArticleVO.getPageSize());
+
+		boardArticleVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
+		boardArticleVO.setLastIndex(paginationInfo.getLastRecordIndex());
+		boardArticleVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+
+		/** List */
+		List<?> boardArticleList = boardArticleService.selectBoardArticleList(boardArticleVO);
+		model.addAttribute("resultList", boardArticleList);
+
+		/** Count */
+		int totCnt = boardArticleService.selectBoardArticleListTotCnt(boardArticleVO);
+		paginationInfo.setTotalRecordCount(totCnt);
+
+		/** Pagination */
+		model.addAttribute("paginationInfo", paginationInfo);
+
+		return "boardArticle/boardArticleList";
+	}
+
+	/**
+	 * 글 등록 화면을 조회한다.
+	 * @param boardArticleVO - 목록 조회조건 정보가 담긴 VO
+	 * @param model
+	 * @return "boardArticleRegister"
+	 * @exception Exception
+	 */
+	@PostMapping("/boardArticle/addBoardArticleView.do")
+	public String addBoardArticleView(@ModelAttribute("boardArticleVO") BoardArticleVO boardArticleVO, Model model) throws Exception {
+
+		model.addAttribute("boardArticleVO", boardArticleVO);
+
+		return "boardArticle/boardArticleRegister";
+	}
+
+	/**
+	 * 글을 등록한다.
+	 * @param boardArticleVO - 등록할 정보가 담긴 VO
+	 * @param bindingResult - @ModelAttrubute에 대한 바인딩 검증 결과
+	 * @param model
+	 * @param status
+	 * @return "redirect:/boardArticle/boardArticleList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/boardArticle/addBoardArticle.do")
+	public String addBoardArticle(@Valid @ModelAttribute("boardArticleVO") BoardArticleVO boardArticleVO, BindingResult bindingResult, Model model, SessionStatus status) throws Exception {
+
+		// Server-Side Validation
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("boardArticleVO", boardArticleVO);
+			return "boardArticle/boardArticleRegister";
+		}
+
+		boardArticleService.insertBoardArticle(boardArticleVO);
+		status.setComplete();
+
+		return "redirect:/boardArticle/boardArticleList.do";
+	}
+
+	/**
+	 * 글 수정화면을 조회한다.
+	 * @param articleId - 수정할 글의 articleId
+	 * @param model
+	 * @return "boardArticleRegister"
+	 * @exception Exception
+	 */
+	@PostMapping("/boardArticle/updateBoardArticleView.do")
+	public String updateBoardArticleView(@ModelAttribute("boardArticleVO") BoardArticleVO boardArticleVO ,Model model) throws Exception {
+
+		BoardArticleVO detail = boardArticleService.selectBoardArticle(boardArticleVO);
+		detail.setSearchCondition(boardArticleVO.getSearchCondition());
+		detail.setSearchKeyword(boardArticleVO.getSearchKeyword());
+		detail.setPageIndex(boardArticleVO.getPageIndex());
+
+		model.addAttribute("boardArticleVO", detail);
+		
+		return "boardArticle/boardArticleRegister";
+	}
+
+	/**
+	 * 글을 수정한다.
+	 * @param boardArticleVO - 수정할 정보가 담긴 VO
+	 * @param bindingResult - @ModelAttrubute에 대한 바인딩 검증 결과
+	 * @param model
+	 * @param status
+	 * @return "redirect:/boardArticle/boardArticleList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/boardArticle/updateBoardArticle.do")
+	public String updateBoardArticle(@Valid @ModelAttribute("boardArticleVO") BoardArticleVO boardArticleVO, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes, SessionStatus status) throws Exception {
+
+		// Server-Side Validation
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("boardArticleVO", boardArticleVO);
+			return "boardArticle/boardArticleRegister";
+		}
+
+		boardArticleService.updateBoardArticle(boardArticleVO);
+		status.setComplete();
+
+		redirectAttributes.addAttribute("searchCondition", boardArticleVO.getSearchCondition());
+		redirectAttributes.addAttribute("searchKeyword", boardArticleVO.getSearchKeyword());
+		redirectAttributes.addAttribute("pageIndex", boardArticleVO.getPageIndex());
+
+		return "redirect:/boardArticle/boardArticleList.do";
+	}
+
+	/**
+	 * 글을 삭제한다.
+	 * @param boardArticleVO - 삭제할 정보가 담긴 VO
+	 * @param model
+	 * @param status
+	 * @return "redirect:/boardArticle/boardArticleList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/boardArticle/deleteBoardArticle.do")
+	public String deleteBoardArticle(@ModelAttribute("boardArticleVO") BoardArticleVO boardArticleVO, RedirectAttributes redirectAttributes, SessionStatus status) throws Exception {
+		boardArticleService.deleteBoardArticle(boardArticleVO);
+		status.setComplete();
+
+		redirectAttributes.addAttribute("searchCondition", boardArticleVO.getSearchCondition());
+		redirectAttributes.addAttribute("searchKeyword", boardArticleVO.getSearchKeyword());
+		redirectAttributes.addAttribute("pageIndex", boardArticleVO.getPageIndex());
+
+		return "redirect:/boardArticle/boardArticleList.do";
+	}
+
+}

@@ -1,0 +1,107 @@
+package egovframework.example.sample.service;
+
+import org.egovframe.rte.ptl.reactive.validation.EgovNullCheck;
+
+/**
+ * @Class Name : OrderItemVO.java
+ * @Description : OrderItemVO Class
+ * @Modification Information
+ * @
+ * @  수정일      수정자              수정내용
+ * @ ---------   ---------   -------------------------------
+ * @ 2026-07-16   author   최초생성
+ *
+ * @author author
+ * @since 2026-07-16
+ * @version 1.0.0
+ * @see
+ *
+ *  Copyright (C) All right reserved.
+ */
+public class OrderItemVO extends OrderItemDefaultVO {
+
+	private static final long serialVersionUID = 1L;
+
+	/** order_id */
+	private java.lang.Integer orderId;
+
+	/** item_seq */
+	private java.lang.Integer itemSeq;
+
+	/** product_name */
+	// @EgovNullCheck(message="productName is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
+	private java.lang.String productName;
+
+	/** quantity */
+	// @EgovNullCheck(message="quantity is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
+	private java.lang.Integer quantity;
+
+	/** unit_price */
+	// @EgovNullCheck(message="unitPrice is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
+	private java.math.BigDecimal unitPrice;
+
+	/** addr_1 */
+	// @EgovNullCheck(message="addr1 is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
+	private java.lang.String addr1;
+
+	/** addr_2 */
+	// @EgovNullCheck(message="addr2 is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
+	private java.lang.String addr2;
+
+	public java.lang.Integer getOrderId() {
+		return orderId;
+	}
+
+	public void setOrderId(java.lang.Integer orderId) {
+		this.orderId = orderId;
+	}
+
+	public java.lang.Integer getItemSeq() {
+		return itemSeq;
+	}
+
+	public void setItemSeq(java.lang.Integer itemSeq) {
+		this.itemSeq = itemSeq;
+	}
+
+	public java.lang.String getProductName() {
+		return productName;
+	}
+
+	public void setProductName(java.lang.String productName) {
+		this.productName = productName;
+	}
+
+	public java.lang.Integer getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(java.lang.Integer quantity) {
+		this.quantity = quantity;
+	}
+
+	public java.math.BigDecimal getUnitPrice() {
+		return unitPrice;
+	}
+
+	public void setUnitPrice(java.math.BigDecimal unitPrice) {
+		this.unitPrice = unitPrice;
+	}
+
+	public java.lang.String getAddr1() {
+		return addr1;
+	}
+
+	public void setAddr1(java.lang.String addr1) {
+		this.addr1 = addr1;
+	}
+
+	public java.lang.String getAddr2() {
+		return addr2;
+	}
+
+	public void setAddr2(java.lang.String addr2) {
+		this.addr2 = addr2;
+	}
+
+}

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="registerFlag=${#strings.isEmpty(boardArticleVO.articleId)} ? 'create' : 'modify'">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title th:if="registerFlag == 'modify'">BoardArticle Update</title>
+    <title th:if="registerFlag == 'create'">BoardArticle Regist</title>
+
+    <!-- KRDS CSS -->
+	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}">
+	<link rel="stylesheet" type="text/css" th:href="@{/css/egovframe.css}">
+	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
+	<script th:inline="javascript" th:src="@{/js/component/ui-script.js}" defer></script>
+	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
+
+	<!--For Custom Validation-->
+	<!-- egovframe-Todo: Validator 적용시 아래 주석 코드 참고 -->
+    <!-- <script th:inline="javascript" th:src="@{/js/egovframework/EgovValidation.js}" defer></script> -->
+
+    <script th:inline="javascript" defer>
+	    function fn_egov_list() {
+            $('#detailForm').attr('method', 'get').attr('action', contextPath + '/boardArticle/boardArticleList.do').submit();
+        }
+
+        function fn_egov_add() {
+            if (confirm('Are you sure you want to register?')) {
+                let frm = document.detailForm;
+                // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
+                // EgovValidation.js 파일에 validateBoardArticleVO 함수 추가 필요
+                // if (!validateBoardArticleVO(frm)) {
+				//	  return;
+				// }
+				$('#detailForm').attr('method', 'post').attr('action', contextPath + '/boardArticle/addBoardArticle.do').submit();
+            }
+        }
+
+        function fn_egov_update() {
+            if (confirm('Are you sure you want to modify?')) {
+            	let frm = document.detailForm;
+                // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
+                // EgovValidation.js 파일에 validateBoardArticleVO 함수 추가 필요
+                // if (!validateBoardArticleVO(frm)) {
+				//	  return;
+				// }
+            	$('#detailForm').attr('method', 'post').attr('action', contextPath + '/boardArticle/updateBoardArticle.do').submit();
+			}
+        }
+
+        function fn_egov_delete() {
+            if (confirm('Are you sure you want to delete?')) {
+                $('#detailForm').attr('method', 'post').attr('action', contextPath + '/boardArticle/deleteBoardArticle.do').submit();
+            }
+        }
+
+        function fn_egov_reset() {
+            $('form').each(function() {
+                this.reset();
+            });
+        }
+    </script>
+</head>
+
+<body>
+<div id="container" class="inner">
+
+	<!-- Page Title -->
+	<h2 class="heading-large">
+	    <span th:if="${registerFlag == 'modify'}">Update</span>
+	    <span th:if="${registerFlag == 'create'}">Regist</span>
+	</h2>
+
+	<form id="detailForm" name="detailForm" th:object="${boardArticleVO}">
+    <input type="hidden" th:id="searchCondition" th:name="searchCondition" th:value="${boardArticleVO.searchCondition}" />
+    <input type="hidden" th:id="searchKeyword" th:name="searchKeyword" th:value="${boardArticleVO.searchKeyword}" />
+    <input type="hidden" th:id="pageIndex" th:name="pageIndex" th:value="${boardArticleVO.pageIndex}" />
+
+		<div class="conts-wrap">
+	        <div class="fieldset input-form">
+                <div class="form-group" th:if="${boardArticleVO.articleId !&#x3D; null}">
+                <div class="form-group" th:if="${not #strings.isEmpty(boardArticleVO.articleId)}">
+                    <div class="form-tit">
+                        <label for="articleId">ArticleId</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="articleId" name="articleId" class="krds-input" th:value="${boardArticleVO.articleId}" th:readonly="readonly">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="title">Title</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="title" name="title" class="krds-input" th:value="${boardArticleVO.title}">
+                        <span class="error-message" th:if="${#fields.hasErrors('title')}" th:errors="*title"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="content">Content</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="content" name="content" class="krds-input" th:value="${boardArticleVO.content}">
+                        <span class="error-message" th:if="${#fields.hasErrors('content')}" th:errors="*content"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="viewCount">ViewCount</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="viewCount" name="viewCount" class="krds-input" th:value="${boardArticleVO.viewCount}">
+                        <span class="error-message" th:if="${#fields.hasErrors('viewCount')}" th:errors="*viewCount"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="createdAt">CreatedAt</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="createdAt" name="createdAt" class="krds-input" th:value="${boardArticleVO.createdAt}">
+                        <span class="error-message" th:if="${#fields.hasErrors('createdAt')}" th:errors="*createdAt"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="price">Price</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="price" name="price" class="krds-input" th:value="${boardArticleVO.price}">
+                        <span class="error-message" th:if="${#fields.hasErrors('price')}" th:errors="*price"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="useYn">UseYn</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="useYn" name="useYn" class="krds-input" th:value="${boardArticleVO.useYn}">
+                        <span class="error-message" th:if="${#fields.hasErrors('useYn')}" th:errors="*useYn"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="writerName">WriterName</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="writerName" name="writerName" class="krds-input" th:value="${boardArticleVO.writerName}">
+                        <span class="error-message" th:if="${#fields.hasErrors('writerName')}" th:errors="*writerName"></span>
+                    </div>
+                </div>
+
+            </div>
+
+	        <!-- Action Buttons -->
+	        <div class="page-btn-wrap">
+                <div class="btn-wrap">
+	                <button type="button" class="krds-btn medium secondary" th:onclick="fn_egov_list()">List</button>
+	                <button type="button" class="krds-btn medium tertiary" th:onclick="fn_egov_reset()">Reset</button>
+                </div>
+	            <div class="btn-wrap">
+					<button type="button"
+	                        class="krds-btn medium"
+	                        th:onclick="fn_egov_update()"
+	                        th:if="${registerFlag == 'modify'}">Update</button>
+	                <button type="button"
+	                        class="krds-btn medium danger"
+	                        th:onclick="fn_egov_delete()"
+	                        th:if="${registerFlag == 'modify'}">Delete</button>
+	                <button type="button"
+	                        class="krds-btn medium"
+	                        th:onclick="fn_egov_add()"
+	                        th:if="${registerFlag == 'create'}">Regist</button>
+	            </div>
+	        </div>
+		</div>
+
+	</form>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,196 @@
+package egovframework.example.sample.web;
+
+import java.util.List;
+
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import egovframework.example.sample.service.TmpLogService;
+import egovframework.example.sample.service.TmpLogVO;
+
+import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+
+/**
+ * @Class Name : TmpLogController.java
+ * @Description : TmpLog Controller Class
+ * @Modification Information
+ * @
+ * @ 수정일 수정자 수정내용
+ * @ --------- --------- -------------------------------
+ * @ 2026-07-16 author 최초생성
+ *
+ * @author author
+ * @since 2026-07-16
+ * @version 1.0.0
+ * @see
+ *
+ * Copyright (C) All right reserved.
+ */
+@Controller
+public class TmpLogController {
+
+	/** TmpLogService */
+	@Resource(name = "tmpLogService")
+	private TmpLogService tmpLogService;
+
+	/** EgovPropertyService */
+	@Resource(name = "propertiesService")
+	private EgovPropertyService propertiesService;
+
+	/**
+	 * TmpLog 목록을 조회한다. (pageing)
+	 * @param tmpLogVO - 조회할 정보가 담긴 TmpLogDefaultVO
+	 * @param model
+	 * @return "tmpLogList"
+	 * @exception Exception
+	 */
+	@GetMapping("/tmpLog/tmpLogList.do")
+	public String selectTmpLogList(@ModelAttribute("tmpLogVO") TmpLogVO tmpLogVO, ModelMap model) throws Exception {
+
+		/** EgovPropertyService.sample */
+		tmpLogVO.setPageUnit(propertiesService.getInt("pageUnit"));
+		tmpLogVO.setPageSize(propertiesService.getInt("pageSize"));
+
+		/** pageing setting */
+		PaginationInfo paginationInfo = new PaginationInfo();
+		paginationInfo.setCurrentPageNo(tmpLogVO.getPageIndex());
+		paginationInfo.setRecordCountPerPage(tmpLogVO.getPageUnit());
+		paginationInfo.setPageSize(tmpLogVO.getPageSize());
+
+		tmpLogVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
+		tmpLogVO.setLastIndex(paginationInfo.getLastRecordIndex());
+		tmpLogVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+
+		/** List */
+		List<?> tmpLogList = tmpLogService.selectTmpLogList(tmpLogVO);
+		model.addAttribute("resultList", tmpLogList);
+
+		/** Count */
+		int totCnt = tmpLogService.selectTmpLogListTotCnt(tmpLogVO);
+		paginationInfo.setTotalRecordCount(totCnt);
+
+		/** Pagination */
+		model.addAttribute("paginationInfo", paginationInfo);
+
+		return "tmpLog/tmpLogList";
+	}
+
+	/**
+	 * 글 등록 화면을 조회한다.
+	 * @param tmpLogVO - 목록 조회조건 정보가 담긴 VO
+	 * @param model
+	 * @return "tmpLogRegister"
+	 * @exception Exception
+	 */
+	@PostMapping("/tmpLog/addTmpLogView.do")
+	public String addTmpLogView(@ModelAttribute("tmpLogVO") TmpLogVO tmpLogVO, Model model) throws Exception {
+
+		model.addAttribute("tmpLogVO", tmpLogVO);
+
+		return "tmpLog/tmpLogRegister";
+	}
+
+	/**
+	 * 글을 등록한다.
+	 * @param tmpLogVO - 등록할 정보가 담긴 VO
+	 * @param bindingResult - @ModelAttrubute에 대한 바인딩 검증 결과
+	 * @param model
+	 * @param status
+	 * @return "redirect:/tmpLog/tmpLogList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/tmpLog/addTmpLog.do")
+	public String addTmpLog(@Valid @ModelAttribute("tmpLogVO") TmpLogVO tmpLogVO, BindingResult bindingResult, Model model, SessionStatus status) throws Exception {
+
+		// Server-Side Validation
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("tmpLogVO", tmpLogVO);
+			return "tmpLog/tmpLogRegister";
+		}
+
+		tmpLogService.insertTmpLog(tmpLogVO);
+		status.setComplete();
+
+		return "redirect:/tmpLog/tmpLogList.do";
+	}
+
+	/**
+	 * 글 수정화면을 조회한다.
+	 * @param logMessage - 수정할 글의 logMessage
+	 * @param model
+	 * @return "tmpLogRegister"
+	 * @exception Exception
+	 */
+	@PostMapping("/tmpLog/updateTmpLogView.do")
+	public String updateTmpLogView(@ModelAttribute("tmpLogVO") TmpLogVO tmpLogVO ,Model model) throws Exception {
+
+		TmpLogVO detail = tmpLogService.selectTmpLog(tmpLogVO);
+		detail.setSearchCondition(tmpLogVO.getSearchCondition());
+		detail.setSearchKeyword(tmpLogVO.getSearchKeyword());
+		detail.setPageIndex(tmpLogVO.getPageIndex());
+
+		model.addAttribute("tmpLogVO", detail);
+		
+		return "tmpLog/tmpLogRegister";
+	}
+
+	/**
+	 * 글을 수정한다.
+	 * @param tmpLogVO - 수정할 정보가 담긴 VO
+	 * @param bindingResult - @ModelAttrubute에 대한 바인딩 검증 결과
+	 * @param model
+	 * @param status
+	 * @return "redirect:/tmpLog/tmpLogList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/tmpLog/updateTmpLog.do")
+	public String updateTmpLog(@Valid @ModelAttribute("tmpLogVO") TmpLogVO tmpLogVO, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes, SessionStatus status) throws Exception {
+
+		// Server-Side Validation
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("tmpLogVO", tmpLogVO);
+			return "tmpLog/tmpLogRegister";
+		}
+
+		tmpLogService.updateTmpLog(tmpLogVO);
+		status.setComplete();
+
+		redirectAttributes.addAttribute("searchCondition", tmpLogVO.getSearchCondition());
+		redirectAttributes.addAttribute("searchKeyword", tmpLogVO.getSearchKeyword());
+		redirectAttributes.addAttribute("pageIndex", tmpLogVO.getPageIndex());
+
+		return "redirect:/tmpLog/tmpLogList.do";
+	}
+
+	/**
+	 * 글을 삭제한다.
+	 * @param tmpLogVO - 삭제할 정보가 담긴 VO
+	 * @param model
+	 * @param status
+	 * @return "redirect:/tmpLog/tmpLogList.do"
+	 * @exception Exception
+	 */
+	@PostMapping("/tmpLog/deleteTmpLog.do")
+	public String deleteTmpLog(@ModelAttribute("tmpLogVO") TmpLogVO tmpLogVO, RedirectAttributes redirectAttributes, SessionStatus status) throws Exception {
+		tmpLogService.deleteTmpLog(tmpLogVO);
+		status.setComplete();
+
+		redirectAttributes.addAttribute("searchCondition", tmpLogVO.getSearchCondition());
+		redirectAttributes.addAttribute("searchKeyword", tmpLogVO.getSearchKeyword());
+		redirectAttributes.addAttribute("pageIndex", tmpLogVO.getPageIndex());
+
+		return "redirect:/tmpLog/tmpLogList.do";
+	}
+
+}

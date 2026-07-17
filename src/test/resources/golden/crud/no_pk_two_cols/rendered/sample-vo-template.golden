@@ -1,0 +1,49 @@
+package egovframework.example.sample.service;
+
+import org.egovframe.rte.ptl.reactive.validation.EgovNullCheck;
+
+/**
+ * @Class Name : TmpLogVO.java
+ * @Description : TmpLogVO Class
+ * @Modification Information
+ * @
+ * @  수정일      수정자              수정내용
+ * @ ---------   ---------   -------------------------------
+ * @ 2026-07-16   author   최초생성
+ *
+ * @author author
+ * @since 2026-07-16
+ * @version 1.0.0
+ * @see
+ *
+ *  Copyright (C) All right reserved.
+ */
+public class TmpLogVO extends TmpLogDefaultVO {
+
+	private static final long serialVersionUID = 1L;
+
+	/** log_message */
+	// @EgovNullCheck(message="logMessage is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
+	private java.lang.String logMessage;
+
+	/** logged_at */
+	// @EgovNullCheck(message="loggedAt is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
+	private java.util.Date loggedAt;
+
+	public java.lang.String getLogMessage() {
+		return logMessage;
+	}
+
+	public void setLogMessage(java.lang.String logMessage) {
+		this.logMessage = logMessage;
+	}
+
+	public java.util.Date getLoggedAt() {
+		return loggedAt;
+	}
+
+	public void setLoggedAt(java.util.Date loggedAt) {
+		this.loggedAt = loggedAt;
+	}
+
+}

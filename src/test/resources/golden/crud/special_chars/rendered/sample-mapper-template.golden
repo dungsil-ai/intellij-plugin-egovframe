@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.example.sample.service.impl.EventInfoMapper">
+
+	<resultMap id="eventInfo" type="egovframework.example.sample.service.EventInfoVO">
+		<result property="eventId" column="event_id"/>
+		<result property="eventName" column="event_name"/>
+		<result property="description" column="description"/>
+	</resultMap>
+
+	<insert id="insertEventInfo">
+
+			INSERT INTO event_info (
+				event_id
+							, event_name
+							, description
+			 )
+			VALUES (
+				#{eventId}
+							, #{eventName}
+							, #{description}
+			 )
+
+	</insert>
+
+	<update id="updateEventInfo">
+
+			UPDATE event_info
+			SET				event_name=#{eventName}				, description=#{description}
+			WHERE
+				event_id=#{eventId}
+
+	</update>
+
+	<delete id="deleteEventInfo">
+
+			DELETE FROM event_info
+			WHERE
+				event_id=#{eventId}
+
+	</delete>
+
+	<select id="selectEventInfo" resultMap="eventInfo">
+
+			SELECT
+				event_id
+				, event_name
+				, description
+			FROM event_info
+			WHERE
+				event_id = #{eventId}
+
+	</select>
+
+	<select id="selectEventInfoList" resultMap="eventInfo">
+
+			SELECT
+				event_id
+				, event_name
+				, description
+			FROM event_info
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND	event_id LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+								
+								AND event_name LIKE '%' || #{searchKeyword} || '%'
+								
+					</when>
+				</choose>
+			</if>
+			ORDER BY event_id DESC
+			LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+
+	</select>
+
+	<select id="selectEventInfoListTotCnt" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM event_info
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND event_id LIKE '%' || #{searchKeyword} || '%'
+					</when>
+		            <when test="searchCondition == 1">
+								
+								
+						AND event_name LIKE '%' || #{searchKeyword} || '%'
+								
+					</when>
+				</choose>
+			</if>
+	</select>
+
+</mapper>

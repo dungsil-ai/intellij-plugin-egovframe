@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="registerFlag=${#strings.isEmpty(tmpLogVO.logMessage)} ? 'create' : 'modify'">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title th:if="registerFlag == 'modify'">TmpLog Update</title>
+    <title th:if="registerFlag == 'create'">TmpLog Regist</title>
+
+    <!-- KRDS CSS -->
+	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}">
+	<link rel="stylesheet" type="text/css" th:href="@{/css/egovframe.css}">
+	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
+	<script th:inline="javascript" th:src="@{/js/component/ui-script.js}" defer></script>
+	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
+
+	<!--For Custom Validation-->
+	<!-- egovframe-Todo: Validator 적용시 아래 주석 코드 참고 -->
+    <!-- <script th:inline="javascript" th:src="@{/js/egovframework/EgovValidation.js}" defer></script> -->
+
+    <script th:inline="javascript" defer>
+	    function fn_egov_list() {
+            $('#detailForm').attr('method', 'get').attr('action', contextPath + '/tmpLog/tmpLogList.do').submit();
+        }
+
+        function fn_egov_add() {
+            if (confirm('Are you sure you want to register?')) {
+                let frm = document.detailForm;
+                // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
+                // EgovValidation.js 파일에 validateTmpLogVO 함수 추가 필요
+                // if (!validateTmpLogVO(frm)) {
+				//	  return;
+				// }
+				$('#detailForm').attr('method', 'post').attr('action', contextPath + '/tmpLog/addTmpLog.do').submit();
+            }
+        }
+
+        function fn_egov_update() {
+            if (confirm('Are you sure you want to modify?')) {
+            	let frm = document.detailForm;
+                // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
+                // EgovValidation.js 파일에 validateTmpLogVO 함수 추가 필요
+                // if (!validateTmpLogVO(frm)) {
+				//	  return;
+				// }
+            	$('#detailForm').attr('method', 'post').attr('action', contextPath + '/tmpLog/updateTmpLog.do').submit();
+			}
+        }
+
+        function fn_egov_delete() {
+            if (confirm('Are you sure you want to delete?')) {
+                $('#detailForm').attr('method', 'post').attr('action', contextPath + '/tmpLog/deleteTmpLog.do').submit();
+            }
+        }
+
+        function fn_egov_reset() {
+            $('form').each(function() {
+                this.reset();
+            });
+        }
+    </script>
+</head>
+
+<body>
+<div id="container" class="inner">
+
+	<!-- Page Title -->
+	<h2 class="heading-large">
+	    <span th:if="${registerFlag == 'modify'}">Update</span>
+	    <span th:if="${registerFlag == 'create'}">Regist</span>
+	</h2>
+
+	<form id="detailForm" name="detailForm" th:object="${tmpLogVO}">
+    <input type="hidden" th:id="searchCondition" th:name="searchCondition" th:value="${tmpLogVO.searchCondition}" />
+    <input type="hidden" th:id="searchKeyword" th:name="searchKeyword" th:value="${tmpLogVO.searchKeyword}" />
+    <input type="hidden" th:id="pageIndex" th:name="pageIndex" th:value="${tmpLogVO.pageIndex}" />
+
+		<div class="conts-wrap">
+	        <div class="fieldset input-form">
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="logMessage">LogMessage</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="logMessage" name="logMessage" class="krds-input" th:value="${tmpLogVO.logMessage}">
+                        <span class="error-message" th:if="${#fields.hasErrors('logMessage')}" th:errors="*logMessage"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="loggedAt">LoggedAt</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="loggedAt" name="loggedAt" class="krds-input" th:value="${tmpLogVO.loggedAt}">
+                        <span class="error-message" th:if="${#fields.hasErrors('loggedAt')}" th:errors="*loggedAt"></span>
+                    </div>
+                </div>
+
+            </div>
+
+	        <!-- Action Buttons -->
+	        <div class="page-btn-wrap">
+                <div class="btn-wrap">
+	                <button type="button" class="krds-btn medium secondary" th:onclick="fn_egov_list()">List</button>
+	                <button type="button" class="krds-btn medium tertiary" th:onclick="fn_egov_reset()">Reset</button>
+                </div>
+	            <div class="btn-wrap">
+					<button type="button"
+	                        class="krds-btn medium"
+	                        th:onclick="fn_egov_update()"
+	                        th:if="${registerFlag == 'modify'}">Update</button>
+	                <button type="button"
+	                        class="krds-btn medium danger"
+	                        th:onclick="fn_egov_delete()"
+	                        th:if="${registerFlag == 'modify'}">Delete</button>
+	                <button type="button"
+	                        class="krds-btn medium"
+	                        th:onclick="fn_egov_add()"
+	                        th:if="${registerFlag == 'create'}">Regist</button>
+	            </div>
+	        </div>
+		</div>
+
+	</form>
+
+</div>
+
+</body>
+</html>

@@ -215,7 +215,7 @@ async function generateCrud() {
     ctx.date = '2026-07-16'
 
     const caseDir = path.join(GOLDEN_DIR, 'crud', caseName)
-    const outDir = path.join(caseDir, 'out')
+    const outDir = path.join(caseDir, 'rendered')
     mkdirp(outDir)
 
     // Write DDL
@@ -749,7 +749,7 @@ function getCrudIndexEntries(): any[] {
     const outputs: Record<string, string> = {}
     for (const templateFile of CRUD_TEMPLATES) {
       const basename = templateFile.replace(/\.hbs$/, '')
-      outputs[templateFile] = `golden/crud/${caseName}/out/${basename}.golden`
+      outputs[templateFile] = `golden/crud/${caseName}/rendered/${basename}.golden`
     }
     entries.push({
       case: caseName,
