@@ -73,6 +73,7 @@ internal object DdlAnalyzer {
         ?: return DdlAnalysisResult.Invalid(INVALID_DDL)
       cursor = if (suffixEnd < text.length) suffixEnd + 1 else suffixEnd
       cursor = skipWhitespace(text, cursor)
+      cursor = skipCommentOnStatements(text, cursor)
       if (cursor < text.length && !matchesKeyword(text, cursor, "CREATE")) {
         return DdlAnalysisResult.Invalid(INVALID_DDL)
       }
@@ -283,6 +284,24 @@ internal object DdlAnalyzer {
     var index = start
     while (index < text.length && text[index].isWhitespace()) index += 1
     return index
+  }
+
+  private fun skipCommentOnStatements(text: String, start: Int): Int {
+    var cursor = start
+    while (cursor < text.length) {
+      cursor = skipWhitespace(text, cursor)
+      if (cursor >= text.length) break
+      if (!matchesKeyword(text, cursor, "COMMENT")) break
+      var c = skipWhitespace(text, cursor + 7)
+      if (!matchesKeyword(text, c, "ON")) break
+      c = skipWhitespace(text, c + 2)
+      if (!matchesKeyword(text, c, "TABLE") && !matchesKeyword(text, c, "COLUMN")) break
+      // This is a COMMENT ON TABLE/COLUMN statement; skip to semicolon
+      val semiIdx = SqlScanner(text).findTopLevelSemicolon(cursor)
+      if (semiIdx == null) break
+      cursor = if (semiIdx < text.length) semiIdx + 1 else semiIdx
+    }
+    return cursor
   }
 
   private fun consumeKeyword(text: String, start: Int, keyword: String): Int? =
