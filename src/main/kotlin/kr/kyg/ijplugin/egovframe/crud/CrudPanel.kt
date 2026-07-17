@@ -113,7 +113,7 @@ class CrudPanel(private val project: Project) : JPanel(BorderLayout(8, 8)), Disp
       override fun changedUpdate(event: DocumentEvent) = restartValidation()
     })
     editorModel.addChangeListener {
-      restartValidation()
+      if (editorModel.isPendingInput) restartValidation()
     }
 
     val dialectRow = JPanel(FlowLayout(FlowLayout.LEFT, 6, 0)).apply {

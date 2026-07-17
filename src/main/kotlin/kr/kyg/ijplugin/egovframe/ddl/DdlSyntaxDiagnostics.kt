@@ -115,13 +115,13 @@ internal object DdlSyntaxDiagnostics {
           val tableNameStart = c
           c = skipIdentifier(text, c)
           if (c == tableNameStart) {
-            val pos = offsetToLineColumn(text, c.coerceAtMost(text.length - 1))
+            val pos = offsetToLineColumn(text, c)
             errors.add(
               Diagnostic(
                 "Expected table name after CREATE TABLE",
                 pos.first,
                 pos.second,
-                c.coerceAtMost(text.length - 1),
+                c,
               ),
             )
             return
@@ -129,8 +129,8 @@ internal object DdlSyntaxDiagnostics {
           c = skipWhitespace(text, c)
 
           if (c >= text.length || text[c] != '(') {
-            val pos = offsetToLineColumn(text, c.coerceAtMost(text.length - 1))
-            errors.add(Diagnostic("Expected '(' after table name", pos.first, pos.second, c.coerceAtMost(text.length - 1)))
+            val pos = offsetToLineColumn(text, c)
+            errors.add(Diagnostic("Expected '(' after table name", pos.first, pos.second, c))
             return
           }
 

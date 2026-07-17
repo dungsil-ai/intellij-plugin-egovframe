@@ -138,6 +138,24 @@ class CrudEditorModelTest {
   }
 
   @Test
+  fun `debounce listener restarts only while user input is pending`() {
+    val model = CrudEditorModel()
+    var restartCount = 0
+    model.addChangeListener {
+      if (model.isPendingInput) restartCount += 1
+    }
+
+    model.setSqlText("CREATE TABLE t (id INT PRIMARY KEY);")
+    assertEquals(1, restartCount)
+
+    model.markInputSettled()
+    assertEquals(1, restartCount)
+
+    model.requestPreview()
+    assertEquals(1, restartCount)
+  }
+
+  @Test
   fun `availableSamples returns samples for current dialect`() {
     val model = CrudEditorModel()
     val mysqlSamples = model.availableSamples

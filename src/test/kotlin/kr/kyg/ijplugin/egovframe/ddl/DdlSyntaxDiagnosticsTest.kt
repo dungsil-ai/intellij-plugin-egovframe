@@ -33,6 +33,8 @@ class DdlSyntaxDiagnosticsTest {
     val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
     val diag = error.diagnostics.first()
     assertEquals("Unclosed parenthesis", diag.message)
+    assertEquals(2, diag.line)
+    assertEquals(9, diag.column)
   }
 
   @Test
@@ -163,6 +165,30 @@ class DdlSyntaxDiagnosticsTest {
     val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
     val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
     assertEquals("Expected '(' after table name", error.diagnostics.first().message)
+  }
+
+  @Test
+  fun `missing opening paren at EOF points after the table name`() {
+    val sql = "CREATE TABLE users"
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    val diagnostic = (result as DdlSyntaxDiagnostics.DiagnosticResult.Error).diagnostics.first()
+
+    assertEquals("Expected '(' after table name", diagnostic.message)
+    assertEquals(sql.length, diagnostic.offset)
+    assertEquals(1, diagnostic.line)
+    assertEquals(sql.length + 1, diagnostic.column)
+  }
+
+  @Test
+  fun `missing table name at EOF points after CREATE TABLE`() {
+    val sql = "CREATE TABLE"
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    val diagnostic = (result as DdlSyntaxDiagnostics.DiagnosticResult.Error).diagnostics.first()
+
+    assertEquals("Expected table name after CREATE TABLE", diagnostic.message)
+    assertEquals(sql.length, diagnostic.offset)
+    assertEquals(1, diagnostic.line)
+    assertEquals(sql.length + 1, diagnostic.column)
   }
 
   @Test

@@ -29,6 +29,7 @@ internal class CrudSqlEditorAdapter(
 
   private val document: Document = EditorFactory.getInstance().createDocument("")
   private val editor: EditorEx
+  private val documentUpdateGuard = DocumentUpdateGuard()
 
   private val sqlKeywords = setOf(
     "CREATE", "TABLE", "IF", "NOT", "EXISTS", "PRIMARY", "KEY", "FOREIGN", "REFERENCES",
@@ -54,15 +55,18 @@ internal class CrudSqlEditorAdapter(
 
     document.addDocumentListener(object : DocumentListener {
       override fun documentChanged(event: DocumentEvent) {
-        model.setSqlText(document.text)
-        applyHighlighting()
+        documentUpdateGuard.onDocumentChanged {
+          model.setSqlText(document.text)
+        }
       }
     }, this)
 
     model.addChangeListener {
       if (document.text != model.sqlText) {
-        com.intellij.openapi.application.ApplicationManager.getApplication().runWriteAction {
-          document.setText(model.sqlText)
+        documentUpdateGuard.applyModelUpdate {
+          com.intellij.openapi.application.ApplicationManager.getApplication().runWriteAction {
+            document.setText(model.sqlText)
+          }
         }
       }
       applyHighlighting()
@@ -161,12 +165,34 @@ internal class CrudSqlEditorAdapter(
     val result = model.diagnosticResult
     if (result is DdlSyntaxDiagnostics.DiagnosticResult.Error) {
       for (diagnostic in result.diagnostics) {
-        val offset = diagnostic.offset.coerceIn(0, document.textLength)
-        val end = (offset + 1).coerceAtMost(document.textLength)
-        if (offset < end) {
-          markup.addRangeHighlighter(offset, end, HighlighterLayer.ERROR, errorAttrs, HighlighterTargetArea.EXACT_RANGE)
+        diagnosticMarkerRange(document.textLength, diagnostic.offset)?.let { (start, end) ->
+          markup.addRangeHighlighter(start, end, HighlighterLayer.ERROR, errorAttrs, HighlighterTargetArea.EXACT_RANGE)
         }
       }
+    }
+  }
+}
+
+internal fun diagnosticMarkerRange(documentLength: Int, diagnosticOffset: Int): Pair<Int, Int>? {
+  if (documentLength == 0) return null
+  val offset = diagnosticOffset.coerceIn(0, documentLength)
+  val start = if (offset == documentLength) documentLength - 1 else offset
+  return start to start + 1
+}
+
+internal class DocumentUpdateGuard {
+  private var applyingModelUpdate = false
+
+  fun onDocumentChanged(action: () -> Unit) {
+    if (!applyingModelUpdate) action()
+  }
+
+  fun applyModelUpdate(action: () -> Unit) {
+    applyingModelUpdate = true
+    try {
+      action()
+    } finally {
+      applyingModelUpdate = false
     }
   }
 }
