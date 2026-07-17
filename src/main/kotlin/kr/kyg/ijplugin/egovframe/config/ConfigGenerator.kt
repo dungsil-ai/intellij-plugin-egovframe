@@ -33,6 +33,8 @@ object ConfigGenerator {
         /** The form-data key that holds the output file name. */
         val fileNameProperty: String,
         private val allDefaults: Map<String, Any?>,
+        /** Model-based form specification, if available. */
+        val formSpec: ConfigFormSpec? = null,
     ) {
         /**
          * Returns variant-aware initial form data.
@@ -55,14 +57,16 @@ object ConfigGenerator {
     /** Builds a [FormDefinition] for the given template, deriving defaults from [TemplateCatalog.configDefaults]. */
     fun definition(template: ConfigTemplate): FormDefinition {
         val allDefaults = LinkedHashMap(TemplateCatalog.configDefaults[template.displayName].orEmpty())
+        val spec = ConfigFormRegistry.forTemplate(template)
         val visible = allDefaults.entries
             .filter { (key, _) -> key != "generationType" && !key.startsWith("_") }
             .map { (key, value) -> key to value }
         return FormDefinition(
             visibleFields = visible,
-            generationTypes = availableTypes(template),
+            generationTypes = spec?.activeTypes ?: availableTypes(template),
             fileNameProperty = template.fileNameProperty,
             allDefaults = allDefaults,
+            formSpec = spec,
         )
     }
 
@@ -84,18 +88,24 @@ object ConfigGenerator {
             }
 
             val packageName = formData["txtConfigPackage"]?.toString()
-            if (!packageName.isNullOrBlank() && !PACKAGE_NAME_REGEX.matches(packageName)) {
+            if (
+                generationType == GenerationType.JAVA &&
+                !packageName.isNullOrBlank() &&
+                !PACKAGE_NAME_REGEX.matches(packageName)
+            ) {
                 return ValidationIssue("Invalid Java package name", "txtConfigPackage")
             }
 
+            val baseFileName = stripOptionalExtension(rawFileName, generationType)
             if (generationType == GenerationType.JAVA) {
-                val className = rawFileName.removeSuffix(".java")
-                if (!JAVA_CLASS_NAME_REGEX.matches(className)) {
+                if (!JAVA_CLASS_NAME_REGEX.matches(baseFileName)) {
                     return ValidationIssue(
                         "JavaConfig file name must be a PascalCase class name",
                         template.fileNameProperty,
                     )
                 }
+            } else if (!FILE_NAME_REGEX.matches(baseFileName)) {
+                return ValidationIssue("Invalid file name", template.fileNameProperty)
             }
 
             val target = runCatching { targetPath(outputFolder) }.getOrElse {
@@ -195,7 +205,13 @@ object ConfigGenerator {
         return baseName
     }
 
-    private val PACKAGE_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$")
-    private val JAVA_CLASS_NAME_REGEX = Regex("^[A-Z][A-Za-z0-9_]*$")
+    private fun stripOptionalExtension(fileName: String, generationType: GenerationType): String {
+        val suffix = ".${generationType.extension}"
+        return if (fileName.endsWith(suffix, ignoreCase = true)) fileName.dropLast(suffix.length) else fileName
+    }
+
+    private val PACKAGE_NAME_REGEX = Regex("^[a-z]([a-z0-9.]*[a-z0-9])?$")
+    private val JAVA_CLASS_NAME_REGEX = Regex("^[A-Z][A-Za-z0-9]*$")
+    private val FILE_NAME_REGEX = Regex("^[A-Za-z0-9_-]+$")
     private const val INVALID_FILE_NAME_CHARACTERS = "<>:\"/\\|?*"
 }

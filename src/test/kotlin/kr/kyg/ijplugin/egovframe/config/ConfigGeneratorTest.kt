@@ -82,15 +82,25 @@ class ConfigGeneratorTest {
     }
 
     @Test
-    fun validateRejectsInvalidPackageName() {
+    fun validateRejectsInvalidJavaPackageName() {
+        val template = TemplateCatalog.configs.first { it.javaConfigTemplate.isNotBlank() }
+        val prepared = ConfigGenerator.prepare(
+            template, ConfigGenerator.GenerationType.JAVA,
+            mapOf(template.fileNameProperty to "EgovConfig", "txtConfigPackage" to "123bad"), "pkg",
+        )
+        val issue = prepared.validate(Path.of("build"))
+        assertNotNull(issue)
+        assertEquals("Invalid Java package name", issue!!.message)
+    }
+
+    @Test
+    fun validateIgnoresStaleJavaPackageForNonJavaVariants() {
         val template = TemplateCatalog.configs.first()
         val prepared = ConfigGenerator.prepare(
             template, ConfigGenerator.GenerationType.XML,
             mapOf(template.fileNameProperty to "file", "txtConfigPackage" to "123bad"), "pkg",
         )
-        val issue = prepared.validate(Path.of("build"))
-        assertNotNull(issue)
-        assertEquals("Invalid Java package name", issue!!.message)
+        assertNull(prepared.validate(Path.of("build")))
     }
 
     @Test
@@ -103,6 +113,56 @@ class ConfigGeneratorTest {
         val issue = prepared.validate(Path.of("build"))
         assertNotNull(issue)
         assertTrue(issue!!.message.contains("PascalCase"))
+    }
+
+    @Test
+    fun validationMatchesUpstreamFileAndPackageRules() {
+        val xmlTemplate = TemplateCatalog.configs.first()
+        val javaTemplate = TemplateCatalog.configs.first { it.javaConfigTemplate.isNotBlank() }
+        val output = Path.of("build")
+
+        fun validate(template: kr.kyg.ijplugin.egovframe.assets.ConfigTemplate, type: ConfigGenerator.GenerationType, name: String, packageName: String) =
+            ConfigGenerator.prepare(
+                template, type, mapOf(template.fileNameProperty to name, "txtConfigPackage" to packageName), "pkg",
+            ).validate(output)
+
+        assertNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file-name_2", "a..b"))
+        assertNotNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file.name", "pkg"))
+        assertNotNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file name", "pkg"))
+        assertNotNull(validate(javaTemplate, ConfigGenerator.GenerationType.JAVA, "Egov_Config", "pkg"))
+        assertNotNull(validate(javaTemplate, ConfigGenerator.GenerationType.JAVA, "EgovConfig", "Pkg"))
+    }
+
+    @Test
+    fun validationAcceptsAnOptionalMatchingExtension() {
+        val xmlTemplate = TemplateCatalog.configs.first()
+        val javaTemplate = TemplateCatalog.configs.first { it.javaConfigTemplate.isNotBlank() }
+        val output = Path.of("build")
+
+        assertNull(
+            ConfigGenerator.prepare(
+                xmlTemplate,
+                ConfigGenerator.GenerationType.XML,
+                mapOf(xmlTemplate.fileNameProperty to "context-cache.xml"),
+                "pkg",
+            ).validate(output),
+        )
+        assertNull(
+            ConfigGenerator.prepare(
+                javaTemplate,
+                ConfigGenerator.GenerationType.JAVA,
+                mapOf(javaTemplate.fileNameProperty to "EgovConfig.java", "txtConfigPackage" to "pkg"),
+                "pkg",
+            ).validate(output),
+        )
+        assertNotNull(
+            ConfigGenerator.prepare(
+                xmlTemplate,
+                ConfigGenerator.GenerationType.XML,
+                mapOf(xmlTemplate.fileNameProperty to "context-cache.yaml"),
+                "pkg",
+            ).validate(output),
+        )
     }
 
     @Test
@@ -141,37 +201,17 @@ class ConfigGeneratorTest {
     // --- sanitization through validate/generate ---
 
     @Test
-    fun sanitizationStripsTraversalSegmentsViaValidation() {
+    fun validationRejectsPathLikeFileNamesBeforeGeneration() {
         val template = TemplateCatalog.configs.first()
         val tmpDir = Files.createTempDirectory("cfggen-sanitize")
         try {
-            val prepared = ConfigGenerator.prepare(
-                template, ConfigGenerator.GenerationType.XML,
-                mapOf(template.fileNameProperty to "../../etc/passwd"), "pkg",
-            )
-            // The sanitized file name should resolve safely inside tmpDir
-            assertNull(prepared.validate(tmpDir))
-        } finally {
-            tmpDir.toFile().deleteRecursively()
-        }
-    }
-
-    @Test
-    fun sanitizationStripsDirectoriesFromFileName() {
-        val template = TemplateCatalog.configs.first()
-        val tmpDir = Files.createTempDirectory("cfggen-sanitize-dir")
-        try {
-            val prepared = ConfigGenerator.prepare(
-                template, ConfigGenerator.GenerationType.XML,
-                mapOf(template.fileNameProperty to "../nested/context-cache"), "pkg",
-            )
-            // Should validate without error (path stays inside output folder)
-            assertNull(prepared.validate(tmpDir))
-
-            val result = prepared.generate(tmpDir)
-            // Generated file should be directly inside tmpDir with traversal stripped
-            assertEquals(tmpDir.toAbsolutePath().normalize(), result.path.parent)
-            assertTrue(result.path.fileName.toString().endsWith(".xml"))
+            for (name in listOf("../../etc/passwd", "../nested/context-cache")) {
+                val prepared = ConfigGenerator.prepare(
+                    template, ConfigGenerator.GenerationType.XML,
+                    mapOf(template.fileNameProperty to name), "pkg",
+                )
+                assertNotNull(prepared.validate(tmpDir), name)
+            }
         } finally {
             tmpDir.toFile().deleteRecursively()
         }

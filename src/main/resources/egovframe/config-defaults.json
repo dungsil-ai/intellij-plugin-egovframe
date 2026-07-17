@@ -18,7 +18,8 @@
     "txtConfigPackage": "egovframework.example.config",
     "txtComponentScanBasePackage": "egovframework.example",
     "txtFileName": "context-cache",
-    "txtConfigLocation": ""
+    "txtConfigLocation": "",
+    "_javaFileName": "EgovEhcacheSpringConfig"
   },
   "Datasource > New Datasource": {
     "generationType": "xml",
@@ -29,14 +30,16 @@
     "txtDriver": "com.mysql.cj.jdbc.Driver",
     "txtUrl": "jdbc:mysql://127.0.0.1:3306/myDB",
     "txtUser": "root",
-    "txtPasswd": ""
+    "txtPasswd": "",
+    "_javaFileName": "EgovDataSourceConfig"
   },
   "Datasource > New JNDI Datasource": {
     "generationType": "xml",
     "txtConfigPackage": "egovframework.example.config",
     "txtFileName": "context-jndi-datasource",
     "txtDatasourceName": "dataSource",
-    "txtJndiName": "java:comp/env/jdbc/myDataSource"
+    "txtJndiName": "java:comp/env/jdbc/myDataSource",
+    "_javaFileName": "EgovJndiDatasourceConfig"
   },
   "ID Generation > New Sequence ID Generation": {
     "generationType": "xml",
@@ -227,7 +230,8 @@
     "txtKey": "pageUnit",
     "txtValue": "20",
     "cboEncoding": "UTF-8",
-    "txtPropertyFile": "classpath*:/egovframework/egovProps/conf/config.properties"
+    "txtPropertyFile": "classpath*:/egovframework/egovProps/conf/config.properties",
+    "_javaFileName": "EgovPropertiesConfig"
   },
   "Scheduling > New Detail Bean Job": {
     "generationType": "xml",
