@@ -88,6 +88,44 @@ class CrudAuxiliaryTest {
   }
 
   @Test
+  fun `context export rejects filename with path separator`() = withTemporaryDirectory { dir ->
+    val writerCalls = mutableListOf<String>()
+    val writer = CrudAuxiliaryWriter { files ->
+      writerCalls += "write"
+      CrudAuxiliaryWriteResult(files.map { it.target }, emptyList(), emptyList())
+    }
+    val workflow = CrudAuxiliaryWorkflow(writer, { it() }, {})
+
+    val tableName = "sub${Path.of("nested", "Evil").joinToString(Path.of("").fileSystem.separator)}"
+    val prepared = preparedWithTableName(tableName)
+
+    val ex = assertThrows(IllegalArgumentException::class.java) {
+      workflow.exportContext(prepared, dir)
+    }
+    assertTrue(ex.message!!.contains("Context export file name escapes the selected directory"))
+    assertEquals(0, writerCalls.size)
+  }
+
+  @Test
+  fun `context export rejects filename with parent traversal`() = withTemporaryDirectory { dir ->
+    val writerCalls = mutableListOf<String>()
+    val writer = CrudAuxiliaryWriter { files ->
+      writerCalls += "write"
+      CrudAuxiliaryWriteResult(files.map { it.target }, emptyList(), emptyList())
+    }
+    val workflow = CrudAuxiliaryWorkflow(writer, { it() }, {})
+
+    val tableName = "..${Path.of("").fileSystem.separator}Escaped"
+    val prepared = preparedWithTableName(tableName)
+
+    val ex = assertThrows(IllegalArgumentException::class.java) {
+      workflow.exportContext(prepared, dir)
+    }
+    assertTrue(ex.message!!.contains("Context export file name escapes the selected directory"))
+    assertEquals(0, writerCalls.size)
+  }
+
+  @Test
   fun `transactional writer restores overwritten file and removes new file on failure`() = withTemporaryDirectory { dir ->
     val first = dir.resolve("first.generated")
     val second = dir.resolve("second.generated")
@@ -137,6 +175,13 @@ class CrudAuxiliaryTest {
   private fun prepared(): PreparedCrud = (
     CrudGeneration(fixedClock).prepare(ddl, "egovframework.example.sample") as CrudPreparation.Ready
   ).prepared
+
+  private fun preparedWithTableName(tableName: String) = PreparedCrud(
+    summary = CrudTableSummary(tableName, "sample_table", 1),
+    erdText = "",
+    context = emptyMap(),
+    packageName = "egovframework.example.sample",
+  )
 
   private fun withTemporaryDirectory(block: (Path) -> Unit) {
     val root = Files.createTempDirectory("egovframe-crud-auxiliary-")

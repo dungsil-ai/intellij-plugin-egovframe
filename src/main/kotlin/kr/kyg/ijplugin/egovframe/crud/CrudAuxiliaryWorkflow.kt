@@ -145,9 +145,14 @@ internal class CrudAuxiliaryWorkflow(
     return writeAndOpen(files)
   }
 
-  fun exportContext(prepared: PreparedCrud, directory: Path): CrudAuxiliaryWriteResult = writeAndOpen(
-    listOf(CrudAuxiliaryFile(directory.resolve(prepared.contextFileName), prepared.contextJson())),
-  )
+  fun exportContext(prepared: PreparedCrud, directory: Path): CrudAuxiliaryWriteResult {
+    val base = directory.toAbsolutePath().normalize()
+    val target = base.resolve(prepared.contextFileName).normalize()
+    require(target.parent == base) {
+      "Context export file name escapes the selected directory: ${prepared.contextFileName}"
+    }
+    return writeAndOpen(listOf(CrudAuxiliaryFile(target, prepared.contextJson())))
+  }
 
   private fun writeAndOpen(files: List<CrudAuxiliaryFile>): CrudAuxiliaryWriteResult {
     val result = runWriteCommand { writer.write(files) }
