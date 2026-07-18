@@ -115,22 +115,20 @@ class ProjectGeneratorTest {
   }
 
   @Test
-  fun `generateWithProgress cleans up on failure for new directory`() {
+  fun `missing POM leaves new project root and staging absent`() {
     val output = Files.createTempDirectory("egov-cleanup-test")
-    val zip = output.resolve("template.zip")
-    ZipOutputStream(Files.newOutputStream(zip)).use { stream ->
-      stream.putNextEntry(ZipEntry("README.md"))
-      stream.write("hello".toByteArray())
-      stream.closeEntry()
-    }
-    // Reference a nonexistent POM to trigger failure after extraction
+    val zip = zip(output, "README.md" to "hello")
     val template = ProjectTemplate("Test", "template.zip", "nonexistent-pom.xml", "d", "Boot", "cleanup-test")
-    val config = ProjectGenerator.ProjectConfig("cleanup-test", "com.example", "demo", template)
 
-    val result = ProjectGenerator.generateWithProgress(output, zip, config)
+    val result = ProjectGenerator.generateWithProgress(
+      output,
+      zip,
+      ProjectGenerator.ProjectConfig("cleanup-test", "com.example", "demo", template),
+    )
 
-    assertTrue(result is GenerationResult.Failure, "Should fail due to missing POM template")
-    assertFalse(Files.exists(output.resolve("cleanup-test")), "Newly created project dir should be cleaned up")
+    assertTrue(result is GenerationResult.Failure)
+    assertFalse(Files.exists(output.resolve("cleanup-test")))
+    assertTrue(stageDirectories(output).isEmpty())
   }
 
   @Test
@@ -172,6 +170,26 @@ class ProjectGeneratorTest {
     assertTrue(result is GenerationResult.Success, "$result")
     assertTrue(Files.isRegularFile(projectDir.resolve("README.md")))
     assertTrue(Files.isRegularFile(ideaDir.resolve(".gitignore")))
+    assertTrue(stageDirectories(output).isEmpty())
+  }
+
+  @Test
+  fun `generateWithProgress reuses pre-existing empty directory`() {
+    val output = Files.createTempDirectory("egov-empty-directory-test")
+    val projectDir = Files.createDirectories(output.resolve("empty-test"))
+    val zip = zip(output, "README.md" to "hello")
+    val template = ProjectTemplate("Test", "template.zip", "", "d", "Boot", "empty-test")
+
+    val result = ProjectGenerator.generateWithProgress(
+      output,
+      zip,
+      ProjectGenerator.ProjectConfig("empty-test", "", "", template),
+      allowExistingEmptyDirectory = true,
+    )
+
+    assertTrue(result is GenerationResult.Success, "$result")
+    assertTrue(Files.isRegularFile(projectDir.resolve("README.md")))
+    assertTrue(stageDirectories(output).isEmpty())
   }
 
   @Test
@@ -197,37 +215,234 @@ class ProjectGeneratorTest {
   }
 
   @Test
-  fun `generateWithProgress preserves pre-existing empty directory on failure`() {
+  fun `missing POM preserves reused IntelliJ directory without publishing staged files`() {
     val output = Files.createTempDirectory("egov-preserve-test")
     val projectDir = output.resolve("preserve-test")
-    Files.createDirectories(projectDir)
-    val zip = output.resolve("template.zip")
-    ZipOutputStream(Files.newOutputStream(zip)).use { stream ->
-      stream.putNextEntry(ZipEntry("README.md"))
-      stream.write("hello".toByteArray())
-      stream.closeEntry()
-    }
-    // Reference a nonexistent POM to trigger failure after extraction
+    val ideaIgnore = projectDir.resolve(".idea/.gitignore")
+    Files.createDirectories(ideaIgnore.parent)
+    Files.writeString(ideaIgnore, "workspace.xml\n")
+    val original = Files.readAllBytes(ideaIgnore)
+    val zip = zip(output, "README.md" to "hello")
     val template = ProjectTemplate("Test", "template.zip", "nonexistent-pom.xml", "d", "Boot", "preserve-test")
-    val config = ProjectGenerator.ProjectConfig("preserve-test", "com.example", "demo", template)
 
-    val result = ProjectGenerator.generateWithProgress(output, zip, config, allowExistingEmptyDirectory = true)
+    val result = ProjectGenerator.generateWithProgress(
+      output,
+      zip,
+      ProjectGenerator.ProjectConfig("preserve-test", "com.example", "demo", template),
+      allowExistingEmptyDirectory = true,
+    )
 
-    assertTrue(result is GenerationResult.Failure, "Should fail due to missing POM template")
-    assertTrue(Files.exists(projectDir), "Pre-existing directory should be preserved")
+    assertTrue(result is GenerationResult.Failure)
+    assertArrayEquals(original, Files.readAllBytes(ideaIgnore))
+    assertEquals(listOf(".idea"), Files.list(projectDir).use { it.map { path -> path.fileName.toString() }.toList() })
+    assertTrue(stageDirectories(output).isEmpty())
   }
 
   @Test
-  fun `cleanup failure is suppressed without masking the generation failure`() {
+  fun `cleanup failure preserves staging path on the primary failure`() {
     val original = IllegalStateException("generation failed")
     val cleanup = IOException("cleanup failed")
+    val staging = Path.of("unused-stage")
 
-    ProjectGenerator.cleanupAfterFailure(Path.of("unused"), original) { throw cleanup }
+    ProjectGenerator.cleanupAfterFailure(staging, original) { throw cleanup }
 
-    assertSame(cleanup, original.suppressed.single())
+    val suppressed = original.suppressed.single()
     assertEquals("generation failed", original.message)
+    assertTrue(suppressed.message.orEmpty().contains(staging.toString()))
+    assertSame(cleanup, suppressed.cause)
   }
 
+  @Test
+  fun `retry after failed generation succeeds`() {
+    val output = Files.createTempDirectory("egov-retry-test")
+    val zip = zip(output, "README.md" to "hello")
+    val invalidTemplate = ProjectTemplate("Test", "template.zip", "missing-pom.xml", "d", "Boot", "retry")
+    val validTemplate = ProjectTemplate("Test", "template.zip", "", "d", "Boot", "retry")
+
+    assertTrue(ProjectGenerator.generateWithProgress(
+      output,
+      zip,
+      ProjectGenerator.ProjectConfig("retry", "com.example", "demo", invalidTemplate),
+    ) is GenerationResult.Failure)
+    val result = ProjectGenerator.generateWithProgress(
+      output,
+      zip,
+      ProjectGenerator.ProjectConfig("retry", "", "", validTemplate),
+    )
+
+    assertTrue(result is GenerationResult.Success)
+    assertTrue(Files.exists(output.resolve("retry/README.md")))
+  }
+
+  @Test
+  fun `staged idea is rejected before reused root mutation`() {
+    val output = Files.createTempDirectory("egov-staged-idea-test")
+    val projectRoot = initializeIdeaProject(output, "staged-idea")
+    val ideaIgnore = projectRoot.resolve(".idea/.gitignore")
+    val original = Files.readAllBytes(ideaIgnore)
+    val zip = zip(output, ".idea/" to null, "README.md" to "hello")
+    val template = ProjectTemplate("Test", "template.zip", "", "d", "Boot", "staged-idea")
+
+    val result = ProjectGenerator.generateWithProgress(
+      output,
+      zip,
+      ProjectGenerator.ProjectConfig("staged-idea", "", "", template),
+      allowExistingEmptyDirectory = true,
+    ) as GenerationResult.Failure
+
+    assertTrue(result.error.contains(".idea"))
+    assertArrayEquals(original, Files.readAllBytes(ideaIgnore))
+    assertEquals(listOf(".idea"), Files.list(projectRoot).use { it.map { path -> path.fileName.toString() }.toList() })
+    assertTrue(stageDirectories(output).isEmpty())
+  }
+
+  @Test
+  fun `concurrent destination collision leaves no committed sibling and cleans staging`() {
+    val output = Files.createTempDirectory("egov-collision-test")
+    val projectRoot = initializeIdeaProject(output, "collision")
+    val zip = zip(output, "alpha.txt" to "alpha", "bravo.txt" to "bravo")
+    val fileOps = FailingProjectFileOps { call, _, target ->
+      if (call == 2) {
+        Files.writeString(target, "concurrent")
+      }
+    }
+    val template = ProjectTemplate("Test", "template.zip", "", "d", "Boot", "collision")
+
+    val result = ProjectGenerator.generateWithProgress(
+      output, zip, ProjectGenerator.ProjectConfig("collision", "", "", template), true, GenerationProgress { }, fileOps,
+    ) as GenerationResult.Failure
+
+    assertTrue(result.cause is IOException)
+    assertFalse(Files.exists(projectRoot.resolve("alpha.txt")))
+    assertEquals("concurrent", Files.readString(projectRoot.resolve("bravo.txt")))
+    assertTrue(stageDirectories(output).isEmpty())
+  }
+
+  @Test
+  fun `second child move failure rolls prior child back and cleans staging`() {
+    val output = Files.createTempDirectory("egov-rollback-test")
+    val projectRoot = initializeIdeaProject(output, "rollback")
+    val zip = zip(output, "alpha.txt" to "alpha", "bravo.txt" to "bravo")
+    val fileOps = FailingProjectFileOps { call, _, _ ->
+      if (call == 2) throw IOException("second child move failure")
+    }
+    val template = ProjectTemplate("Test", "template.zip", "", "d", "Boot", "rollback")
+
+    val result = ProjectGenerator.generateWithProgress(
+      output, zip, ProjectGenerator.ProjectConfig("rollback", "", "", template), true, GenerationProgress { }, fileOps,
+    ) as GenerationResult.Failure
+
+    assertEquals("second child move failure", result.cause?.message)
+    assertEquals(listOf(".idea"), Files.list(projectRoot).use { it.map { path -> path.fileName.toString() }.toList() })
+    assertTrue(stageDirectories(output).isEmpty())
+  }
+
+  @Test
+  fun `rollback failure is suppressed on primary failure and cleanup is attempted`() {
+    val output = Files.createTempDirectory("egov-rollback-suppression-test")
+    val projectRoot = initializeIdeaProject(output, "rollback-suppression")
+    val zip = zip(output, "alpha.txt" to "alpha", "bravo.txt" to "bravo")
+    val fileOps = FailingProjectFileOps { call, source, _ ->
+      if (call == 2 && source.fileName.toString() == "bravo.txt") throw IOException("second child move failure")
+      if (call == 3 && source.fileName.toString() == "alpha.txt") throw IOException("rollback failure")
+    }
+    val template = ProjectTemplate("Test", "template.zip", "", "d", "Boot", "rollback-suppression")
+
+    val result = ProjectGenerator.generateWithProgress(
+      output, zip, ProjectGenerator.ProjectConfig("rollback-suppression", "", "", template), true, GenerationProgress { }, fileOps,
+    ) as GenerationResult.Failure
+
+    assertEquals("second child move failure", result.cause?.message)
+    assertTrue(result.cause!!.suppressed.any { it.message == "rollback failure" })
+    assertTrue(Files.exists(projectRoot.resolve("alpha.txt")))
+    assertTrue(fileOps.cleanupAttempts > 0)
+    assertTrue(stageDirectories(output).isEmpty())
+  }
+
+  @Test
+  fun `generation cleanup failure is suppressed with preserved staging path`() {
+    val output = Files.createTempDirectory("egov-cleanup-suppression-test")
+    val zip = zip(output, "README.md" to "hello")
+    val fileOps = FailingProjectFileOps { _, _, _ -> }.also { it.failCleanup = true }
+    val template = ProjectTemplate("Test", "template.zip", "missing-pom.xml", "d", "Boot", "cleanup-suppression")
+
+    val result = ProjectGenerator.generateWithProgress(
+      output, zip, ProjectGenerator.ProjectConfig("cleanup-suppression", "com.example", "demo", template), false,
+      GenerationProgress { }, fileOps,
+    ) as GenerationResult.Failure
+
+    val staging = fileOps.stagingRoot!!
+    assertTrue(result.cause!!.suppressed.single().message.orEmpty().contains(staging.toString()))
+    assertTrue(Files.exists(staging))
+    assertFalse(Files.exists(output.resolve("cleanup-suppression")))
+    Files.walk(staging).use { it.sorted(Comparator.reverseOrder()).forEach(Files::deleteIfExists) }
+  }
+
+  @Test
+  fun `new project commits by one no replace move and existing target is refused`() {
+    val output = Files.createTempDirectory("egov-new-commit-test")
+    val staging = Files.createTempDirectory(output, ".egov-project-stage-")
+    Files.writeString(staging.resolve("README.md"), "hello")
+    val target = output.resolve("new-project")
+
+    ProjectGenerator.commitStagedProject(staging, target, preExisting = false)
+
+    assertTrue(Files.exists(target.resolve("README.md")))
+    assertFalse(Files.exists(staging))
+    val existingStaging = Files.createTempDirectory(output, ".egov-project-stage-")
+    Files.createDirectories(output.resolve("existing-project"))
+    assertThrows(IllegalArgumentException::class.java) {
+      ProjectGenerator.commitStagedProject(existingStaging, output.resolve("existing-project"), preExisting = false)
+    }
+    assertTrue(Files.exists(existingStaging))
+  }
+
+  private fun zip(output: Path, vararg entries: Pair<String, String?>): Path {
+    val zip = output.resolve("template-${System.nanoTime()}.zip")
+    ZipOutputStream(Files.newOutputStream(zip)).use { stream ->
+      entries.forEach { (name, contents) ->
+        stream.putNextEntry(ZipEntry(name))
+        contents?.let { stream.write(it.toByteArray()) }
+        stream.closeEntry()
+      }
+    }
+    return zip
+  }
+
+  private fun initializeIdeaProject(output: Path, name: String): Path {
+    val root = output.resolve(name)
+    Files.createDirectories(root.resolve(".idea"))
+    Files.writeString(root.resolve(".idea/.gitignore"), "workspace.xml\n")
+    return root
+  }
+
+  private fun stageDirectories(output: Path): List<Path> = Files.list(output).use { paths ->
+    paths.filter { it.fileName.toString().startsWith(".egov-project-stage-") }.toList()
+  }
+
+  private class FailingProjectFileOps(
+    private val beforeMove: (Int, Path, Path) -> Unit,
+  ) : ProjectFileOps by NioProjectFileOps {
+    var stagingRoot: Path? = null
+    var cleanupAttempts = 0
+    var failCleanup = false
+    private var moveCalls = 0
+
+    override fun createTempDirectory(directory: Path, prefix: String): Path =
+      NioProjectFileOps.createTempDirectory(directory, prefix).also { stagingRoot = it }
+
+    override fun moveNoReplace(source: Path, target: Path) {
+      moveCalls += 1
+      beforeMove(moveCalls, source, target)
+      NioProjectFileOps.moveNoReplace(source, target)
+    }
+
+    override fun deleteRecursively(directory: Path) {
+      cleanupAttempts += 1
+      if (failCleanup) throw IOException("cleanup failure")
+      NioProjectFileOps.deleteRecursively(directory)
+    }
+  }
   @Test
   fun `error messages fall back to the exception type`() {
     assertEquals("IllegalStateException", IllegalStateException().messageOrTypeName())
