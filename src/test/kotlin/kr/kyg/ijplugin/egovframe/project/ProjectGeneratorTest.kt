@@ -132,6 +132,51 @@ class ProjectGeneratorTest {
   }
 
   @Test
+  fun `generateWithProgress reuses directory initialized by IntelliJ`() {
+    val output = Files.createTempDirectory("egov-intellij-directory-test")
+    val projectDir = output.resolve("intellij-test")
+    val ideaDir = projectDir.resolve(".idea")
+    Files.createDirectories(ideaDir)
+    Files.writeString(ideaDir.resolve(".gitignore"), "workspace.xml\n")
+    val zip = output.resolve("template.zip")
+    ZipOutputStream(Files.newOutputStream(zip)).use { stream ->
+      stream.putNextEntry(ZipEntry("README.md"))
+      stream.write("hello".toByteArray())
+      stream.closeEntry()
+    }
+    val template = ProjectTemplate("Test", "template.zip", "", "d", "Boot", "intellij-test")
+    val config = ProjectGenerator.ProjectConfig("intellij-test", "", "", template)
+
+    val result = ProjectGenerator.generateWithProgress(output, zip, config, allowExistingEmptyDirectory = true)
+
+    assertTrue(result is GenerationResult.Success, "$result")
+    assertTrue(Files.isRegularFile(projectDir.resolve("README.md")))
+    assertTrue(Files.isRegularFile(ideaDir.resolve(".gitignore")))
+  }
+
+  @Test
+  fun `generateWithProgress rejects existing directory with user content`() {
+    val output = Files.createTempDirectory("egov-existing-content-test")
+    val projectDir = output.resolve("existing-content-test")
+    Files.createDirectories(projectDir)
+    Files.writeString(projectDir.resolve("README.md"), "user content")
+    val template = ProjectTemplate("Test", "template.zip", "", "d", "Boot", "existing-content-test")
+    val config = ProjectGenerator.ProjectConfig("existing-content-test", "", "", template)
+
+    val error = assertThrows(IllegalArgumentException::class.java) {
+      ProjectGenerator.generateWithProgress(
+        output,
+        output.resolve("template.zip"),
+        config,
+        allowExistingEmptyDirectory = true,
+      )
+    }
+
+    assertTrue(error.message.orEmpty().contains("Project directory already exists"))
+    assertEquals("user content", Files.readString(projectDir.resolve("README.md")))
+  }
+
+  @Test
   fun `generateWithProgress preserves pre-existing empty directory on failure`() {
     val output = Files.createTempDirectory("egov-preserve-test")
     val projectDir = output.resolve("preserve-test")

@@ -4,6 +4,7 @@ import kr.kyg.ijplugin.egovframe.assets.EgovAssets
 import kr.kyg.ijplugin.egovframe.assets.ProjectTemplate
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.LinkOption
 import java.nio.file.StandardCopyOption
 import java.util.zip.ZipInputStream
 
@@ -52,9 +53,9 @@ object ProjectGenerator {
     require(projectRoot.startsWith(base) && projectRoot != base) { "Resolved project path escapes the output directory" }
 
     if (Files.exists(projectRoot)) {
-      val canReuse = allowExistingEmptyDirectory && Files.isDirectory(projectRoot) && Files.list(projectRoot)
-        .use { !it.findAny().isPresent }
-      require(canReuse) { "Project directory already exists: $projectRoot" }
+      require(canReuseProjectDirectory(projectRoot, allowExistingEmptyDirectory)) {
+        "Project directory already exists: $projectRoot"
+      }
     } else {
       Files.createDirectories(projectRoot)
     }
@@ -85,9 +86,9 @@ object ProjectGenerator {
 
     val preExisting = Files.exists(projectRoot)
     if (preExisting) {
-      val canReuse = allowExistingEmptyDirectory && Files.isDirectory(projectRoot) && Files.list(projectRoot)
-        .use { !it.findAny().isPresent }
-      require(canReuse) { "Project directory already exists: $projectRoot" }
+      require(canReuseProjectDirectory(projectRoot, allowExistingEmptyDirectory)) {
+        "Project directory already exists: $projectRoot"
+      }
     } else {
       Files.createDirectories(projectRoot)
     }
@@ -129,6 +130,15 @@ object ProjectGenerator {
       require(ARTIFACT_ID_REGEX.matches(config.artifactId)) { "Invalid Maven artifactId: ${config.artifactId}" }
     }
     require(config.template.fileName.isNotBlank()) { "Template file name is required" }
+  }
+
+  private fun canReuseProjectDirectory(directory: Path, allowExistingEmptyDirectory: Boolean): Boolean {
+    if (!allowExistingEmptyDirectory || !Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS)) return false
+    return Files.list(directory).use { entries ->
+      entries.allMatch { entry ->
+        entry.fileName.toString() == ".idea" && Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS)
+      }
+    }
   }
 
   private fun extractZip(zipPath: Path, projectRoot: Path) {
