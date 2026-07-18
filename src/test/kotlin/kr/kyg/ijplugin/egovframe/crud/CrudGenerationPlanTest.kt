@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assumptions.assumeTrue
+import kr.kyg.ijplugin.egovframe.SymlinkTestSupport
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Clock
@@ -91,6 +91,7 @@ class CrudGenerationPlanTest {
   }
 
   @Test
+  @Tag("symlink")
   fun `allows a parent symlink whose real target remains inside the root`() = withTemporaryDirectory { root ->
     val destination = Files.createDirectories(root.resolve("actual-src"))
     createSymbolicLinkOrSkip(root.resolve("src"), destination)
@@ -101,6 +102,7 @@ class CrudGenerationPlanTest {
   }
 
   @Test
+  @Tag("symlink")
   fun `rejects a parent symlink whose real target escapes the root`() = withTemporaryDirectory { root ->
     val project = Files.createDirectory(root.resolve("project"))
     val outside = Files.createDirectory(root.resolve("outside"))
@@ -114,6 +116,7 @@ class CrudGenerationPlanTest {
   }
 
   @Test
+  @Tag("symlink")
   fun `rejects an existing target symbolic link`() = withTemporaryDirectory { root ->
     val source = root.resolve("source.txt")
     Files.writeString(source, "source")
@@ -169,17 +172,8 @@ class CrudGenerationPlanTest {
     content = "generated",
   )
 
-  private fun createSymbolicLinkOrSkip(link: Path, target: Path) {
-    try {
-      Files.createSymbolicLink(link, target)
-    } catch (error: Exception) {
-      assumeTrue(
-        error !is UnsupportedOperationException && error !is IOException && error !is SecurityException,
-        "Symbolic links are not supported in this environment: ${error.message}",
-      )
-      throw error
-    }
-  }
+  private fun createSymbolicLinkOrSkip(link: Path, target: Path) =
+    SymlinkTestSupport.createSymbolicLinkOrSkip(link, target)
 
   private fun withTemporaryDirectory(block: (Path) -> Unit) {
     val root = Files.createTempDirectory("egovframe-crud-plan-")

@@ -4,7 +4,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assumptions.assumeTrue
+import kr.kyg.ijplugin.egovframe.SymlinkTestSupport
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.IOException
 import java.nio.file.Files
@@ -55,6 +56,7 @@ class CrudWriteAdapterTest {
     assertTrue(childNames(root).isEmpty())
   }
 
+  @Tag("symlink")
   @Test
   fun `rejects target type changes after planning without mutation`() = withTemporaryDirectory { root ->
     val target = root.resolve("target.txt")
@@ -78,6 +80,7 @@ class CrudWriteAdapterTest {
     assertTrue(Files.isSymbolicLink(target))
   }
 
+  @Tag("symlink")
   @Test
   fun `rejects a changed parent real path without mutation`() = withTemporaryDirectory { root ->
     val firstDestination = Files.createDirectory(root.resolve("first"))
@@ -202,17 +205,8 @@ class CrudWriteAdapterTest {
       }.toList()
     }
 
-  private fun createSymbolicLinkOrSkip(link: Path, target: Path) {
-    try {
-      Files.createSymbolicLink(link, target)
-    } catch (error: Exception) {
-      assumeTrue(
-        error !is UnsupportedOperationException && error !is IOException && error !is SecurityException,
-        "Symbolic links are not supported in this environment: ${error.message}",
-      )
-      throw error
-    }
-  }
+  private fun createSymbolicLinkOrSkip(link: Path, target: Path) =
+    SymlinkTestSupport.createSymbolicLinkOrSkip(link, target)
 
   private fun withTemporaryDirectory(block: (Path) -> Unit) {
     val root = Files.createTempDirectory("egovframe-crud-write-")
