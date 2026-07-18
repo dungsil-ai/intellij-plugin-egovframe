@@ -1,5 +1,7 @@
 package kr.kyg.ijplugin.egovframe.config
 
+import kr.kyg.ijplugin.egovframe.assets.TemplateCatalog
+
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -10,6 +12,10 @@ class ConfigFormModelTest {
     @Test
     fun registryCovers21Specs() {
         assertEquals(21, ConfigFormRegistry.all().size)
+        assertEquals(
+            TemplateCatalog.configs.map { it.displayName }.toSet(),
+            ConfigFormRegistry.all().map { it.displayName }.toSet(),
+        )
     }
 
     @Test
@@ -430,25 +436,26 @@ class ConfigFormModelTest {
         assertEquals("plain/path.xml", normalizeConfigLocation("plain/path.xml"))
     }
 
-    // ── Four Java defaults ──────────────────────────────────────────────
+    // ── Numeric validation: Infinity, -Infinity accepted; NaN, text rejected ──
 
     @Test
-    fun fourJavaDefaults() {
-        assertEquals(
-            "EgovEhcacheSpringConfig",
-            ConfigFormRegistry.forTemplate("Cache > New Ehcache Configuration")!!.javaDefaultFileName,
-        )
-        assertEquals(
-            "EgovDataSourceConfig",
-            ConfigFormRegistry.forTemplate("Datasource > New Datasource")!!.javaDefaultFileName,
-        )
-        assertEquals(
-            "EgovPropertiesConfig",
-            ConfigFormRegistry.forTemplate("Property > New Property")!!.javaDefaultFileName,
-        )
-        assertEquals(
-            "EgovTransactionConfig",
-            ConfigFormRegistry.forTemplate("Transaction > New Datasource Transaction")!!.javaDefaultFileName,
-        )
+    fun numericFieldAcceptsFiniteAndInfinity() {
+        val template = TemplateCatalog.configs.first { it.displayName == "Logging > New Rolling File Appender" }
+        val spec = ConfigFormRegistry.forTemplate(template)!!
+        val definition = ConfigGenerator.definition(template)
+        fun state(maxFileSize: String): FormState {
+            val data = LinkedHashMap(definition.initialFormData(ConfigGenerator.GenerationType.XML))
+            data["txtMaxFileSize"] = maxFileSize
+            return FormState(data)
+        }
+
+        for (accepted in listOf("3000", "1.5", "Infinity", "-Infinity")) {
+            assertNull(spec.validate(state(accepted)), "Should accept $accepted")
+        }
+        for (rejected in listOf("NaN", "abc")) {
+            val issue = spec.validate(state(rejected))
+            assertNotNull(issue, "Should reject $rejected")
+            assertEquals("txtMaxFileSize", issue!!.field)
+        }
     }
 }

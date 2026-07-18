@@ -79,39 +79,31 @@ object ConfigGenerator {
         private val generationType: GenerationType,
         private val formData: Map<String, Any?>,
         private val defaultPackageName: String,
+        private val fileOps: ConfigFileOps = NioConfigFileOps,
     ) {
-        /** Validates file name, package name, Java-class name, target path, and existing-file. */
+        /** Validates form data, target path, and existing-file via the form spec. */
         fun validate(outputFolder: Path): ValidationIssue? {
-            val rawFileName = formData[template.fileNameProperty]?.toString().orEmpty()
-            if (rawFileName.isBlank()) {
-                return ValidationIssue("File name is required", template.fileNameProperty)
-            }
+            val effectiveData = LinkedHashMap(formData)
+            effectiveData["generationType"] = generationType.id
 
-            val packageName = formData["txtConfigPackage"]?.toString()
-            if (
-                generationType == GenerationType.JAVA &&
-                !packageName.isNullOrBlank() &&
-                !PACKAGE_NAME_REGEX.matches(packageName)
-            ) {
-                return ValidationIssue("Invalid Java package name", "txtConfigPackage")
-            }
+            val spec = ConfigFormRegistry.forTemplate(template)
+                ?: return ValidationIssue(
+                    "Missing form specification: ${template.displayName}",
+                    template.fileNameProperty,
+                )
 
-            val baseFileName = stripOptionalExtension(rawFileName, generationType)
-            if (generationType == GenerationType.JAVA) {
-                if (!JAVA_CLASS_NAME_REGEX.matches(baseFileName)) {
-                    return ValidationIssue(
-                        "JavaConfig file name must be a PascalCase class name",
-                        template.fileNameProperty,
-                    )
-                }
-            } else if (!FILE_NAME_REGEX.matches(baseFileName)) {
-                return ValidationIssue("Invalid file name", template.fileNameProperty)
+            val state = FormState(effectiveData)
+            val semanticIssue = spec.validate(state)
+            if (semanticIssue != null) return semanticIssue
+
+            if (fileOps.exists(outputFolder) && !fileOps.isDirectory(outputFolder)) {
+                return ValidationIssue("Output folder is not a directory", template.fileNameProperty)
             }
 
             val target = runCatching { targetPath(outputFolder) }.getOrElse {
                 return ValidationIssue(it.message ?: "Invalid output path", template.fileNameProperty)
             }
-            if (Files.exists(target)) {
+            if (fileOps.exists(target)) {
                 return ValidationIssue("File already exists: $target", template.fileNameProperty)
             }
 
@@ -136,16 +128,26 @@ object ConfigGenerator {
 
         /** Validates, renders, and writes the file. Returns the generated config. */
         fun generate(outputFolder: Path): GeneratedConfig {
+            val issue = validate(outputFolder)
+            if (issue != null) throw IllegalArgumentException(issue.message)
+
             val target = targetPath(outputFolder)
-            require(!Files.exists(target)) { "File already exists: $target" }
             val content = render()
-            Files.createDirectories(target.parent)
-            Files.writeString(target, content, Charsets.UTF_8)
+            fileOps.createDirectories(target.parent)
+
+            val tempFile = fileOps.createTempFile(target.parent, ".cfg-", ".tmp")
+            try {
+                fileOps.writeString(tempFile, content)
+                fileOps.move(tempFile, target)
+            } finally {
+                fileOps.deleteIfExists(tempFile)
+            }
             return GeneratedConfig(target, content)
         }
 
         private fun targetPath(outputFolder: Path): Path {
-            val rawFileName = formData[template.fileNameProperty]?.toString().orEmpty().ifBlank { "default_filename" }
+            val rawFileName = formData[template.fileNameProperty]?.toString().orEmpty()
+            require(rawFileName.isNotBlank()) { "File name is required" }
             return outputPath(outputFolder, rawFileName, generationType)
         }
 
@@ -170,6 +172,14 @@ object ConfigGenerator {
         formData: Map<String, Any?>,
         defaultPackageName: String,
     ): PreparedConfig = PreparedConfig(template, generationType, formData, defaultPackageName)
+
+    internal fun prepare(
+        template: ConfigTemplate,
+        generationType: GenerationType,
+        formData: Map<String, Any?>,
+        defaultPackageName: String,
+        fileOps: ConfigFileOps,
+    ): PreparedConfig = PreparedConfig(template, generationType, formData, defaultPackageName, fileOps)
 
     private fun availableTypes(template: ConfigTemplate): List<GenerationType> = buildList {
         add(GenerationType.XML)
@@ -205,13 +215,32 @@ object ConfigGenerator {
         return baseName
     }
 
-    private fun stripOptionalExtension(fileName: String, generationType: GenerationType): String {
-        val suffix = ".${generationType.extension}"
-        return if (fileName.endsWith(suffix, ignoreCase = true)) fileName.dropLast(suffix.length) else fileName
-    }
-
-    private val PACKAGE_NAME_REGEX = Regex("^[a-z]([a-z0-9.]*[a-z0-9])?$")
-    private val JAVA_CLASS_NAME_REGEX = Regex("^[A-Z][A-Za-z0-9]*$")
-    private val FILE_NAME_REGEX = Regex("^[A-Za-z0-9_-]+$")
     private const val INVALID_FILE_NAME_CHARACTERS = "<>:\"/\\|?*"
+}
+
+// ── ConfigFileOps seam ──────────────────────────────────────────────────────
+
+internal interface ConfigFileOps {
+    fun exists(path: Path): Boolean
+    fun isDirectory(path: Path): Boolean
+    fun createDirectories(path: Path)
+    fun createTempFile(directory: Path, prefix: String, suffix: String): Path
+    fun writeString(path: Path, content: String)
+    fun move(source: Path, target: Path)
+    fun deleteIfExists(path: Path): Boolean
+}
+
+internal object NioConfigFileOps : ConfigFileOps {
+    override fun exists(path: Path): Boolean = Files.exists(path)
+    override fun isDirectory(path: Path): Boolean = Files.isDirectory(path)
+    override fun createDirectories(path: Path) { Files.createDirectories(path) }
+    override fun createTempFile(directory: Path, prefix: String, suffix: String): Path =
+        Files.createTempFile(directory, prefix, suffix)
+    override fun writeString(path: Path, content: String) {
+        Files.writeString(path, content, Charsets.UTF_8)
+    }
+    override fun move(source: Path, target: Path) {
+        Files.move(source, target) // no ATOMIC_MOVE, no REPLACE_EXISTING
+    }
+    override fun deleteIfExists(path: Path): Boolean = Files.deleteIfExists(path)
 }

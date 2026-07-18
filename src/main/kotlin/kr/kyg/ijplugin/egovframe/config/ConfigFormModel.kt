@@ -44,7 +44,6 @@ data class ConfigFormSpec(
     val activeTypes: List<ConfigGenerator.GenerationType>,
     val linkedUpdates: List<LinkedUpdate> = emptyList(),
     val validateExtra: ((FormState) -> ConfigGenerator.ValidationIssue?)? = null,
-    val javaDefaultFileName: String? = null,
 )
 
 // ── Path normalisation ──────────────────────────────────────────────────────
@@ -85,8 +84,11 @@ fun ConfigFormSpec.validate(state: FormState): ConfigGenerator.ValidationIssue? 
         }
         if (value.isBlank()) continue
 
-        if (field.numeric && value.toDoubleOrNull() == null) {
-            return ConfigGenerator.ValidationIssue(EgovBundle.message("config.validation.numeric", label), field.key)
+        if (field.numeric) {
+            val parsed = value.toDoubleOrNull()
+            if (parsed == null || parsed.isNaN()) {
+                return ConfigGenerator.ValidationIssue(EgovBundle.message("config.validation.numeric", label), field.key)
+            }
         }
         if (field.noSpecialChars && SPECIAL_CHARS.containsMatchIn(value)) {
             return ConfigGenerator.ValidationIssue(EgovBundle.message("config.validation.special", label), field.key)
@@ -210,7 +212,6 @@ object ConfigFormRegistry {
     private fun cacheEhcacheConfig() = ConfigFormSpec(
         displayName = "Cache > New Ehcache Configuration",
         activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-        javaDefaultFileName = "EgovEhcacheSpringConfig",
         linkedUpdates = listOf(
             LinkedUpdate("txtConfigLocation") { state ->
                 val raw = state.getString("txtConfigLocation")
@@ -230,7 +231,6 @@ object ConfigFormRegistry {
     private fun datasource() = ConfigFormSpec(
         displayName = "Datasource > New Datasource",
         activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-        javaDefaultFileName = "EgovDataSourceConfig",
         fields = listOf(
             configPackageField(),
             fileNameField(classField = true),
@@ -255,7 +255,6 @@ object ConfigFormRegistry {
     private fun jndiDatasource() = ConfigFormSpec(
         displayName = "Datasource > New JNDI Datasource",
         activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-        javaDefaultFileName = "EgovJndiDatasourceConfig",
         fields = listOf(
             configPackageField(),
             fileNameField(),
@@ -269,7 +268,6 @@ object ConfigFormRegistry {
     private fun idGenSequence() = ConfigFormSpec(
         displayName = "ID Generation > New Sequence ID Generation",
         activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-        javaDefaultFileName = "EgovIdgnSequenceConfig",
         fields = listOf(
             configPackageField(),
             fileNameField(),
@@ -290,7 +288,6 @@ object ConfigFormRegistry {
         return ConfigFormSpec(
             displayName = "ID Generation > New Table ID Generation",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-            javaDefaultFileName = "EgovIdgnTableConfig",
             fields = listOf(
                 configPackageField(),
                 fileNameField(),
@@ -325,7 +322,6 @@ object ConfigFormRegistry {
         return ConfigFormSpec(
             displayName = "ID Generation > New UUID Generation",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-            javaDefaultFileName = "EgovIdgnUuidConfig",
             fields = listOf(
                 configPackageField(),
                 fileNameField(),
@@ -475,7 +471,6 @@ object ConfigFormRegistry {
         return ConfigFormSpec(
             displayName = "Property > New Property",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-            javaDefaultFileName = "EgovPropertiesConfig",
             fields = listOf(
                 configPackageField(),
                 fileNameField(),
@@ -525,7 +520,6 @@ object ConfigFormRegistry {
         return ConfigFormSpec(
             displayName = "Scheduling > New Detail Bean Job",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-            javaDefaultFileName = "EgovSchedulingJobDetailConfig",
             fields = listOf(
                 configPackageField(),
                 fileNameField(),
@@ -549,7 +543,6 @@ object ConfigFormRegistry {
         return ConfigFormSpec(
             displayName = "Scheduling > New Method Invoking Job",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-            javaDefaultFileName = "EgovSchedulingMethodInvokingJobDetailConfig",
             fields = listOf(
                 configPackageField(),
                 fileNameField(),
@@ -592,7 +585,6 @@ object ConfigFormRegistry {
     private fun schedulingSimpleTrigger() = ConfigFormSpec(
         displayName = "Scheduling > New Simple Trigger",
         activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-        javaDefaultFileName = "EgovSchedulingSimpleTriggerConfig",
         linkedUpdates = listOf(jobDetailLinkedUpdate),
         fields = listOf(
             configPackageField(),
@@ -612,7 +604,6 @@ object ConfigFormRegistry {
     private fun schedulingCronTrigger() = ConfigFormSpec(
         displayName = "Scheduling > New Cron Trigger",
         activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-        javaDefaultFileName = "EgovSchedulingCronTriggerConfig",
         linkedUpdates = listOf(jobDetailLinkedUpdate),
         fields = listOf(
             configPackageField(),
@@ -631,7 +622,6 @@ object ConfigFormRegistry {
     private fun schedulingScheduler() = ConfigFormSpec(
         displayName = "Scheduling > New Scheduler",
         activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-        javaDefaultFileName = "EgovSchedulingSchedulerConfig",
         linkedUpdates = listOf(
             LinkedUpdate("cboTriggerType") { state ->
                 state["txtTriggerName"] = when (state.getString("cboTriggerType")) {
@@ -776,7 +766,6 @@ object ConfigFormRegistry {
         return ConfigFormSpec(
             displayName = "Transaction > New Datasource Transaction",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-            javaDefaultFileName = "EgovTransactionConfig",
             validateExtra = transactionExtraValidation,
             fields = page1 + aopFields(),
         )
@@ -801,7 +790,6 @@ object ConfigFormRegistry {
         return ConfigFormSpec(
             displayName = "Transaction > New JPA Transaction",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-            javaDefaultFileName = "EgovTransactionJpaConfig",
             validateExtra = transactionExtraValidation,
             fields = page1 + aopFields(),
         )
@@ -826,7 +814,6 @@ object ConfigFormRegistry {
         return ConfigFormSpec(
             displayName = "Transaction > New JTA Transaction",
             activeTypes = listOf(ConfigGenerator.GenerationType.XML, ConfigGenerator.GenerationType.JAVA),
-            javaDefaultFileName = "EgovTransactionJtaConfig",
             validateExtra = transactionExtraValidation,
             fields = page1 + aopFields(),
         )

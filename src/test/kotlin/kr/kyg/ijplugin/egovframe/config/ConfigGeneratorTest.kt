@@ -1,12 +1,27 @@
 package kr.kyg.ijplugin.egovframe.config
 
+import kr.kyg.ijplugin.egovframe.assets.ConfigTemplate
 import kr.kyg.ijplugin.egovframe.assets.TemplateCatalog
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.io.IOException
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 
 class ConfigGeneratorTest {
+
+    /** Returns full initial form data for a template + type, with optional overrides. */
+    private fun formData(
+        template: ConfigTemplate,
+        type: ConfigGenerator.GenerationType,
+        overrides: Map<String, Any?> = emptyMap(),
+    ): Map<String, Any?> {
+        val def = ConfigGenerator.definition(template)
+        val data = LinkedHashMap(def.initialFormData(type))
+        data.putAll(overrides)
+        return data
+    }
 
     // --- FormDefinition tests ---
 
@@ -72,97 +87,162 @@ class ConfigGeneratorTest {
     @Test
     fun validateRejectsBlankFileName() {
         val template = TemplateCatalog.configs.first()
-        val prepared = ConfigGenerator.prepare(
-            template, ConfigGenerator.GenerationType.XML,
-            mapOf(template.fileNameProperty to ""), "pkg",
-        )
-        val issue = prepared.validate(Path.of("build"))
-        assertNotNull(issue)
-        assertEquals("File name is required", issue!!.message)
+        val tmpDir = Files.createTempDirectory("cfggen-blank")
+        try {
+            val prepared = ConfigGenerator.prepare(
+                template,
+                ConfigGenerator.GenerationType.XML,
+                formData(template, ConfigGenerator.GenerationType.XML, mapOf(template.fileNameProperty to "")),
+                "pkg",
+            )
+            val issue = prepared.validate(tmpDir)
+            assertNotNull(issue)
+
+            val exception = assertThrows(IllegalArgumentException::class.java) { prepared.generate(tmpDir) }
+            assertEquals(issue!!.message, exception.message)
+            assertTrue(Files.list(tmpDir).use { it.toList() }.isEmpty())
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun validateRejectsBlankJavaPackageName() {
+        val template = TemplateCatalog.configs.first { it.displayName == "Datasource > New Datasource" }
+        val tmpDir = Files.createTempDirectory("cfggen-blank-pkg")
+        try {
+            val prepared = ConfigGenerator.prepare(
+                template,
+                ConfigGenerator.GenerationType.JAVA,
+                formData(template, ConfigGenerator.GenerationType.JAVA, mapOf("txtConfigPackage" to "")),
+                "pkg",
+            )
+            val issue = prepared.validate(tmpDir)
+            assertNotNull(issue)
+
+            val exception = assertThrows(IllegalArgumentException::class.java) { prepared.generate(tmpDir) }
+            assertEquals(issue!!.message, exception.message)
+            assertTrue(Files.list(tmpDir).use { it.toList() }.isEmpty())
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
     }
 
     @Test
     fun validateRejectsInvalidJavaPackageName() {
-        val template = TemplateCatalog.configs.first { it.javaConfigTemplate.isNotBlank() }
-        val prepared = ConfigGenerator.prepare(
-            template, ConfigGenerator.GenerationType.JAVA,
-            mapOf(template.fileNameProperty to "EgovConfig", "txtConfigPackage" to "123bad"), "pkg",
-        )
-        val issue = prepared.validate(Path.of("build"))
-        assertNotNull(issue)
-        assertEquals("Invalid Java package name", issue!!.message)
+        val template = TemplateCatalog.configs.first { it.displayName == "Datasource > New Datasource" }
+        val tmpDir = Files.createTempDirectory("cfggen-pkg")
+        try {
+            val data = formData(template, ConfigGenerator.GenerationType.JAVA,
+                mapOf("txtConfigPackage" to "123bad"))
+            val issue = ConfigGenerator.prepare(template, ConfigGenerator.GenerationType.JAVA, data, "pkg")
+                .validate(tmpDir)
+            assertNotNull(issue)
+            assertEquals("txtConfigPackage", issue!!.field)
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
     }
 
     @Test
     fun validateIgnoresStaleJavaPackageForNonJavaVariants() {
         val template = TemplateCatalog.configs.first()
-        val prepared = ConfigGenerator.prepare(
-            template, ConfigGenerator.GenerationType.XML,
-            mapOf(template.fileNameProperty to "file", "txtConfigPackage" to "123bad"), "pkg",
-        )
-        assertNull(prepared.validate(Path.of("build")))
+        val tmpDir = Files.createTempDirectory("cfggen-stale")
+        try {
+            val data = formData(template, ConfigGenerator.GenerationType.XML,
+                mapOf("txtConfigPackage" to "123bad"))
+            assertNull(
+                ConfigGenerator.prepare(template, ConfigGenerator.GenerationType.XML, data, "pkg")
+                    .validate(tmpDir),
+            )
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
     }
 
     @Test
     fun validateRejectsNonPascalCaseJavaFileName() {
-        val template = TemplateCatalog.configs.first { it.javaConfigTemplate.isNotBlank() }
-        val prepared = ConfigGenerator.prepare(
-            template, ConfigGenerator.GenerationType.JAVA,
-            mapOf(template.fileNameProperty to "lower-case", "txtConfigPackage" to "pkg"), "pkg",
-        )
-        val issue = prepared.validate(Path.of("build"))
-        assertNotNull(issue)
-        assertTrue(issue!!.message.contains("PascalCase"))
+        val template = TemplateCatalog.configs.first { it.displayName == "Datasource > New Datasource" }
+        val tmpDir = Files.createTempDirectory("cfggen-pascal")
+        try {
+            val prepared = ConfigGenerator.prepare(
+                template,
+                ConfigGenerator.GenerationType.JAVA,
+                formData(template, ConfigGenerator.GenerationType.JAVA, mapOf(template.fileNameProperty to "lower-case")),
+                "pkg",
+            )
+            val issue = prepared.validate(tmpDir)
+            assertNotNull(issue)
+            assertEquals(template.fileNameProperty, issue!!.field)
+
+            val exception = assertThrows(IllegalArgumentException::class.java) { prepared.generate(tmpDir) }
+            assertEquals(issue.message, exception.message)
+            assertTrue(Files.list(tmpDir).use { it.toList() }.isEmpty())
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
     }
 
     @Test
     fun validationMatchesUpstreamFileAndPackageRules() {
         val xmlTemplate = TemplateCatalog.configs.first()
-        val javaTemplate = TemplateCatalog.configs.first { it.javaConfigTemplate.isNotBlank() }
-        val output = Path.of("build")
+        val javaTemplate = TemplateCatalog.configs.first { it.displayName == "Datasource > New Datasource" }
+        val tmpDir = Files.createTempDirectory("cfggen-upstream")
+        try {
+            fun validate(
+                template: ConfigTemplate,
+                type: ConfigGenerator.GenerationType,
+                name: String,
+                packageName: String,
+            ) = ConfigGenerator.prepare(
+                template, type,
+                formData(template, type, mapOf(template.fileNameProperty to name, "txtConfigPackage" to packageName)),
+                "pkg",
+            ).validate(tmpDir)
 
-        fun validate(template: kr.kyg.ijplugin.egovframe.assets.ConfigTemplate, type: ConfigGenerator.GenerationType, name: String, packageName: String) =
-            ConfigGenerator.prepare(
-                template, type, mapOf(template.fileNameProperty to name, "txtConfigPackage" to packageName), "pkg",
-            ).validate(output)
-
-        assertNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file-name_2", "a..b"))
-        assertNotNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file.name", "pkg"))
-        assertNotNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file name", "pkg"))
-        assertNotNull(validate(javaTemplate, ConfigGenerator.GenerationType.JAVA, "Egov_Config", "pkg"))
-        assertNotNull(validate(javaTemplate, ConfigGenerator.GenerationType.JAVA, "EgovConfig", "Pkg"))
+            assertNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file-name_2", "a..b"))
+            assertNotNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file.name", "pkg"))
+            assertNotNull(validate(xmlTemplate, ConfigGenerator.GenerationType.XML, "file name", "pkg"))
+            assertNotNull(validate(javaTemplate, ConfigGenerator.GenerationType.JAVA, "Egov_Config", "pkg"))
+            assertNotNull(validate(javaTemplate, ConfigGenerator.GenerationType.JAVA, "EgovConfig", "Pkg"))
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
     }
 
     @Test
     fun validationAcceptsAnOptionalMatchingExtension() {
         val xmlTemplate = TemplateCatalog.configs.first()
-        val javaTemplate = TemplateCatalog.configs.first { it.javaConfigTemplate.isNotBlank() }
-        val output = Path.of("build")
-
-        assertNull(
-            ConfigGenerator.prepare(
-                xmlTemplate,
-                ConfigGenerator.GenerationType.XML,
-                mapOf(xmlTemplate.fileNameProperty to "context-cache.xml"),
-                "pkg",
-            ).validate(output),
-        )
-        assertNull(
-            ConfigGenerator.prepare(
-                javaTemplate,
-                ConfigGenerator.GenerationType.JAVA,
-                mapOf(javaTemplate.fileNameProperty to "EgovConfig.java", "txtConfigPackage" to "pkg"),
-                "pkg",
-            ).validate(output),
-        )
-        assertNotNull(
-            ConfigGenerator.prepare(
-                xmlTemplate,
-                ConfigGenerator.GenerationType.XML,
-                mapOf(xmlTemplate.fileNameProperty to "context-cache.yaml"),
-                "pkg",
-            ).validate(output),
-        )
+        val javaTemplate = TemplateCatalog.configs.first { it.displayName == "Datasource > New Datasource" }
+        val tmpDir = Files.createTempDirectory("cfggen-ext")
+        try {
+            assertNull(
+                ConfigGenerator.prepare(
+                    xmlTemplate, ConfigGenerator.GenerationType.XML,
+                    formData(xmlTemplate, ConfigGenerator.GenerationType.XML,
+                        mapOf(xmlTemplate.fileNameProperty to "context-cache.xml")),
+                    "pkg",
+                ).validate(tmpDir),
+            )
+            assertNull(
+                ConfigGenerator.prepare(
+                    javaTemplate, ConfigGenerator.GenerationType.JAVA,
+                    formData(javaTemplate, ConfigGenerator.GenerationType.JAVA,
+                        mapOf(javaTemplate.fileNameProperty to "EgovConfig.java")),
+                    "pkg",
+                ).validate(tmpDir),
+            )
+            assertNotNull(
+                ConfigGenerator.prepare(
+                    xmlTemplate, ConfigGenerator.GenerationType.XML,
+                    formData(xmlTemplate, ConfigGenerator.GenerationType.XML,
+                        mapOf(xmlTemplate.fileNameProperty to "context-cache.yaml")),
+                    "pkg",
+                ).validate(tmpDir),
+            )
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
     }
 
     @Test
@@ -170,11 +250,11 @@ class ConfigGeneratorTest {
         val template = TemplateCatalog.configs.first()
         val tmpDir = Files.createTempDirectory("cfggen-validate")
         try {
-            val prepared = ConfigGenerator.prepare(
-                template, ConfigGenerator.GenerationType.XML,
-                mapOf(template.fileNameProperty to "context-test"), "pkg",
+            val data = formData(template, ConfigGenerator.GenerationType.XML)
+            assertNull(
+                ConfigGenerator.prepare(template, ConfigGenerator.GenerationType.XML, data, "pkg")
+                    .validate(tmpDir),
             )
-            assertNull(prepared.validate(tmpDir))
         } finally {
             tmpDir.toFile().deleteRecursively()
         }
@@ -185,14 +265,47 @@ class ConfigGeneratorTest {
         val template = TemplateCatalog.configs.first()
         val tmpDir = Files.createTempDirectory("cfggen-exists")
         try {
-            Files.writeString(tmpDir.resolve("context-test.xml"), "existing")
+            val data = formData(template, ConfigGenerator.GenerationType.XML)
+            val target = tmpDir.resolve("${data[template.fileNameProperty]}.xml")
+            val existingBytes = "existing".toByteArray()
+            Files.write(target, existingBytes)
+            val prepared = ConfigGenerator.prepare(template, ConfigGenerator.GenerationType.XML, data, "pkg")
+            val issue = prepared.validate(tmpDir)
+            assertNotNull(issue)
+
+            val exception = assertThrows(IllegalArgumentException::class.java) { prepared.generate(tmpDir) }
+            assertEquals(issue!!.message, exception.message)
+            assertArrayEquals(existingBytes, Files.readAllBytes(target))
+            assertEquals(listOf(target), Files.list(tmpDir).use { it.toList() })
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun validateReportsMissingFormSpecification() {
+        val template = ConfigTemplate(
+            displayName = "Unknown Config",
+            templateFolder = "unused",
+            templateFile = "unused",
+            webView = "unused",
+            fileNameProperty = "txtFileName",
+            javaConfigTemplate = "",
+            yamlTemplate = "",
+            propertiesTemplate = "",
+            description = "unused",
+        )
+        val tmpDir = Files.createTempDirectory("cfggen-unknown")
+        try {
             val prepared = ConfigGenerator.prepare(
-                template, ConfigGenerator.GenerationType.XML,
-                mapOf(template.fileNameProperty to "context-test"), "pkg",
+                template,
+                ConfigGenerator.GenerationType.XML,
+                mapOf("txtFileName" to "test"),
+                "pkg",
             )
             val issue = prepared.validate(tmpDir)
             assertNotNull(issue)
-            assertTrue(issue!!.message.contains("already exists"))
+            assertEquals("Missing form specification: Unknown Config", issue!!.message)
         } finally {
             tmpDir.toFile().deleteRecursively()
         }
@@ -206,11 +319,13 @@ class ConfigGeneratorTest {
         val tmpDir = Files.createTempDirectory("cfggen-sanitize")
         try {
             for (name in listOf("../../etc/passwd", "../nested/context-cache")) {
-                val prepared = ConfigGenerator.prepare(
-                    template, ConfigGenerator.GenerationType.XML,
-                    mapOf(template.fileNameProperty to name), "pkg",
+                val data = formData(template, ConfigGenerator.GenerationType.XML,
+                    mapOf(template.fileNameProperty to name))
+                assertNotNull(
+                    ConfigGenerator.prepare(template, ConfigGenerator.GenerationType.XML, data, "pkg")
+                        .validate(tmpDir),
+                    name,
                 )
-                assertNotNull(prepared.validate(tmpDir), name)
             }
         } finally {
             tmpDir.toFile().deleteRecursively()
@@ -222,12 +337,11 @@ class ConfigGeneratorTest {
         val template = TemplateCatalog.configs.first()
         val tmpDir = Files.createTempDirectory("cfggen-invalid")
         try {
-            val prepared = ConfigGenerator.prepare(
-                template, ConfigGenerator.GenerationType.XML,
-                mapOf(template.fileNameProperty to ".."), "pkg",
-            )
+            val data = formData(template, ConfigGenerator.GenerationType.XML,
+                mapOf(template.fileNameProperty to ".."))
             assertThrows(IllegalArgumentException::class.java) {
-                prepared.generate(tmpDir)
+                ConfigGenerator.prepare(template, ConfigGenerator.GenerationType.XML, data, "pkg")
+                    .generate(tmpDir)
             }
         } finally {
             tmpDir.toFile().deleteRecursively()
@@ -263,6 +377,29 @@ class ConfigGeneratorTest {
             assertTrue(result.path.startsWith(tmpDir.toAbsolutePath().normalize()), "Path should be inside output folder")
         } finally {
             tmpDir.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun generateCreatesMissingOutputDirectoryAndTarget() {
+        val template = TemplateCatalog.configs.first { it.displayName == "Cache > New Cache" }
+        val root = Files.createTempDirectory("cfggen-missing-output-root")
+        val outputFolder = root.resolve("generated")
+        try {
+            val prepared = ConfigGenerator.prepare(
+                template,
+                ConfigGenerator.GenerationType.XML,
+                formData(template, ConfigGenerator.GenerationType.XML),
+                "egovframework.example.sample",
+            )
+            assertNull(prepared.validate(outputFolder))
+
+            val result = prepared.generate(outputFolder)
+            assertTrue(Files.isDirectory(outputFolder))
+            assertTrue(Files.exists(result.path))
+            assertEquals(result.content, Files.readString(result.path))
+        } finally {
+            root.toFile().deleteRecursively()
         }
     }
 
@@ -325,6 +462,126 @@ class ConfigGeneratorTest {
             } finally {
                 tmpDir.toFile().deleteRecursively()
             }
+        }
+    }
+
+    // --- Java-capable template _javaFileName contract ---
+
+    @Test
+    fun `every Java-capable template has nonblank _javaFileName default matching initialFormData`() {
+        val javaCapable = TemplateCatalog.configs.filter { it.javaConfigTemplate.isNotBlank() }
+        assertTrue(javaCapable.isNotEmpty(), "Should have Java-capable templates")
+
+        for (template in javaCapable) {
+            val defaults = TemplateCatalog.configDefaults[template.displayName]
+            assertNotNull(defaults, "Defaults missing for ${template.displayName}")
+
+            val javaFileName = defaults!!["_javaFileName"]?.toString()
+            assertNotNull(javaFileName, "_javaFileName missing for ${template.displayName}")
+            assertTrue(javaFileName!!.isNotBlank(), "_javaFileName blank for ${template.displayName}")
+
+            val def = ConfigGenerator.definition(template)
+            val javaData = def.initialFormData(ConfigGenerator.GenerationType.JAVA)
+            assertEquals(
+                javaFileName,
+                javaData[def.fileNameProperty],
+                "initialFormData filename for ${template.displayName}",
+            )
+        }
+    }
+
+    // --- Temp file / no-overwrite publish ---
+
+    @Test
+    fun `generate success leaves no temp file`() {
+        val template = TemplateCatalog.configs.first { it.displayName == "Cache > New Cache" }
+        val def = ConfigGenerator.definition(template)
+        val tmpDir = Files.createTempDirectory("cfggen-notemp")
+        try {
+            ConfigGenerator.prepare(
+                template, ConfigGenerator.GenerationType.XML,
+                def.initialFormData(ConfigGenerator.GenerationType.XML), "egovframework.example.sample",
+            ).generate(tmpDir)
+
+            val temps = Files.list(tmpDir).use { s -> s.filter { it.fileName.toString().endsWith(".tmp") }.toList() }
+            assertTrue(temps.isEmpty(), "No temp files should remain after successful generate")
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `concurrent target appearance before move preserves existing bytes and cleans temp`() {
+        val template = TemplateCatalog.configs.first { it.displayName == "Cache > New Cache" }
+        val def = ConfigGenerator.definition(template)
+        val tmpDir = Files.createTempDirectory("cfggen-concurrent")
+        try {
+            val existingContent = "pre-existing content"
+            val ops = object : ConfigFileOps by NioConfigFileOps {
+                override fun move(source: Path, target: Path) {
+                    // Simulate another process creating the target just before our move
+                    Files.writeString(target, existingContent, Charsets.UTF_8)
+                    NioConfigFileOps.move(source, target) // will throw FileAlreadyExistsException
+                }
+            }
+            val error = assertThrows(FileAlreadyExistsException::class.java) {
+                ConfigGenerator.prepare(
+                    template, ConfigGenerator.GenerationType.XML,
+                    def.initialFormData(ConfigGenerator.GenerationType.XML), "egovframework.example.sample",
+                    ops,
+                ).generate(tmpDir)
+            }
+            assertNotNull(error)
+            // Existing bytes preserved
+            val targetName = def.initialFormData(ConfigGenerator.GenerationType.XML)[def.fileNameProperty].toString() + ".xml"
+            assertEquals(existingContent, Files.readString(tmpDir.resolve(targetName)))
+            // Temp file cleaned
+            val temps = Files.list(tmpDir).use { s -> s.filter { it.fileName.toString().endsWith(".tmp") }.toList() }
+            assertTrue(temps.isEmpty(), "Temp file should be cleaned after move failure")
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `real NIO move does not replace existing file`() {
+        val tmpDir = Files.createTempDirectory("cfggen-noreplace")
+        try {
+            val target = tmpDir.resolve("existing.xml")
+            Files.writeString(target, "original")
+            val tempFile = Files.createTempFile(tmpDir, ".cfg-", ".tmp")
+            Files.writeString(tempFile, "new content")
+            assertThrows(FileAlreadyExistsException::class.java) {
+                NioConfigFileOps.move(tempFile, target) // no REPLACE_EXISTING
+            }
+            assertEquals("original", Files.readString(target))
+        } finally {
+            tmpDir.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `write failure creates neither target nor temp`() {
+        val template = TemplateCatalog.configs.first { it.displayName == "Cache > New Cache" }
+        val def = ConfigGenerator.definition(template)
+        val tmpDir = Files.createTempDirectory("cfggen-writefail")
+        try {
+            val ops = object : ConfigFileOps by NioConfigFileOps {
+                override fun writeString(path: Path, content: String) {
+                    throw IOException("Injected write failure")
+                }
+            }
+            assertThrows(IOException::class.java) {
+                ConfigGenerator.prepare(
+                    template, ConfigGenerator.GenerationType.XML,
+                    def.initialFormData(ConfigGenerator.GenerationType.XML), "egovframework.example.sample",
+                    ops,
+                ).generate(tmpDir)
+            }
+            val allFiles = Files.list(tmpDir).use { it.toList() }
+            assertTrue(allFiles.isEmpty(), "No files should remain after write failure")
+        } finally {
+            tmpDir.toFile().deleteRecursively()
         }
     }
 }
