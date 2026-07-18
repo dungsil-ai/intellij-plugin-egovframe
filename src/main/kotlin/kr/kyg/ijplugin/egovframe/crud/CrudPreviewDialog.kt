@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.util.ui.JBUI
+import kr.kyg.ijplugin.egovframe.settings.EgovBundle
 import java.awt.BorderLayout
 import javax.swing.JComboBox
 import javax.swing.JComponent
@@ -21,7 +22,7 @@ internal class CrudPreviewDialog(
   private val editorPanel = JPanel(BorderLayout())
 
   init {
-    title = "CRUD Preview"
+    title = EgovBundle.message("crud.dialog.preview.title")
     fileCombo.addActionListener { updatePreview() }
     init()
     updatePreview()
