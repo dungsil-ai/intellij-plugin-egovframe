@@ -35,7 +35,10 @@ internal object DdlSyntaxDiagnostics {
     validateStatements(sql, dialect, errors)
     if (errors.isNotEmpty()) return DiagnosticResult.Error(errors)
 
-    return DiagnosticResult.Ok("Valid DDL")
+    return when (val analysis = DdlAnalyzer.analyze(sql)) {
+      is DdlAnalysisResult.Success -> DiagnosticResult.Ok("Valid DDL")
+      is DdlAnalysisResult.Invalid -> DiagnosticResult.Error(listOf(Diagnostic(analysis.message, 1, 1, 0)))
+    }
   }
 
   private fun checkBalance(text: String, errors: MutableList<Diagnostic>) {

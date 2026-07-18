@@ -233,6 +233,59 @@ class DdlAnalysisTest {
   }
 
   @Test
+  fun `rejects tables with unusable generated Java names`() {
+    // empty quoted table
+    assertInvalid(
+      "CREATE TABLE \"\" (id INT PRIMARY KEY);",
+      "Invalid generated table name: \"\"",
+    )
+    // symbol in quoted table name
+    assertInvalid(
+      "CREATE TABLE \"tbl@name\" (id INT PRIMARY KEY);",
+      "Invalid generated table name: \"tbl@name\"",
+    )
+    // digit-leading table (unquoted)
+    assertInvalid(
+      "CREATE TABLE 1tbl (id INT PRIMARY KEY);",
+      "Invalid generated table name: \"1tbl\"",
+    )
+    // digit-leading table (quoted)
+    assertInvalid(
+      "CREATE TABLE \"1tbl\" (id INT PRIMARY KEY);",
+      "Invalid generated table name: \"1tbl\"",
+    )
+    // table whose lower-camel name is a Java keyword
+    assertInvalid(
+      "CREATE TABLE new (id INT PRIMARY KEY);",
+      "Invalid generated table name: \"new\"",
+    )
+  }
+
+  @Test
+  fun `rejects columns with unusable generated Java names`() {
+    // quoted keyword column
+    assertInvalid(
+      "CREATE TABLE valid (\"class\" INT PRIMARY KEY);",
+      "Invalid generated column name: \"class\"",
+    )
+    // single underscore column
+    assertInvalid(
+      "CREATE TABLE valid (_ INT PRIMARY KEY);",
+      "Invalid generated column name: \"_\"",
+    )
+    // symbol in column name
+    assertInvalid(
+      "CREATE TABLE valid (\"col@\" INT PRIMARY KEY);",
+      "Invalid generated column name: \"col@\"",
+    )
+    // digit-leading column
+    assertInvalid(
+      "CREATE TABLE valid (\"1col\" INT PRIMARY KEY);",
+      "Invalid generated column name: \"1col\"",
+    )
+  }
+
+  @Test
   fun `all sample DDLs parse successfully`() {
     kr.kyg.ijplugin.egovframe.crud.CrudSampleCatalog.all().forEach { sample ->
       val result = DdlAnalyzer.analyze(sample.ddl)

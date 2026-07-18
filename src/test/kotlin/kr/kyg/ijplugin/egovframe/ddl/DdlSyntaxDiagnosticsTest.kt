@@ -259,4 +259,90 @@ class DdlSyntaxDiagnosticsTest {
       )
     }
   }
+
+  @Test
+  fun `invalid generated table name returns Error with analyzer message`() {
+    val sql = "CREATE TABLE \"1tbl\" (id INT PRIMARY KEY);"
+    val analyzerResult = DdlAnalyzer.analyze(sql)
+    assertTrue(analyzerResult is DdlAnalysisResult.Invalid, "Analyzer must reject this DDL")
+    val expectedMessage = (analyzerResult as DdlAnalysisResult.Invalid).message
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
+    assertEquals(expectedMessage, error.diagnostics.single().message)
+    assertEquals(1, error.diagnostics.single().line)
+    assertEquals(1, error.diagnostics.single().column)
+    assertEquals(0, error.diagnostics.single().offset)
+  }
+
+  @Test
+  fun `invalid generated column name returns Error with analyzer message`() {
+    val sql = "CREATE TABLE valid (\"class\" INT PRIMARY KEY);"
+    val analyzerResult = DdlAnalyzer.analyze(sql)
+    assertTrue(analyzerResult is DdlAnalysisResult.Invalid, "Analyzer must reject this DDL")
+    val expectedMessage = (analyzerResult as DdlAnalysisResult.Invalid).message
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
+    assertEquals(expectedMessage, error.diagnostics.single().message)
+    assertEquals(1, error.diagnostics.single().line)
+    assertEquals(1, error.diagnostics.single().column)
+    assertEquals(0, error.diagnostics.single().offset)
+  }
+
+  @Test
+  fun `valid CREATE TABLE still returns Ok after canonical analysis`() {
+    val sql = "CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(50));"
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.MYSQL)
+    assertTrue(result is DdlSyntaxDiagnostics.DiagnosticResult.Ok)
+  }
+
+  @Test
+  fun `schema-qualified CREATE TABLE returns Error via canonical analysis`() {
+    val sql = "CREATE TABLE myschema.users (id INT PRIMARY KEY);"
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.POSTGRESQL)
+    val error = result as DdlSyntaxDiagnostics.DiagnosticResult.Error
+    assertEquals("Invalid DDL", error.diagnostics.single().message)
+    assertEquals(1, error.diagnostics.single().line)
+    assertEquals(1, error.diagnostics.single().column)
+    assertEquals(0, error.diagnostics.single().offset)
+  }
+
+  @Test
+  fun `PostgreSQL COMMENT ON COLUMN after valid CREATE returns Ok`() {
+    val sql = """
+      CREATE TABLE board (
+        id VARCHAR(36) PRIMARY KEY,
+        title VARCHAR(200) NOT NULL
+      );
+      COMMENT ON TABLE board IS 'Board Table';
+      COMMENT ON COLUMN board.id IS 'Board ID';
+    """.trimIndent()
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.POSTGRESQL)
+    assertTrue(result is DdlSyntaxDiagnostics.DiagnosticResult.Ok)
+  }
+
+  @Test
+  fun `schema-qualified COMMENT target is Ok as metadata-only`() {
+    val sql = """
+      CREATE TABLE board (
+        id VARCHAR(36) PRIMARY KEY
+      );
+      COMMENT ON COLUMN myschema.board.id IS 'Board ID';
+    """.trimIndent()
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.POSTGRESQL)
+    assertTrue(result is DdlSyntaxDiagnostics.DiagnosticResult.Ok)
+  }
+
+  @Test
+  fun `final COMMENT without canonical terminator follows analyzer result`() {
+    val sql = """
+      CREATE TABLE board (
+        id VARCHAR(36) PRIMARY KEY
+      );
+      COMMENT ON COLUMN board.id IS 'Board ID'
+    """.trimIndent()
+    val analyzerResult = DdlAnalyzer.analyze(sql)
+    assertTrue(analyzerResult is DdlAnalysisResult.Success)
+    val result = DdlSyntaxDiagnostics.diagnose(sql, SqlDialect.POSTGRESQL)
+    assertTrue(result is DdlSyntaxDiagnostics.DiagnosticResult.Ok)
+  }
 }

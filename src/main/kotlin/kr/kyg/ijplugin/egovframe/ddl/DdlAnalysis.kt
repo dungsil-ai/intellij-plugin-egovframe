@@ -1,5 +1,7 @@
 package kr.kyg.ijplugin.egovframe.ddl
 
+import javax.lang.model.SourceVersion
+
 internal sealed interface DdlAnalysisResult {
   data class Success(val analysis: DdlAnalysis) : DdlAnalysisResult
 
@@ -122,6 +124,12 @@ internal object DdlAnalyzer {
     statement: CreateTable,
     relationships: MutableList<DdlRelationship>,
   ): TableParseResult {
+    val className = convertCamelCaseToPascalCase(convertToCamelCase(statement.dbName))
+    val tableCamelName = if (className.isEmpty()) "" else className.replaceFirstChar { it.lowercaseChar() }
+    if (tableCamelName.isEmpty() || !isUsableJavaIdentifier(tableCamelName) || !isUsableJavaIdentifier(className)) {
+      return TableParseResult.Invalid("Invalid generated table name: \"${statement.dbName}\"")
+    }
+
     val definitions = SqlScanner(statement.body).splitTopLevelCommas()
       ?: return TableParseResult.Invalid(INVALID_DDL)
     val nonEmptyDefinitions = definitions.map(String::trim).filter(String::isNotEmpty)
@@ -175,6 +183,11 @@ internal object DdlAnalyzer {
         )
       }
       val dataType = leadingWordRegex.find(rawDataType)?.value ?: rawDataType
+      val camelName = convertToCamelCase(columnName)
+      val pascalName = convertCamelCaseToPascalCase(camelName)
+      if (!isUsableJavaIdentifier(camelName) || !isUsableJavaIdentifier(pascalName)) {
+        return TableParseResult.Invalid("Invalid generated column name: \"$columnName\"")
+      }
 
       inlineReferenceRegex.find(definition)?.let { match ->
         val toTable = cleanIdentifier(match.groupValues[1])
@@ -190,12 +203,11 @@ internal object DdlAnalyzer {
         )
       }
 
-      val camelName = convertToCamelCase(columnName)
       columns.add(
         DdlColumn(
           name = columnName,
           camelName = camelName,
-          pascalName = convertCamelCaseToPascalCase(camelName),
+          pascalName = pascalName,
           dataType = dataType,
           javaType = DataTypes.getJavaClassName(dataType),
           isPrimaryKey = columnName in primaryKeyColumns || inlinePrimaryKeyRegex.containsMatchIn(definition),
@@ -208,7 +220,7 @@ internal object DdlAnalyzer {
     return TableParseResult.Success(
       DdlTable(
         dbName = statement.dbName,
-        className = convertCamelCaseToPascalCase(convertToCamelCase(statement.dbName)),
+        className = className,
         columns = columns.toList(),
       )
     )
@@ -285,6 +297,10 @@ internal object DdlAnalyzer {
     if (value.isEmpty()) value else value[0].uppercaseChar() + value.substring(1)
 
   private fun normalizeWhitespace(value: String): String = value.replace(whitespaceRegex, " ").trim()
+
+  private fun isUsableJavaIdentifier(value: String): Boolean =
+    SourceVersion.isIdentifier(value) &&
+      !SourceVersion.isKeyword(value, SourceVersion.RELEASE_17)
 
   private fun skipWhitespace(text: String, start: Int): Int {
     var index = start
