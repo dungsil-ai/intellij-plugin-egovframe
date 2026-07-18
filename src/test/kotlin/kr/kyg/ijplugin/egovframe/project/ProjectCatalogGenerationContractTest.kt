@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
@@ -31,7 +32,8 @@ class ProjectCatalogGenerationContractTest {
         }
         val output = Files.createDirectories(root.resolve("output-$index"))
         val projectName = "contract-$index"
-        val generated = ProjectGenerator.generate(
+        val stages = mutableListOf<ProjectGenerationStage>()
+        val result = ProjectGenerator.generateWithProgress(
           outputDirectory = output,
           zipPath = zip,
           config = ProjectGenerator.ProjectConfig(
@@ -40,8 +42,11 @@ class ProjectCatalogGenerationContractTest {
             artifactId = projectName,
             template = template,
           ),
-        )
-
+        ) { stages += it }
+        val success = result as? GenerationResult.Success ?: fail("Expected project generation success for ${template.displayName}: $result")
+        val generated = success.projectRoot
+        assertTrue(stages.isNotEmpty(), "At least one stage must be reported for ${template.displayName}")
+        assertEquals(ProjectGenerationStage.EXTRACT, stages.first(), "First stage must be EXTRACT for ${template.displayName}")
         assertTrue(Files.isDirectory(generated), "Project root missing for ${template.displayName}")
         Files.list(generated).use { entries ->
           assertTrue(entries.findAny().isPresent, "Extracted project is empty for ${template.displayName}")

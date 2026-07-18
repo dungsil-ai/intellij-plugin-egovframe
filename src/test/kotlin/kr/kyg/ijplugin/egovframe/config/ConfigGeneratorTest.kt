@@ -288,4 +288,43 @@ class ConfigGeneratorTest {
             tmpDir.toFile().deleteRecursively()
         }
     }
+
+    @Test
+    fun `generate produces correct file for each generation type variant`() {
+        data class Case(val displayName: String, val type: ConfigGenerator.GenerationType, val extension: String)
+
+        val cases = listOf(
+            Case("Cache > New Cache", ConfigGenerator.GenerationType.XML, "xml"),
+            Case("Datasource > New Datasource", ConfigGenerator.GenerationType.JAVA, "java"),
+            Case("Logging > New Console Appender", ConfigGenerator.GenerationType.YAML, "yaml"),
+            Case("Logging > New Console Appender", ConfigGenerator.GenerationType.PROPERTIES, "properties"),
+        )
+
+        for (case in cases) {
+            val template = TemplateCatalog.configs.first { it.displayName == case.displayName }
+            val def = ConfigGenerator.definition(template)
+            val formData = def.initialFormData(case.type)
+            val tmpDir = Files.createTempDirectory("cfggen-variant-")
+            try {
+                val result = ConfigGenerator.prepare(
+                    template, case.type, formData, "egovframework.example.sample",
+                ).generate(tmpDir)
+                assertTrue(
+                    Files.exists(result.path),
+                    "Generated file must exist for ${case.displayName} / ${case.type}",
+                )
+                assertTrue(
+                    result.path.fileName.toString().endsWith(".${case.extension}"),
+                    "File extension must be .${case.extension} for ${case.displayName} / ${case.type}, " +
+                        "but was ${result.path.fileName}",
+                )
+                assertTrue(
+                    result.content.isNotBlank(),
+                    "Generated content must be non-blank for ${case.displayName} / ${case.type}",
+                )
+            } finally {
+                tmpDir.toFile().deleteRecursively()
+            }
+        }
+    }
 }

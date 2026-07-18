@@ -35,12 +35,32 @@ class ProjectGeneratorTest {
       template = template,
     )
 
-    val projectRoot = ProjectGenerator.generate(output, zip, config)
+    val result = ProjectGenerator.generateWithProgress(output, zip, config)
+    val success = result as? GenerationResult.Success ?: fail("Expected success: $result")
+    val projectRoot = success.projectRoot
     assertTrue(Files.isRegularFile(projectRoot.resolve("src/main/resources/application.properties")))
     val pom = Files.readString(projectRoot.resolve("pom.xml"))
     assertTrue(pom.contains("<groupId>com.example</groupId>"))
     assertTrue(pom.contains("<artifactId>demo-app</artifactId>"))
+    assertTrue(pom.contains("com.example.demo"), "POM must contain the configured project name")
+    assertTrue(pom.contains("1.0.0"), "POM must contain the default version")
+    assertTrue(pom.contains("https://www.egovframe.go.kr"), "POM must contain the default URL")
     assertFalse(pom.contains("###"))
+  }
+
+  @Test
+  fun `replacePomTokens maps all five placeholders`() {
+    val template = "###NAME### ###GROUP_ID### ###ARTIFACT_ID### ###VERSION### ###URL###"
+    val config = ProjectGenerator.ProjectConfig(
+      projectName = "my-project",
+      groupId = "org.example",
+      artifactId = "my-artifact",
+      template = ProjectTemplate("t", "t.zip", "pom.xml", "", "Boot", "t"),
+      version = "2.0.0",
+      url = "https://example.org",
+    )
+    val result = ProjectGenerator.replacePomTokens(template, config)
+    assertEquals("my-project org.example my-artifact 2.0.0 https://example.org", result)
   }
 
   @Test
