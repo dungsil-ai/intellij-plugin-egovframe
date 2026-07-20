@@ -107,7 +107,7 @@ The packaged plugin is written under `build/distributions/`. No dedicated lint o
 - **JDK:** 21 for building and CI. Generated eGovFrame projects prefer an installed JDK 17.
 - **Gradle:** wrapper-pinned 9.5.0; do not depend on a system Gradle installation.
 - **Kotlin:** 2.3.20. The plugin relies on the IntelliJ-bundled Kotlin stdlib and must compile against both the oldest and newest CI platforms.
-- **IntelliJ Platform:** IDEA Community 2025.1.6 is the default, `sinceBuild = 251`, with no upper bound. CI runs the full test suite on 2025.1.6, 2026.1.4, and 2026.2; Plugin Verifier covers the same 2026 releases.
+- **IntelliJ Platform:** IDEA Community 2025.1.7.1이 기본값이며, `sinceBuild = 251`이고 상한은 없습니다. CI 전체 테스트와 Plugin Verifier는 최근 지원 대상 5개 버전(2025.1.7.1, 2025.2.6.2, 2025.3.6, 2026.1.4, 2026.2)을 검증합니다.
 - **Rendering:** Handlebars.java 4.5.3 at runtime; Handlebars.js 4.7.9 is pinned only for parity generation.
 - **Golden tooling:** Node.js 24 LTS with npm 11. TypeScript 7.0.2, `@types/node` 24.13.3, and tsx 4.23.1 are pinned in `tools/golden-gen/package.json`; use `npm ci` and do not casually update `package-lock.json`.
 - **Maven:** optional at plugin runtime. Keep integration in `egovframe-maven.xml`.

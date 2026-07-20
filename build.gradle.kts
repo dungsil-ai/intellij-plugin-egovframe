@@ -138,7 +138,9 @@ intellijPlatform {
 
   pluginVerification {
     ides {
-      recommended()
+      create(IntelliJPlatformType.IntellijIdea, "2025.1.7.1")
+      create(IntelliJPlatformType.IntellijIdea, "2025.2.6.2")
+      create(IntelliJPlatformType.IntellijIdea, "2025.3.6")
       create(IntelliJPlatformType.IntellijIdea, "2026.1.4")
       create(IntelliJPlatformType.IntellijIdea, "2026.2")
     }
