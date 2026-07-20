@@ -2,6 +2,7 @@ package kr.kyg.ijplugin.egovframe.config
 
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileChooser.FileChooser
+import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -385,7 +386,7 @@ class ConfigFormDialog(
     }
 
     private fun chooseFile(textField: JBTextField) {
-        val descriptor = FileChooserDescriptorFactory.createSingleFileDescriptor()
+        val descriptor = FileChooserDescriptor(true, false, false, false, false, false)
         FileChooser.chooseFile(descriptor, project, null)?.let {
             textField.text = normalizeConfigLocation(it.path)
         }
