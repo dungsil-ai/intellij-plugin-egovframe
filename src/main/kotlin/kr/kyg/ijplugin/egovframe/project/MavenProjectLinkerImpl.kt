@@ -10,7 +10,8 @@ class MavenProjectLinkerImpl : MavenProjectLinker {
   override fun link(project: Project, pomPath: Path) {
     val pomFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(pomPath) ?: return
     val manager = MavenProjectsManager.getInstance(project)
-    manager.addManagedFiles(listOf(pomFile))
-    manager.scheduleUpdateAllMavenProjects(MavenSyncSpec.full("eGovFrame 템플릿 프로젝트 생성"))
+    val pomFiles = listOf(pomFile)
+    manager.addManagedFilesOrUnignoreNoUpdate(pomFiles)
+    manager.scheduleUpdateMavenProjects(MavenSyncSpec.full("eGovFrame 템플릿 프로젝트 생성"), pomFiles, emptyList())
   }
 }
