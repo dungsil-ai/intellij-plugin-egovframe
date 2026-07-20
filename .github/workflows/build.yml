@@ -16,8 +16,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platformVersion: "2025.1.6"
+          - platformVersion: "2025.1.7.1"
             platformType: "IC"
+          - platformVersion: "2025.2.6.2"
+            platformType: "IU"
+          - platformVersion: "2025.3.6"
+            platformType: "IU"
           - platformVersion: "2026.1.4"
             platformType: "IU"
           - platformVersion: "2026.2"
