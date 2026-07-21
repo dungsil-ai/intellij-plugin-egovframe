@@ -47,7 +47,6 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - name: Fetch sources
         uses: actions/checkout@v4
@@ -68,8 +67,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build, test, and verify plugin
-        run: ./gradlew buildPlugin check verifyPluginProjectConfiguration verifyPluginStructure verifyPlugin
+      - name: Build and verify plugin
+        run: ./gradlew buildPlugin verifyPluginProjectConfiguration verifyPluginStructure verifyPlugin
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
