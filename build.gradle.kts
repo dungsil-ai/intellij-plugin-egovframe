@@ -125,6 +125,10 @@ dependencies {
 }
 
 intellijPlatform {
+  buildSearchableOptions = providers.gradleProperty("egovframeBuildSearchableOptions")
+    .map(String::toBoolean)
+    .getOrElse(true)
+
   pluginConfiguration {
     id = "kr.kyg.ijplugin.egovframe"
     name = providers.gradleProperty("pluginName").get()
